@@ -6,7 +6,7 @@ var express = require('express');
 var router = express.Router();
 var config = require(__base + 'config');
 
-//router.use('/api/v1/', require(__base + 'controllers/api/v1/index'));
+router.use('/user', require(__base + 'controllers/api/v1/user'));
 
 /* GET API home */
 router.get('/', function(req, res, next) {

@@ -8,13 +8,14 @@ var randomString = require('randomstring');
 
 function UserService() {
 
-    this.getAuthUrl = function (request, callbac) {
+    this.getAuthUrl = function (request, redirectUrl, callbac) {
 
         var state = randomString.generate('20');
         var postData = {
             state: state,
-            redirect_url: request.protocol + '://' + request.get('host') + '/user/loginback'
+            redirect_url: redirectUrl
         };
+
         request.session.state = state;
 
         entuDaoService.getAuthUrl(postData, function (error, url) {
@@ -27,6 +28,7 @@ function UserService() {
     };
 
     this.getEntuUser = function (request, callbac) {
+
         entuDaoService.getUser(request.session.authUrl, request.session.state, function (error, userResult) {
             if(error){
                 return callbac(error);

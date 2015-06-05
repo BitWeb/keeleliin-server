@@ -8,7 +8,6 @@ var sqlModel = require(__base + 'src/service/dao/sql');
 
 router.use('/api/v1/', require(__base + 'controllers/api/v1/index'));
 
-
 router.use('/user', function(req, res, next){ console.log('USER MIDDLE'); next()}, require('./user'));
 router.use('/service', require('./service'));
 
