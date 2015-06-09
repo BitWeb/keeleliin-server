@@ -3,6 +3,7 @@
  */
 
 var daoService = require('../daoService');
+var logger = require('log4js').getLogger('redis_dao_service');
 
 function RedisSession( id, cb ){
     var self = this;
@@ -17,16 +18,16 @@ function RedisSession( id, cb ){
                 self.data = data;
             }
 
-            console.log('DATA GOT ON INIT');
-            console.log(self.data);
+            logger.debug('DATA GOT ON INIT');
+            logger.debug(self.data);
 
             callback();
         });
     };
 
     this.save = function (callback) {
-        console.log('SAVE: ' + self.id);
-        console.log(self.data);
+        logger.debug('SAVE: ' + self.id);
+        logger.debug(self.data);
         daoService.set(self.id, self.data, callback);
     };
 

@@ -3,3 +3,5 @@ keeleliin-server.iml
 .idea
 node_modules
 config.js
+keeleliin.log
+dump.rdb

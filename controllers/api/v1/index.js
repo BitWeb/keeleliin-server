@@ -5,6 +5,8 @@
 var express = require('express');
 var router = express.Router();
 var config = require(__base + 'config');
+var logger = require('log4js').getLogger('index_controller');
+
 var UserService = require('../../../src/service/userService');
 
 /* GET API home */
@@ -23,8 +25,8 @@ var checkToken = function (req, res, next) {
 
     UserService.auth(req, function (error, userId) {
         if(error){
-            console.log('Auth error');
-            console.log(error);
+            logger.error('Auth error');
+            logger.error(error);
             return res.send(401, {errors: 'Usr not found'});
         }
         return next();

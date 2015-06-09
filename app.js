@@ -8,6 +8,7 @@ var express = require('express');
 
 var app = express();
 var path = require('path');
+var log4js = require('log4js');
 var logger = require('morgan');
 var bodyParser = require('body-parser');
 var multer = require('multer');
@@ -24,6 +25,14 @@ var errorhandlerMiddleware = require('./middlewares/errorhandler');
 
 app.set('views', path.join(__dirname, 'views'));// view engine setup
 app.set('view engine', 'jade');// view engine setup
+
+log4js.configure({
+    appenders: [
+        { type: 'console' },
+        { type: 'file', filename: 'keeleliin.log' }
+    ]
+});
+
 app.use(logger('dev'));
 app.use(bodyParser.json({limit: '10mb'})); // for parsing application/json
 app.use(multer({ dest: './uploads/'})); // for parsing multipart/form-data

@@ -1,7 +1,7 @@
 /**
  * Created by priit on 2.06.15.
  */
-
+var logger = require('log4js').getLogger('user_service');
 var userDaoService = require('./dao/userDaoService');
 
 function UserService() {
@@ -28,13 +28,14 @@ function UserService() {
 
         userDaoService.getEntuUser(request.redisSession.data.authUrl, request.redisSession.id, function (err, entuUser) {
             if(err){
-                console.log('getUser Error');
-                console.log(err);
+                logger.error('getUser Error');
+                logger.error(err);
                 return callbac(err);
             }
 
             userDaoService.getUserByEntuId(entuUser.user_id, function (err, user) {
                 if(err){
+                    logger.error(err);
                     return callback(err);
                 }
 
@@ -68,7 +69,7 @@ function UserService() {
         delete request.session.user;
         delete request.session.state;
         delete request.session.authUrl;
-        request.redisSession.data ={};
+        request.redisSession.data = {};
         request.redisSession.save();
         callback();
     };

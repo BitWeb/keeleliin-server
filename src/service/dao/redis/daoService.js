@@ -5,7 +5,7 @@
  *
  * Singelton
  */
-
+var logger = require('log4js').getLogger('redis_dao_service');
 var redis = require('redis');
 redis.debug_mode = true;
 
@@ -19,12 +19,12 @@ var DaoService = function(){
     this.client = redis.createClient(config.redis.port, config.redis.host, {});
 
     this.client.on('connect', function() {
-        console.log('connected');
+        logger.debug('connected');
         self.connected = true;
     });
 
     this.client.on("error", function (err) {
-        console.log("Redis Error " + err);
+        logger.debug("Redis Error " + err);
     });
 
     this.set =  function(key, value, cb){

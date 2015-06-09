@@ -6,6 +6,8 @@
 var request = require('request');
 request.debug = true;
 
+var logger = require('log4js').getLogger('redis_dao_service');
+
 var config = require(__base + 'config');
 var Base64 = require("crypto-js/enc-base64");
 var Utf8 = require("crypto-js/enc-utf8");
@@ -22,11 +24,12 @@ var DaoService = function(){
         };
 
         request(options, function (error, response, body) {
-            console.log('Entu auth url response:');
-            console.log( body );
+            logger.debug('Entu auth url response:');
+            logger.debug( body );
             return callback( error, body.auth_url );
         }).on('error', function(e) {
-            console.log('problem with request: ' + e);
+            logger.debug('problem with request: ' + e);
+            return callback(e);
         });
     };
 
@@ -42,11 +45,11 @@ var DaoService = function(){
         };
 
         request(options, function (error, response, body) {
-            console.log('Entu response:');
-            console.log( body );
+            logger.debug('Entu response:');
+            logger.debug( body );
             return callback( error, body );
         }).on('error', function(e) {
-            console.log('problem with request: ' + e);
+            logger.debug('problem with request: ' + e);
             return callback( e, null );
         });
     };
@@ -95,9 +98,10 @@ var DaoService = function(){
         };
 
         request(options, function (error, response, body) {
-            callback( error, body );
+            return callback( error, body );
         }).on('error', function(e) {
-            console.log('problem with request: ' + e);
+            logger.debug('problem with request: ' + e);
+            return callback( e );
         });
     }
 };

@@ -2,10 +2,10 @@
  * Created by priit on 9.06.15.
  */
 
+var logger = require('log4js').getLogger('user_dao_service');
+
 var entuDaoService = require('../dao/entu/daoService');
-
 var postgresModel = require(__base + 'src/service/dao/sql');
-
 
 function UserDaoService() {
 
@@ -20,13 +20,13 @@ function UserDaoService() {
 
         return entuDaoService.getUser(authUrl, token, function (error, userResult) {
             if(error){
-                console.log('getUser Error');
-                console.log(error);
+                logger.error('getUser Error');
+                logger.error(error);
                 return callbac(error);
             }
             if(userResult.error){
-                console.log('getUser Error');
-                console.log(userResult);
+                logger.error('getUser Error');
+                logger.error(userResult);
                 return callbac(userResult);
             }
 

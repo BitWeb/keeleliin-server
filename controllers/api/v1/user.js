@@ -4,7 +4,7 @@
 
 var express = require('express');
 var router = express.Router();
-
+var logger = require('log4js').getLogger('user_controller');
 var UserService = require('../../../src/service/userService');
 
 router.get('/', function(req, res, next) {
@@ -12,7 +12,6 @@ router.get('/', function(req, res, next) {
         if(error){
             return res.send(error);
         }
-
         return res.send(user);
     });
 });
