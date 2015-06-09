@@ -30,7 +30,7 @@ function UserService() {
             if(err){
                 logger.error('getUser Error');
                 logger.error(err);
-                return callbac(err);
+                return callback(err);
             }
 
             userDaoService.getUserByEntuId(entuUser.user_id, function (err, user) {
@@ -66,14 +66,8 @@ function UserService() {
     };
 
     this.logout = function (request, callback) {
-        delete request.session.user;
-        delete request.session.state;
-        delete request.session.authUrl;
-        request.redisSession.data = {};
-        request.redisSession.save();
-        callback();
+        request.redisSession.delete(callback);
     };
-
 }
 
 module.exports = new UserService();
