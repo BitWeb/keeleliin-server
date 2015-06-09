@@ -1,0 +1,57 @@
+/**
+ * Created by priit on 9.06.15.
+ */
+
+var entuDaoService = require('../dao/entu/daoService');
+
+var postgresModel = require(__base + 'src/service/dao/sql');
+
+
+function UserDaoService() {
+
+    this.getAuthUrl = function (postData, callbac) {
+
+        entuDaoService.getAuthUrl(postData, function (error, url) {
+            return callbac(error, url);
+        });
+    };
+
+    this.getEntuUser = function (authUrl, token, callbac) {
+
+        return entuDaoService.getUser(authUrl, token, function (error, userResult) {
+            if(error){
+                console.log('getUser Error');
+                console.log(error);
+                return callbac(error);
+            }
+            if(userResult.error){
+                console.log('getUser Error');
+                console.log(userResult);
+                return callbac(userResult);
+            }
+
+            return callbac(null, userResult.result.user);
+        });
+    };
+
+    this.getUserByEntuId = function (id, callback) {
+        postgresModel.User.find({where:{entu_id:id}}).then(function (user) {
+            callback(user);
+        });
+    };
+
+    this.findById = function (id, callback) {
+        postgresModel.User.find({where:{id:id}}).then(function (user) {
+            callback(user);
+        });
+    };
+
+
+    this.create = function (params, callback) {
+        postgresModel.User.create(params).then(function (user) {
+            callback(user);
+        });
+    };
+}
+
+module.exports = new UserDaoService();

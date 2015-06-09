@@ -2,66 +2,77 @@
  * Created by priit on 2.06.15.
  */
 
-var config = require('../../config');
-var entuDaoService = require('./dao/entu/daoService');
-var randomString = require('randomstring');
+var userDaoService = require('./dao/userDaoService');
 
 function UserService() {
 
     this.getAuthUrl = function (request, redirectUrl, callbac) {
 
-        var state = randomString.generate('20');
         var postData = {
-            state: state,
+            state: request.redisSession.id,
             redirect_url: redirectUrl
         };
 
-        request.session.state = state;
-
-        entuDaoService.getAuthUrl(postData, function (error, url) {
-            if(error){
-                return callbac(error);
+        return userDaoService.getAuthUrl(postData, function (err, url) {
+            if(err){
+                return callbac(err);
             }
-            request.session.authUrl = url;
-            return callbac(null, url);
+
+            request.redisSession.data.authUrl = url;
+            request.redisSession.save();
+            callbac(err, url);
         });
     };
 
-    this.getEntuUser = function (request, callbac) {
+    this.auth = function (request, callback) {
 
-        entuDaoService.getUser(request.session.authUrl, request.session.state, function (error, userResult) {
-            if(error){
-                return callbac(error);
+        userDaoService.getEntuUser(request.redisSession.data.authUrl, request.redisSession.id, function (err, entuUser) {
+            if(err){
+                console.log('getUser Error');
+                console.log(err);
+                return callbac(err);
             }
-            request.session.user = userResult.result.user;
-            return callbac(null, userResult.result.user);
+
+            userDaoService.getUserByEntuId(entuUser.user_id, function (err, user) {
+                if(err){
+                    return callback(err);
+                }
+
+                if(user){
+                    request.redisSession.data.userId = user.id;
+                    request.redisSession.save();
+                    return callback(null, user.id);
+                } else {
+
+                    var userParams = {
+                        entu_id: entuUser.user_id,
+                        email: entuUser.email,
+                        name: entuUser.name
+                    };
+
+                    userDaoService.create(userParams, function (user) {
+                        request.redisSession.data.userId = user.id;
+                        request.redisSession.save();
+                        return callback(null, user.id);
+                    });
+                }
+            });
         });
+    };
+
+    this.getCurrentUser = function (request, callbac) {
+        return userDaoService.findById(request.redisSession.data.userId, callbac);
     };
 
     this.logout = function (request, callback) {
         delete request.session.user;
         delete request.session.state;
         delete request.session.authUrl;
+        request.redisSession.data ={};
+        request.redisSession.save();
         callback();
     };
 
-    this.getEntuEntities = function (request, callbac) {
-
-        var data = {
-            limit:10
-        };
-
-        var user = request.session.user;
-        var meta = {
-            userId: user.user_id,
-            sessionKey: user.session_key, //entu-api-key
-            apiKey: null //ENTU api key for sig
-        };
-
-        entuDaoService.getEntities(data, meta, function (error, entities) {
-            return callbac(error, entities);
-        });
-    };
 }
 
 module.exports = new UserService();

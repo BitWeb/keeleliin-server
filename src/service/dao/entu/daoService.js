@@ -47,6 +47,7 @@ var DaoService = function(){
             return callback( error, body );
         }).on('error', function(e) {
             console.log('problem with request: ' + e);
+            return callback( e, null );
         });
     };
 

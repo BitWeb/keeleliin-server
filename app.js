@@ -4,8 +4,7 @@
 global.__base = __dirname + '/';
 
 var express = require('express');
-var session = require('express-session');
-var RedisStore = require('connect-redis')(session);
+
 
 var app = express();
 var path = require('path');
@@ -16,6 +15,8 @@ var debug = require('debug')('keeleliin-server:server');
 var http = require('http');
 var config = require('./config');
 var sessionMiddleware = require('./middlewares/session');
+var sessionDebugger = require('./middlewares/sessionDebugger');
+
 var controllers = require('./controllers');
 
 var routerMiddleware = require('./middlewares/router');
@@ -28,32 +29,23 @@ app.use(bodyParser.json({limit: '10mb'})); // for parsing application/json
 app.use(multer({ dest: './uploads/'})); // for parsing multipart/form-data
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(session({
-    secret: 'keyboard cat',
-    name: 'cookie_name',
-    store: new RedisStore({
-        host: config.redis.host,
-        port: config.redis.port
-    }),
-    resave:true,
-    saveUninitialized: true
-}));
-
+app.use(function (req, res, next){
+    next();
+});
 app.use(routerMiddleware);
 app.use(sessionMiddleware);
+app.use(sessionDebugger);
 
 app.use(errorhandlerMiddleware.common);
 
 app.use(controllers);
 app.use(errorhandlerMiddleware.error404);
 
-
-
 /**
  * Create HTTP server.
  */
 
-
+var port = config.port;
 app.set('port', config.port);
 var server = http.createServer(app);
 server.listen(config.port);

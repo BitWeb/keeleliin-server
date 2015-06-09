@@ -14,6 +14,7 @@ var config = require(__base + 'config');
 var DaoService = function(){
     var self = this;
     var connected = false;
+    var prefix = 'dao:';
 
     this.client = redis.createClient(config.redis.port, config.redis.host, {});
 
@@ -28,42 +29,34 @@ var DaoService = function(){
 
     this.set =  function(key, value, cb){
 
-        this.client.hmset(key, value, function (err, reply) {
-            console.log(key + ' is set');
-            console.log(err);
-            console.log(reply);
-
+        this.client.set(prefix + key, JSON.stringify(value), function (err, reply) {
             if(cb != undefined){
-                cb();
+                cb(err, reply);
             }
         });
     };
 
     this.get = function(key, cb){
-
-        this.client.hgetall(key, function(err, reply) {
-            console.log('Got redis data');
-            console.log(reply);
+        this.client.get(prefix + key, function(err, reply) {
             if(cb != undefined){
-                cb(reply);
+                if(err){
+                   return cb(err);
+                }
+                return cb(null, JSON.parse(reply));
             }
         });
     };
 
     this.delete = function(key, cb){
-
-        this.client.del(key, function(err, reply) {
+        this.client.del(prefix + key, function (err, reply) {
             if(cb != undefined){
-                cb();
+                cb(err, reply);
             }
-        });
+        } );
     };
 
     this.exists = function(key, cb){
-
-        this.client.exists(key, function(err, reply) {
-            cb(reply);
-        });
+        this.client.exists(prefix + key, cb);
     }
 };
 

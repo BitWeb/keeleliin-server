@@ -8,40 +8,26 @@ var router = express.Router();
 var UserService = require('../../../src/service/userService');
 
 router.get('/', function(req, res, next) {
-
-    UserService.getEntuUser(req, function (error, user) {
+    UserService.getCurrentUser(req, function (error, user) {
         if(error){
             return res.send(error);
         }
+
         return res.send(user);
     });
 });
 
-router.get('/login', function(req, res, next) {
+router.get('/login/:redirectUrl', function(req, res, next) {
 
-    if(!req.session || !req.session.user){
+    if(!req.redisSession || !req.redisSession.data.user){
 
-        var redirectUrl = req.protocol + '://' + req.get('host') + '/api/v1/user/loginback';
+        var redirectUrl = req.params.redirectUrl;
 
         UserService.getAuthUrl( req, redirectUrl, function (error, url) {
             if(error){
                 return res.send(error);
             }
-            res.send({ authUrl: url });
-        });
-        return;
-    }
-
-    res.send( req.session.user );
-});
-
-router.get('/loginback', function(req, res, next) {
-
-    console.log(req.session);
-
-    if(!req.session.user){
-        UserService.getEntuUser( req, function (url) {
-            res.send( req.session.user );
+            res.send({ authUrl: url, token: req.redisSession.id });
         });
         return;
     }

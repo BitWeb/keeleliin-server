@@ -7,11 +7,9 @@
   },
   "dependencies": {
     "body-parser": "~1.12.4",
-    "connect-redis": "^2.3.0",
     "crypto-js": "^3.1.5",
     "debug": "~2.2.0",
     "express": "~4.12.4",
-    "express-session": "^1.11.2",
     "fs": "0.0.2",
     "jade": "~1.9.2",
     "morgan": "~1.5.3",
@@ -21,6 +19,7 @@
     "randomstring": "^1.0.5",
     "redis": "^0.12.1",
     "request": "^2.57.0",
-    "sequelize": "^3.1.1"
+    "sequelize": "^3.1.1",
+    "uid-safe": "^2.0.0"
   }
 }

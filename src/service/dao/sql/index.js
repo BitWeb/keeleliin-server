@@ -13,6 +13,9 @@ var sequelize = new Sequelize(config.sql.database, config.sql.username, config.s
 });
 
 var db = {};
+
+db['User'] = sequelize.import(__base + 'src/service/dao/sql/models/user');
+
 db['Service'] = sequelize.import(__base + 'src/service/dao/sql/models/service');
 db['ServiceParam'] = sequelize.import(__base + 'src/service/dao/sql/models/serviceParam');
 
