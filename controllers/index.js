@@ -10,7 +10,7 @@ var sqlModel = require(__base + 'src/service/dao/sql');
 router.get('/', function(req, res, next) {
     res.send('index', {
         title: 'Hello',
-        description: 'Keeleliin Server'
+        description: 'Keeleliin server'
     });
 });
 
