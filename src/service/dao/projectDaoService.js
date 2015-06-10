@@ -3,6 +3,7 @@
  */
 var logger = require('log4js').getLogger('project_dao_service');
 var Project = require(__base + 'src/service/dao/sql').Project;
+var User = require(__base + 'src/service/dao/sql').User;
 
 function ProjectDaoService() {
 
@@ -14,8 +15,12 @@ function ProjectDaoService() {
     };
 
     this.getUserProject = function (userId, projectId, callback) {
-
-        Project.find({where: { id: projectId, user_id: userId}}).then(function (result) {
+        Project.find({
+            where: { id: projectId, user_id: userId }
+            /*,include: [
+                {model: User, as: 'user'}
+            ]*/
+        }).then(function (result) {
             if(!result){
                 return callback('Not found');
             }

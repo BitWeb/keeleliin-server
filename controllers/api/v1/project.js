@@ -24,5 +24,14 @@ router.get('/:id', function(req, res, next) {
     });
 });
 
+router.put('/:id', function(req, res, next) {
+
+    projectService.updateCurrentUserProject(req, req.params.id, req.body, function (error, project) {
+        if(error){
+            return res.send(400, {errors: error});
+        }
+        return res.send(project);
+    });
+});
 
 module.exports = router;

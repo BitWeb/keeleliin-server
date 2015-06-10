@@ -27,6 +27,30 @@ function ProjectService(){
 
         var userId = req.redisSession.data.userId;
         return projectDaoService.getUserProject( userId, projectId, callback);
+    };
+
+    this.updateCurrentUserProject = function(req, projectId, updateData, callback){
+
+        var userId = req.redisSession.data.userId;
+
+        projectDaoService.getUserProject( userId, projectId, function (err, project) {
+            if(err){
+                return callback(err, project);
+            }
+
+            if(updateData.name != undefined){
+                project.name = updateData.name;
+            }
+            if(updateData.description != undefined){
+                project.description = updateData.description;
+            }
+
+            project.save().then(function (updatedProject) {
+                return callback(null, updatedProject);
+            }).catch(function (error) {
+                return callback( error.message );
+            });
+        });
     }
 }
 
