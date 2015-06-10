@@ -7,31 +7,14 @@ var router = express.Router();
 var config = require(__base + 'config');
 var logger = require('log4js').getLogger('index_controller');
 
-var UserService = require('../../../src/service/userService');
+var authMiddleware = require(__base + 'middlewares/auth');
 
 /* GET API home */
-router.get('/', function(req, res, next) {
+router.get('/', function(req, res) {
     res.send({api:'Keeleliin API V1'});
 });
 
-var checkToken = function (req, res, next) {
-
-    var userId = req.redisSession.data.userId;
-    if(userId){
-        return next();
-    }
-
-    UserService.auth(req, function (error, userId) {
-        if(error){
-            logger.error('Auth error');
-            logger.error(error);
-            return res.send(401, {errors: 'User not found'});
-        }
-        return next();
-    });
-};
-
 router.use('/user', require(__base + 'controllers/api/v1/user'));
-router.use('/project',checkToken , require(__base + 'controllers/api/v1/project'));
+router.use('/project',authMiddleware , require(__base + 'controllers/api/v1/project'));
 
 module.exports = router;

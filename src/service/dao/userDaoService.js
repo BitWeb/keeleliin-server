@@ -41,13 +41,16 @@ function UserDaoService() {
 
     this.findById = function (id, callback) {
         User.find({where:{id:id}}).then(function (user) {
-            callback(user);
+            if(!user){
+                callback("Not found");
+            }
+            callback(null, user);
         });
     };
 
     this.create = function (params, callback) {
         User.create(params).then(function (user) {
-            callback(user);
+            callback(null, user);
         });
     };
 }

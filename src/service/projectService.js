@@ -12,7 +12,7 @@ function ProjectService(){
 
         Project.create(projectData, ['name', 'description']).then(function (project) {
             user.addProject( project).then(function () {
-                callback(project);
+                callback(null, project);
             });
         });
     };

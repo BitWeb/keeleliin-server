@@ -2,7 +2,7 @@
  * Created by priit on 27.05.15.
  */
 
-var debug = require('debug')('errorhandler');
+var debug = require('debug')('errorhandler_middleware');
 
 var express = require('express');
 var app = express();

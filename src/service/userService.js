@@ -9,7 +9,7 @@ function UserService() {
 
     var self = this;
 
-    this.getAuthUrl = function (request, redirectUrl, callbac) {
+    this.getAuthUrl = function (request, redirectUrl, callback) {
 
         var postData = {
             state: request.redisSession.id,
@@ -18,12 +18,12 @@ function UserService() {
 
         return userDaoService.getAuthUrl(postData, function (err, url) {
             if(err){
-                return callbac(err);
+                return callback(err);
             }
 
             request.redisSession.data.authUrl = url;
             request.redisSession.save();
-            callbac(err, url);
+            callback(err, url);
         });
     };
 
@@ -54,7 +54,10 @@ function UserService() {
                         name: entuUser.name
                     };
 
-                    self.createNewUser(userParams, function (user) {
+                    self.createNewUser(userParams, function (err, user) {
+                        if(err){
+                            callback(err);
+                        }
                         request.redisSession.data.userId = user.id;
                         request.redisSession.save();
                         return callback(null, user.id);
@@ -64,23 +67,23 @@ function UserService() {
         });
     };
 
-    this.createNewUser = function (userParams, callbac) {
-        userDaoService.create(userParams, function (user) {
+    this.createNewUser = function (userParams, callback) {
+        userDaoService.create(userParams, function (err, user) {
 
             var projectDefaultData = {
                 name: 'Projekt 1',
                 description: 'Minu esimene projekt'
             };
 
-            projectService.createNewProjectForUser(projectDefaultData, user, function (project) {
+            projectService.createNewProjectForUser(projectDefaultData, user, function (err, project) {
                 logger.debug('Project loodud');
-                callbac(user);
+                callback(err, user);
             });
         });
     };
 
-    this.getCurrentUser = function (request, callbac) {
-        return userDaoService.findById(request.redisSession.data.userId, callbac);
+    this.getCurrentUser = function (request, callback) {
+        return userDaoService.findById(request.redisSession.data.userId, callback);
     };
 
     this.logout = function (request, callback) {

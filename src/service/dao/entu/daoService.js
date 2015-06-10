@@ -5,9 +5,7 @@
  */
 var request = require('request');
 request.debug = true;
-
-var logger = require('log4js').getLogger('redis_dao_service');
-
+var logger = require('log4js').getLogger('entu_dao_service');
 var config = require(__base + 'config');
 var Base64 = require("crypto-js/enc-base64");
 var Utf8 = require("crypto-js/enc-utf8");
@@ -45,9 +43,14 @@ var DaoService = function(){
         };
 
         request(options, function (error, response, body) {
-            logger.debug('Entu response:');
-            logger.debug( body );
-            return callback( error, body );
+            if(error){
+                if(error instanceof Error){
+                    error = error.message;
+                }
+                return callback( error );
+            }
+
+            return callback( null, body );
         }).on('error', function(e) {
             logger.debug('problem with request: ' + e);
             return callback( e, null );

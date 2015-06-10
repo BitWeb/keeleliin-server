@@ -7,14 +7,14 @@ var logger = require('log4js').getLogger('project_controller');
 
 var projectService = require('../../../src/service/projectService');
 
-router.get('/', function(req, res, next) {
+router.get('/', function(req, res) {
 
     projectService.getCurrentUserProjects(req, function (err, projects) {
         return res.send(projects);
     });
 });
 
-router.get('/:id', function(req, res, next) {
+router.get('/:id', function(req, res) {
 
     projectService.getCurrentUserProject(req, req.params.id, function (error, project) {
         if(error){
@@ -24,7 +24,7 @@ router.get('/:id', function(req, res, next) {
     });
 });
 
-router.put('/:id', function(req, res, next) {
+router.put('/:id', function(req, res) {
 
     projectService.updateCurrentUserProject(req, req.params.id, req.body, function (error, project) {
         if(error){
@@ -34,7 +34,7 @@ router.put('/:id', function(req, res, next) {
     });
 });
 
-router.delete('/:id', function(req, res, next) {
+router.delete('/:id', function(req, res) {
 
     projectService.deleteCurrentUserProject(req, req.params.id, function (error) {
         if(error){
