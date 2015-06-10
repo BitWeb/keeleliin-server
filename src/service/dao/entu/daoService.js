@@ -1,7 +1,5 @@
 /**
  * Created by priit on 28.05.15.
- *
- * Store and retrive objects from ENTU
  */
 var request = require('request');
 request.debug = true;

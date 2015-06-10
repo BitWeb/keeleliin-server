@@ -2,7 +2,6 @@
  * Created by priit on 28.05.15.
  *
  * Store and retrive objects from redis
- *
  */
 var logger = require('log4js').getLogger('redis_dao_service');
 var redis = require('redis');
