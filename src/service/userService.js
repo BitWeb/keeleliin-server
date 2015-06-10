@@ -3,7 +3,7 @@
  */
 var logger = require('log4js').getLogger('user_service');
 var userDaoService = require('./dao/userDaoService');
-var projectService = require('./projectService');
+var Project = require(__base + 'src/service/dao/sql').Project;
 
 function UserService() {
 
@@ -70,13 +70,13 @@ function UserService() {
     this.createNewUser = function (userParams, callback) {
         userDaoService.create(userParams, function (err, user) {
 
-            var projectDefaultData = {
+            var project = Project.build({
                 name: 'Projekt 1',
                 description: 'Minu esimene projekt'
-            };
+            });
 
-            projectService.createNewProjectForUser(projectDefaultData, user, function (err, project) {
-                logger.debug('Project loodud');
+            user.addProject( project).then(function () {
+                logger.debug('Vaikimisi project loodud');
                 callback(err, user);
             });
         });

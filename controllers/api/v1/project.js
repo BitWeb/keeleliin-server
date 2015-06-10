@@ -34,6 +34,16 @@ router.put('/:id', function(req, res) {
     });
 });
 
+router.post('/', function(req, res) {
+
+    projectService.createCurrentUserProject(req, req.body, function (error, project) {
+        if(error){
+            return res.status(400).send({errors: error});
+        }
+        return res.send(project);
+    });
+});
+
 router.delete('/:id', function(req, res) {
 
     projectService.deleteCurrentUserProject(req, req.params.id, function (error) {

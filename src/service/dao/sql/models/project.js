@@ -16,9 +16,18 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.TEXT,
             allowNull: true,
             primaryKey: false
-        }
+        },
         //created_at
         //updated_at
+
+        user_id: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: 'user',
+                key: 'id'
+            }
+        }
     }, {
         tableName: 'project',
         timestamps: true,

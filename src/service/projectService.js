@@ -5,17 +5,9 @@
 var logger = require('log4js').getLogger('project_service');
 var projectDaoService = require('./dao/projectDaoService');
 var Project = require(__base + 'src/service/dao/sql').Project;
+var userService = require('./userService');
 
 function ProjectService(){
-
-    this.createNewProjectForUser = function(projectData, user, callback){
-
-        Project.create(projectData, ['name', 'description']).then(function (project) {
-            user.addProject( project).then(function () {
-                callback(null, project);
-            });
-        });
-    };
 
     this.getCurrentUserProjects = function (req, callback) {
 
@@ -27,6 +19,27 @@ function ProjectService(){
 
         var userId = req.redisSession.data.userId;
         return projectDaoService.getUserProject( userId, projectId, callback);
+    };
+
+    this.createCurrentUserProject = function(req, updateData, callback){
+
+        console.log("userService");
+        console.log(userService);
+
+
+        userService.getCurrentUser(req, function (err, user) {
+            if(err){
+                return callback(err);
+            }
+
+            var project = Project.build(updateData );
+
+            user.addProject( project).then(function () {
+                return callback(null, project);
+            }).catch(function (e) {
+                return callback(e);
+            });
+        });
     };
 
     this.updateCurrentUserProject = function(req, projectId, updateData, callback){
@@ -48,7 +61,7 @@ function ProjectService(){
             project.save().then(function (updatedProject) {
                 return callback(null, updatedProject);
             }).catch(function (error) {
-                return callback( error.message );
+                return callback( error );
             });
         });
     };
@@ -70,7 +83,6 @@ function ProjectService(){
             });
         });
     }
-    
 }
 
 module.exports = new ProjectService();
