@@ -5,12 +5,11 @@
 var logger = require('log4js').getLogger('user_dao_service');
 
 var entuDaoService = require('../dao/entu/daoService');
-var postgresModel = require(__base + 'src/service/dao/sql');
+var User = require(__base + 'src/service/dao/sql').User;
 
 function UserDaoService() {
 
     this.getAuthUrl = function (postData, callbac) {
-
         entuDaoService.getAuthUrl(postData, function (error, url) {
             return callbac(error, url);
         });
@@ -35,20 +34,19 @@ function UserDaoService() {
     };
 
     this.getUserByEntuId = function (id, callback) {
-        postgresModel.User.find({where:{entu_id:id}}).then(function (user) {
-            callback(user);
+        User.find({where:{entu_id:id}}).then(function (user) {
+            callback(null, user);
         });
     };
 
     this.findById = function (id, callback) {
-        postgresModel.User.find({where:{id:id}}).then(function (user) {
+        User.find({where:{id:id}}).then(function (user) {
             callback(user);
         });
     };
 
-
     this.create = function (params, callback) {
-        postgresModel.User.create(params).then(function (user) {
+        User.create(params).then(function (user) {
             callback(user);
         });
     };

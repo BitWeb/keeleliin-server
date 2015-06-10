@@ -27,12 +27,13 @@ var checkToken = function (req, res, next) {
         if(error){
             logger.error('Auth error');
             logger.error(error);
-            return res.send(401, {errors: 'Usr not found'});
+            return res.send(401, {errors: 'User not found'});
         }
         return next();
     });
 };
 
 router.use('/service',checkToken , require(__base + 'controllers/api/v1/service'));
+router.use('/project',checkToken , require(__base + 'controllers/api/v1/project'));
 
 module.exports = router;

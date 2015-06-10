@@ -14,17 +14,11 @@ module.exports = {
 
         if (app.get('env') === 'development') {
             res.status(err.status || 500);
-            res.render('error', {
-                message: err.message,
-                error: err
-            });
+            return res.send({errors: err.message });
         }
 
         res.status(err.status || 500);
-        res.render('error', {
-            message: err.message,
-            error: {}
-        });
+        return res.send({errors: err.message });
     },
 
     error404: function(req, res, next) {

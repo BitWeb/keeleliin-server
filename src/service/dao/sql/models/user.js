@@ -29,8 +29,7 @@ module.exports = function(sequelize, DataTypes) {
 
         classMethods: {
             associate: function(models) {
-                /*Service.hasMany(models.ServiceParam);
-                Service.belongsToMany(models.Service, {as: 'Parents', through: 'parent_services'});*/
+                User.hasMany(models.Project,{as: 'projects'});
             }
         }
     });

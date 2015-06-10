@@ -1,31 +1,36 @@
 /**
- * Created by priit on 4.06.15.
+ * Created by priit on 9.06.15.
  */
 "use strict";
 
 module.exports = function(sequelize, DataTypes) {
 
-    var Service = sequelize.define("Service", {
-
+    var Project = sequelize.define("Project", {
+        //id
         name: {
             type: DataTypes.STRING,
             allowNull: false,
             primaryKey: false
-
+        },
+        description: {
+            type: DataTypes.TEXT,
+            allowNull: true,
+            primaryKey: false
         }
+        //created_at
+        //updated_at
     }, {
-        tableName: 'service',
+        tableName: 'project',
         timestamps: true,
         paranoid: true,
         underscored: true,
 
         classMethods: {
             associate: function(models) {
-                Service.hasMany(models.ServiceParam);
-                Service.belongsToMany(models.Service, {as: 'Parents', through: 'parent_services'});
+                Project.belongsTo(models.User, {as: 'user'});
             }
         }
     });
 
-    return Service;
+    return Project;
 };

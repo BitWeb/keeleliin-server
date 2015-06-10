@@ -3,7 +3,6 @@
  *
  * Store and retrive objects from redis
  *
- * Singelton
  */
 var logger = require('log4js').getLogger('redis_dao_service');
 var redis = require('redis');

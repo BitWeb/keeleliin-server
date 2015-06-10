@@ -20,7 +20,6 @@ function RedisSession( id, cb ){
 
             logger.debug('DATA GOT ON INIT');
             logger.debug(self.data);
-
             callback();
         });
     };

@@ -5,10 +5,10 @@
 var express = require('express');
 var router = express.Router();
 var logger = require('log4js').getLogger('user_controller');
-var UserService = require('../../../src/service/userService');
+var userService = require('../../../src/service/userService');
 
 router.get('/', function(req, res, next) {
-    UserService.getCurrentUser(req, function (error, user) {
+    userService.getCurrentUser(req, function (error, user) {
         if(error){
             return res.send(error);
         }
@@ -22,7 +22,7 @@ router.get('/login/:redirectUrl', function(req, res, next) {
 
         var redirectUrl = req.params.redirectUrl;
 
-        UserService.getAuthUrl( req, redirectUrl, function (error, url) {
+        userService.getAuthUrl( req, redirectUrl, function (error, url) {
             if(error){
                 return res.send(error);
             }
@@ -36,8 +36,8 @@ router.get('/login/:redirectUrl', function(req, res, next) {
 
 router.get('/logout', function(req, res, next) {
 
-    UserService.logout( req, function () {
-        res.send( {logout: 'OK'} );
+    userService.logout( req, function () {
+        res.send( {success: true} );
     });
 });
 

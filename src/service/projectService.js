@@ -1,0 +1,33 @@
+/**
+ * Created by priit on 9.06.15.
+ */
+
+var logger = require('log4js').getLogger('project_service');
+var projectDaoService = require('./dao/projectDaoService');
+var Project = require(__base + 'src/service/dao/sql').Project;
+
+function ProjectService(){
+
+    this.createNewProjectForUser = function(projectData, user, callback){
+
+        Project.create(projectData, ['name', 'description']).then(function (project) {
+            user.addProject( project).then(function () {
+                callback(project);
+            });
+        });
+    };
+
+    this.getCurrentUserProjects = function (req, callback) {
+
+        var userId = req.redisSession.data.userId;
+        return projectDaoService.getUserProjects( userId, callback);
+    };
+
+    this.getCurrentUserProject = function (req, projectId, callback) {
+
+        var userId = req.redisSession.data.userId;
+        return projectDaoService.getUserProject( userId, projectId, callback);
+    }
+}
+
+module.exports = new ProjectService();

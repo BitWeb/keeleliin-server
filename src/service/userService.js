@@ -3,8 +3,11 @@
  */
 var logger = require('log4js').getLogger('user_service');
 var userDaoService = require('./dao/userDaoService');
+var projectService = require('./projectService');
 
 function UserService() {
+
+    var self = this;
 
     this.getAuthUrl = function (request, redirectUrl, callbac) {
 
@@ -51,13 +54,29 @@ function UserService() {
                         name: entuUser.name
                     };
 
-                    userDaoService.create(userParams, function (user) {
+                    self.createNewUser(userParams, function (user) {
                         request.redisSession.data.userId = user.id;
                         request.redisSession.save();
                         return callback(null, user.id);
                     });
                 }
             });
+        });
+    };
+
+    this.createNewUser = function (userParams, callbac) {
+        userDaoService.create(userParams, function (user) {
+
+            var projectDefaultData = {
+                name: 'Projekt 1',
+                description: 'Minu esimene projekt'
+            };
+
+            projectService.createNewProjectForUser(projectDefaultData, user, function (project) {
+                logger.debug('Project loodud');
+            });
+
+            callbac(user);
         });
     };
 
