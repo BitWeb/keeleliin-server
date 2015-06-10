@@ -74,9 +74,8 @@ function UserService() {
 
             projectService.createNewProjectForUser(projectDefaultData, user, function (project) {
                 logger.debug('Project loodud');
+                callbac(user);
             });
-
-            callbac(user);
         });
     };
 
