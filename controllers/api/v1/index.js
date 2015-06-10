@@ -11,10 +11,8 @@ var UserService = require('../../../src/service/userService');
 
 /* GET API home */
 router.get('/', function(req, res, next) {
-    res.send({api:'Keeleliin v1'});
+    res.send({api:'Keeleliin API V1'});
 });
-
-router.use('/user', require(__base + 'controllers/api/v1/user'));
 
 var checkToken = function (req, res, next) {
 
@@ -33,7 +31,7 @@ var checkToken = function (req, res, next) {
     });
 };
 
-router.use('/service',checkToken , require(__base + 'controllers/api/v1/service'));
+router.use('/user', require(__base + 'controllers/api/v1/user'));
 router.use('/project',checkToken , require(__base + 'controllers/api/v1/project'));
 
 module.exports = router;
