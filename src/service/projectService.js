@@ -35,7 +35,7 @@ function ProjectService(){
 
         projectDaoService.getUserProject( userId, projectId, function (err, project) {
             if(err){
-                return callback(err, project);
+                return callback( err );
             }
 
             if(updateData.name != undefined){
@@ -51,7 +51,26 @@ function ProjectService(){
                 return callback( error.message );
             });
         });
+    };
+    
+    this.deleteCurrentUserProject = function (req, projectId, callback) {
+
+        // todo: kustuta seotud andmeobjektid
+        var userId = req.redisSession.data.userId;
+
+        projectDaoService.getUserProject( userId, projectId, function (err, project) {
+            if(err){
+                return callback( err );
+            }
+
+            project.destroy().then(function () {
+                return callback();
+            }).catch(function (error) {
+                return callback( error.message );
+            });
+        });
     }
+    
 }
 
 module.exports = new ProjectService();

@@ -18,7 +18,7 @@ router.get('/:id', function(req, res, next) {
 
     projectService.getCurrentUserProject(req, req.params.id, function (error, project) {
         if(error){
-            return res.send(404, {errors: 'Project not found'});
+            return res.status(400).send({errors: 'Project not found'});
         }
         return res.send(project);
     });
@@ -28,10 +28,21 @@ router.put('/:id', function(req, res, next) {
 
     projectService.updateCurrentUserProject(req, req.params.id, req.body, function (error, project) {
         if(error){
-            return res.send(400, {errors: error});
+            return res.status(400).send({errors: error});
         }
         return res.send(project);
     });
 });
+
+router.delete('/:id', function(req, res, next) {
+
+    projectService.deleteCurrentUserProject(req, req.params.id, function (error) {
+        if(error){
+            return res.status(400).send({errors: error});
+        }
+        return res.send( { success: true } );
+    });
+});
+
 
 module.exports = router;
