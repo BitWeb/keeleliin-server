@@ -16,6 +16,7 @@ var db = {};
 
 db['User'] = sequelize.import(__base + 'src/service/dao/sql/models/user');
 db['Project'] = sequelize.import(__base + 'src/service/dao/sql/models/project');
+db['Resource'] = sequelize.import(__base + 'src/service/dao/sql/models/resource');
 
 
 Object.keys(db).forEach(function(modelName) {
@@ -25,5 +26,4 @@ Object.keys(db).forEach(function(modelName) {
 });
 
 db.sequelize = sequelize;
-db.Sequelize = Sequelize;
 module.exports = db;

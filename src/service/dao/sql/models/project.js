@@ -6,7 +6,11 @@
 module.exports = function(sequelize, DataTypes) {
 
     var Project = sequelize.define("Project", {
-        //id
+        id: {
+            type: DataTypes.INTEGER,
+            primaryKey: true,
+            autoIncrement: true
+        },
         name: {
             type: DataTypes.STRING,
             allowNull: false,
@@ -37,6 +41,7 @@ module.exports = function(sequelize, DataTypes) {
         classMethods: {
             associate: function(models) {
                 Project.belongsTo(models.User, {as: 'user'});
+                Project.belongsToMany(models.Resource, {through: 'project_has_resource', foreignKey: 'project_id', otherKey: 'resource_id'});
             }
         }
     });
