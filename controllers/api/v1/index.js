@@ -16,5 +16,6 @@ router.get('/', function(req, res) {
 
 router.use('/user', require(__base + 'controllers/api/v1/user'));
 router.use('/project',authMiddleware , require(__base + 'controllers/api/v1/project'));
+router.use('/resource', require(__base + 'controllers/api/v1/resource'));
 
 module.exports = router;
