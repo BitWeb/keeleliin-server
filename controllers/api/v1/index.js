@@ -17,5 +17,6 @@ router.get('/', function(req, res) {
 router.use('/user', require(__base + 'controllers/api/v1/user'));
 router.use('/project',authMiddleware , require(__base + 'controllers/api/v1/project'));
 router.use('/resource', require(__base + 'controllers/api/v1/resource'));
+router.use('/workflow-definition', /* authMiddleware,*/ require(__base + 'controllers/api/v1/workflowDefinition'));
 
 module.exports = router;

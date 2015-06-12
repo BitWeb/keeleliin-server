@@ -10,6 +10,17 @@ var path = require('path');
 
 function ResourceService() {
 
+    this.getResource = function(resourceId, callback) {
+
+        Resource.find({ where: {id: resourceId }}).then(function(resource) {
+
+            return callback(null, resource);
+        }).catch(function(error) {
+
+            return callback(error);
+        });
+    };
+
     this.getProjectResources = function(req, projectId, callback) {
 
         return resourceDaoService.getProjectResources(projectId, callback);
@@ -60,6 +71,9 @@ function ResourceService() {
      * @param callback
      */
     this.createResourceFromUpload = function(req, callback) {
+
+        // TODO: get project id from req params, project related resources reside in project folder
+
         var data = req.body;
         var content = new Buffer(data.data, "base64").toString("utf8");
         var uniqid = require('uniqid');
@@ -81,7 +95,7 @@ function ResourceService() {
         self.saveFile(resourceData.source_filename, content, function(fileName) {
             // on success create also pipe content file
             var pipeContent = new PipeContent();
-            pipeContent.structure.content = content;
+            pipeContent.structure.content = data.data;
             self.saveFile(resourceData.filename, JSON.stringify(pipeContent.structure), function(fileName) {
                 Resource.build(resourceData).save().then(function(resource) {
                     console.log('Saving resource');

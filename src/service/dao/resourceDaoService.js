@@ -31,8 +31,7 @@ function ResourceDaoService() {
                 {model: Project, where: {
                     id: projectId
                 }}
-            ],
-            logging: console.log
+            ]
         }).then(function(resources) {
             return callback(null, resources);
         });
