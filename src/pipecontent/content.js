@@ -5,7 +5,6 @@
 
 function Content() {
 
-
     this.structure = {
         corpora: '', //korpus
         sourceFile: '', //lähtefail e valueObject

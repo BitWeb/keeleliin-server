@@ -13,6 +13,16 @@ router.get('/', function(req, res) {
     });
 });
 
+router.post('/', function(req, res) {
+
+    resourceService.createResourceFromUpload(req, function(error, resource) {
+        if (error) {
+            res.send({errors: error});
+        }
+        return res.send(resource);
+    });
+});
+
 router.get('/projectId/:projectId', function(req, res) {
 
     resourceService.getProjectResources(req, req.params.projectId, function(error, resources) {

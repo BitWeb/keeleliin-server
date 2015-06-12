@@ -7,6 +7,15 @@ var Project = require(__base + 'src/service/dao/sql').Project;
 
 function ResourceDaoService() {
 
+    this.getResource = function(resourceId, callback) {
+        Resource.find({where: { id: resourceId }}).then(function(resource) {
+            if (!resource) {
+                return callback('Resource not found!');
+            }
+            return callback(null, resource);
+        });
+    };
+
     this.getResources = function(pagination, callback) {
         Resource.findAll({
             limit: pagination.limit,

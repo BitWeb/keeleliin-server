@@ -12,21 +12,28 @@ module.exports = function(sequelize, DataTypes) {
             primaryKey: true,
             autoIncrement: true
         },
-        source_file_location: {
+        source_original_name: {
             type: DataTypes.STRING,
             allowNull: false,
             primaryKey: false
         },
-        name: {
-            type: DataTypes.STRING
+        source_filename: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            primaryKey: false
         },
-        date_created: {
-            type: DataTypes.DATE
-        },
-        file_location: {
+        filename: {
             type: DataTypes.STRING,
             allowNull: true,
             primaryKey: false
+        },
+        name: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            primaryKey: false
+        },
+        date_created: {
+            type: DataTypes.DATE
         },
         corpora_name: {
             type: DataTypes.STRING,
@@ -60,16 +67,30 @@ module.exports = function(sequelize, DataTypes) {
         },
         date_updated: {
             type: DataTypes.DATE
+        },
+        hash: {
+            type: DataTypes.STRING
         }
     }, {
         tableName: 'resource',
-        timestamps: true,
+        timestamps: false,
         paranoid: true,
         underscored: true,
 
         classMethods: {
             associate: function(models) {
                 Resource.belongsToMany(models.Project, {through: 'project_has_resource', foreignKey: 'resource_id', otherKey: 'project_id'});
+            }
+        },
+
+        hooks: {
+            beforeCreate: function(resource, options, fn) {
+                resource.date_created = new Date();
+                fn(null, resource);
+            },
+            beforeUpdate: function(resource, options, fn) {
+                resource.date_updated = new Date();
+                fn(null, resource);
             }
         }
     });
