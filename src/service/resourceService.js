@@ -98,7 +98,6 @@ function ResourceService() {
             pipeContent.structure.content = data.data;
             self.saveFile(resourceData.filename, JSON.stringify(pipeContent.structure), function(fileName) {
                 Resource.build(resourceData).save().then(function(resource) {
-                    console.log('Saving resource');
                     return callback(null, resource);
                 }).catch(function(error) {
                     return callback(error);

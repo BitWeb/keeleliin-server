@@ -33,14 +33,14 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: true
         }
     }, {
-        tableName: 'workflow_param_value',
+        tableName: 'workflow_service_param_value',
         timestamps: false,
         paranoid: true,
         underscored: true,
 
         classMethods: {
             associate: function(models) {
-                WorkflowServiceParamValue.belongsTo(models.WorkflowServiceModel);
+                WorkflowServiceParamValue.belongsTo(models.ServiceModelParam, {foreignKey: 'service_param_id', as: 'service_param'});
             }
         }
     });

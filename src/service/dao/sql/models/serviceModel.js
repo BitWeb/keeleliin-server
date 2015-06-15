@@ -27,7 +27,7 @@ module.exports = function(sequelize, DataTypes) {
 
         classMethods: {
             associate: function(models) {
-                ServiceModel.hasMany(models.ServiceModelParam);
+                ServiceModel.hasMany(models.ServiceModelParam, { foreignKey: 'service_id', as: 'service_params' });
                 ServiceModel.belongsToMany(ServiceModel, {through: 'service_has_parent_service', as: 'ChildServiceModels', foreignKey: 'service_parent_id'});
                 ServiceModel.belongsToMany(ServiceModel, {through: 'service_has_parent_service', as: 'ParentServiceModels', foreignKey: 'service_sibling_id'});
             }

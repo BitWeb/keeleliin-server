@@ -48,8 +48,9 @@ module.exports = function(sequelize, DataTypes) {
 
         classMethods: {
             associate: function(models) {
-                Workflow.hasMany(models.WorkflowServiceModel);
+                Workflow.hasMany(models.WorkflowServiceModel, {as: 'workflow_services'});
                 Workflow.belongsTo(models.WorkflowDefinition);
+                Workflow.belongsTo(models.Project, { as: 'project' })
             }
         }
     });

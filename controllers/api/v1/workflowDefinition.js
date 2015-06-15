@@ -4,11 +4,14 @@
 
 var express = require('express');
 var router = express.Router();
-var workflowDefinitionApiService = require(__base + 'src/service/api/workflowDefinitionApiService');
+var workflowDefinitionService = require(__base + 'src/service/workflowDefinitionService');
 
+/**
+ * Get workflow definitions by project id
+ */
 router.get('/projectId/:projectId', function(req, res) {
 
-    workflowDefinitionApiService.getWorkflowDefinitionsByProject(req, req.params.projectId, function(err, workflowDefinitions) {
+    workflowDefinitionService.getWorkflowDefinitionsByProject(req, req.params.projectId, function(err, workflowDefinitions) {
         if (err) {
             return res.send({errors: err});
         }
@@ -16,13 +19,16 @@ router.get('/projectId/:projectId', function(req, res) {
     });
 });
 
-router.get('/:workflowDefinitionId/services', function(req, res) {
+/**
+ * Get workflow definition service params by workflow definition service id
+ */
+router.get('/service/:workflowDefinitionServiceId/params', function(req, res) {
 
-    workflowDefinitionApiService.getWorkflowDefinitionServiceModelsByWorkflowDefinition(req, req.params.workflowDefinitionId, function(err, workflowDefinitionServiceModels) {
+    workflowDefinitionService.getWorkflowDefinitionServiceParamValues(req, req.params.workflowDefinitionServiceId, function(err, workflowDefinitionServiceParamValues) {
         if (err) {
             return res.send({errors: err});
         }
-        return res.send(workflowDefinitionServiceModels);
+        return res.send(workflowDefinitionServiceParamValues);
     });
 
 });

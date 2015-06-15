@@ -5,7 +5,7 @@
 var express = require('express');
 var router = express.Router();
 var resourceService = require('../../../src/service/resourceService');
-var workFlowService = require(__base + 'src/service/workFlowService');
+var workFlowService = require(__base + 'src/service/workflowService');
 
 router.get('/', function(req, res) {
 

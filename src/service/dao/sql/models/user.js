@@ -23,7 +23,7 @@ module.exports = function(sequelize, DataTypes) {
         }
     }, {
         tableName: 'user',
-        timestamps: true,
+        timestamps: false,
         paranoid: true,
         underscored: true,
 

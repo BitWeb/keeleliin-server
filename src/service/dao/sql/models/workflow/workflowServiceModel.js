@@ -71,7 +71,7 @@ module.exports = function(sequelize, DataTypes) {
         classMethods: {
             associate: function(models) {
                 WorkflowServiceModel.belongsTo(models.Workflow);
-                WorkflowServiceModel.hasMany(models.WorkflowServiceParamValue);
+                WorkflowServiceModel.hasMany(models.WorkflowServiceParamValue, {foreignKey: 'workflow_service_id', as: 'param_values'});
             }
         }
     });

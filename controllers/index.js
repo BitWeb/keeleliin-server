@@ -15,7 +15,7 @@ router.get('/', function(req, res, next) {
 });
 
 router.get('/generate', function(req, res, next) {
-    sqlModel.sequelize.sync({ force: true });
+    sqlModel.sequelize.sync( { force: true } );
     res.send({
         title: 'Database sync'
     });
