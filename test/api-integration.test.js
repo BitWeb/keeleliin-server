@@ -10,7 +10,6 @@ var should = require('should');
 
 describe('Routing', function() {
     var url = 'http://127.0.0.1:' + config.port + '/api/v1';
-    var app;
 
     before(function(done) {
         server.startInstance( function(){
@@ -58,6 +57,15 @@ describe('Routing', function() {
                     if (err) {
                         throw err;
                     }
+                    res.body.should.have.property('id');
+                    res.body.should.have.property('user_id');
+                    res.body.should.have.property('input_resource_id');
+                    res.body.should.have.property('name');
+                    res.body.should.have.property('description');
+                    res.body.should.have.property('date_created');
+                    //res.body.should.have.property('date_updated'); // TODO: add
+                    //res.body.should.have.property('workflow_services'); // TODO: add
+                    res.body.id.should.equal(1);
                     done();
                 });
         });
@@ -98,6 +106,14 @@ describe('Routing', function() {
                     if (err) {
                         throw err;
                     }
+                    res.body.should.have.property('id');
+                    res.body.should.have.property('workflow_definition_id');
+                    res.body.should.have.property('input_resource_id');
+                    res.body.should.have.property('status');
+                    res.body.should.have.property('datetime_start');
+                    res.body.should.have.property('datetime_end');
+                    //res.body.should.have.property('workflow_services'); // TODO: add
+                    res.body.id.should.equal(1);
                     done();
                 });
         });
@@ -152,6 +168,19 @@ describe('Routing', function() {
                         throw err;
                     }
                     res.body.should.have.property('id');
+                    res.body.should.have.property('source_original_name');
+                    res.body.should.have.property('source_filename');
+                    res.body.should.have.property('filename');
+                    res.body.should.have.property('name');
+                    res.body.should.have.property('date_created');
+                    res.body.should.have.property('corpora_name');
+                    res.body.should.have.property('description');
+                    res.body.should.have.property('author');
+                    res.body.should.have.property('content_type');
+                    res.body.should.have.property('encoding');
+                    res.body.should.have.property('language');
+                    res.body.should.have.property('date_updated');
+                    res.body.should.have.property('hash');
                     res.body.id.should.equal(1);
                     done();
                 });
