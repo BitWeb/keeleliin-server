@@ -10,7 +10,7 @@ var path = require('path');
 
 function ResourceService() {
 
-    this.getResource = function(resourceId, callback) {
+    this.getResource = function(req, resourceId, callback) {
 
         Resource.find({ where: {id: resourceId }}).then(function(resource) {
 

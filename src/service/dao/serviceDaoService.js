@@ -7,6 +7,21 @@ var ServiceModelParam = require(__base + 'src/service/dao/sql').ServiceModelPara
 
 function ServiceDaoService() {
 
+    this.findService = function(serviceId, callback) {
+        ServiceModel.find({
+            where: {id: serviceId},
+            include: [
+                {
+                    model: ServiceModelParam,
+                    as: 'service_params',
+                    order: ['order_num', 'ASC']
+                }
+            ]
+        }).then(function(service) {
+           return callback(null, service);
+        });
+    };
+
     this.findServices = function(pagination, callback) {
         ServiceModel.findAll({
             include: [

@@ -15,4 +15,13 @@ router.get('/', function(req, res) {
     });
 });
 
+router.get('/:serviceId', function(req, res) {
+    serviceService.getService(req ,req.params.serviceId, function(err, service) {
+        if (err) {
+            return res.send(err);
+        }
+        return res.send(service);
+    });
+});
+
 module.exports = router;

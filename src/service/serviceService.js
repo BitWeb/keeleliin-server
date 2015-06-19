@@ -7,6 +7,11 @@ var serviceDaoService = require(__base + 'src/service/dao/serviceDaoService');
 
 function ServiceService() {
 
+    this.getService = function(req, serviceId, callback) {
+
+        return serviceDaoService.findService(serviceId, callback);
+    };
+
     this.getServices = function(req, callback) {
         var pagination = new PaginationUtil();
         if (req.params.offset != undefined) {

@@ -6,3 +6,4 @@ config.js
 keeleliin.log
 dump.rdb
 uploads/*
+coverage

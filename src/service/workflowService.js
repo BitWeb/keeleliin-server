@@ -6,10 +6,22 @@
 var resourceService = require(__base + 'src/service/resourceService');
 var workflowDaoService = require(__base + 'src/service/dao/workflowDaoService');
 var GrepWrapper = require(__base + 'src/wrapper/grepWrapper/grepWrapper');
+var Workflow = require(__base + 'src/service/dao/sql').Workflow;
 
 function WorkflowService() {
 
     var self = this;
+
+    this.getWorkflow = function(req, workflowId, callback) {
+
+        Workflow.find({ where: {id: workflowId }}).then(function(workflow) {
+
+            return callback(null, workflow);
+        }).catch(function(error) {
+
+            return callback(error);
+        });
+    };
 
     this.getWorkflowsByProjectId = function(req, projectId, callback) {
 
@@ -19,23 +31,6 @@ function WorkflowService() {
     this.getWorkflowServiceParamValues = function(req, workflowServiceId, callback) {
 
         return workflowDaoService.findWorkflowServiceParamValues(workflowServiceId, callback);
-    };
-
-    this.test = function(req, callback) {
-        resourceService.getResource(10, function (err, resource) {
-            if (err) {
-                throw err;
-            }
-
-            var grepWrapper = new GrepWrapper();
-            grepWrapper.send(resource, function(err, response) {
-                if (err) {
-                    return callback(err);
-                }
-
-                return callback(null, response);
-            });
-        });
     };
 }
 

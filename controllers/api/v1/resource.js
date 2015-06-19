@@ -5,12 +5,20 @@
 var express = require('express');
 var router = express.Router();
 var resourceService = require('../../../src/service/resourceService');
-var workFlowService = require(__base + 'src/service/workflowService');
 
 router.get('/', function(req, res) {
 
     resourceService.getResources(req, function(error, resources) {
         return res.send(resources);
+    });
+});
+
+router.get('/:resourceId', function(req, res) {
+    resourceService.getResource(req, req.params.resourceId, function(error, resource) {
+        if (error) {
+            res.send({errors: 'Resource not found'});
+        }
+        return res.send(resource);
     });
 });
 
@@ -31,16 +39,6 @@ router.get('/projectId/:projectId', function(req, res) {
             return res.status(400).send({errors: 'Resources not found'});
         }
         return res.send(resources);
-    });
-});
-
-router.get('/test', function(req, res) {
-
-    workFlowService.test(req, function(err, response) {
-        if (err) {
-            return res.send({errors : err});
-        }
-        return res.send(response);
     });
 });
 

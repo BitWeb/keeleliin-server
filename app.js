@@ -44,7 +44,6 @@ app.use(function (req, res, next){
 app.use(routerMiddleware);
 app.use(sessionMiddleware);
 app.use(sessionDebugger);
-
 app.use(errorhandlerMiddleware.common);
 
 app.use(controllers);
