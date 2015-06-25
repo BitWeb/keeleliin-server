@@ -34,7 +34,28 @@ router.get('/service/:workflowDefinitionServiceId/params', function(req, res) {
         }
         return res.send(workflowDefinitionServiceParamValues);
     });
+});
 
+router.post('/projectId/:projectId', function(req, res) {
+
+    workflowDefinitionService.createWorkflowDefinition(req, req.params.projectId, req.body, function(err, workflowDefinion) {
+        if (err) {
+            return res.send({errors: err});
+        }
+
+        return res.send({id: workflowDefinion.id, date_created: workflowDefinion.date_created});
+    });
+});
+
+router.put('/:workflowDefinitionId', function(req, res) {
+
+    workflowDefinitionService.saveWorkflowDefinition(req, req.params.workflowDefinitionId, req.body, function(err, workflowDefinition) {
+        if (err) {
+            return res.send({errors: err});
+        }
+
+        return res.send({id: workflowDefinition.id, date_updated: workflowDefinition.date_updated});
+    });
 });
 
 module.exports = router;

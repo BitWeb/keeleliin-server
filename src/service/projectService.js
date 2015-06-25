@@ -9,6 +9,14 @@ var userService = require('./userService');
 
 function ProjectService(){
 
+    this.getProject = function(req, projectId, callback) {
+        Project.find({ where: { id: projectId }}).then(function(project) {
+            return callback(null, project);
+        }).catch(function(error) {
+            return callback(error);
+        });
+    };
+
     this.getCurrentUserProjects = function (req, callback) {
 
         var userId = req.redisSession.data.userId;

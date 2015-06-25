@@ -95,6 +95,38 @@ describe('Routing', function() {
                     done();
                 });
         });
+
+        it('adds new workflow definition and updates the workflow', function(done) {
+            request(url).post('/workflow-definition/projectId/1')
+                .expect(200)
+                .expect('Content-Type', /json/)
+                .send({
+                    name: 'Test töövoog',
+                    description: 'Test töövoo kirjeldus',
+                    user_id: 1
+                })
+                .end(function(err, res) {
+                    if (err) {
+                        throw err;
+                    }
+                    res.body.should.have.property('id');
+                    res.body.should.have.property('date_created');
+
+                    var id = res.body.id;
+
+                    request(url).put('/workflow-definition/' + id)
+                        .expect(200)
+                        .expect('Content-Type', /json/)
+                        .send({
+                            name: 'Test töövoog (Muudetud)',
+                            description: 'Test töövoo kirjeldus (Muudetud)'
+                        })
+                        .end(function(err, res) {
+                            res.body.should.have.property('date_updated');
+                            done();
+                        });
+                });
+        });
     });
 
     describe('/workflow', function(done) {

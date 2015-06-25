@@ -39,6 +39,9 @@ module.exports = function(sequelize, DataTypes) {
         },
         date_created: {
             type: DataTypes.DATE
+        },
+        date_updated: {
+            type: DataTypes.DATE
         }
     }, {
         tableName: 'workflow_definition',
@@ -51,6 +54,17 @@ module.exports = function(sequelize, DataTypes) {
                 WorkflowDefinition.hasMany(models.WorkflowDefinitionServiceModel, { as: 'workflow_services' });
                 WorkflowDefinition.hasMany(models.Workflow);
                 WorkflowDefinition.belongsToMany(models.Project, {through: 'project_workflow_definition', foreignKey: 'workflow_definition_id', otherKey: 'project_id', as: 'projects'});
+            }
+        },
+
+        hooks: {
+            beforeCreate: function(workflowDefinition, options, fn) {
+                workflowDefinition.date_created = new Date();
+                fn(null, workflowDefinition);
+            },
+            beforeUpdate: function(workflowDefinition, options, fn) {
+                workflowDefinition.date_updated = new Date();
+                fn(null, workflowDefinition);
             }
         }
     });
