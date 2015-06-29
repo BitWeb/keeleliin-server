@@ -24,4 +24,13 @@ router.get('/:serviceId', function(req, res) {
     });
 });
 
+router.post('/', function(req, res) {
+    serviceService.createService(req, req.body, function(err, service) {
+        if (err) {
+            return res.send(err);
+        }
+        return res.send(service);
+    });
+});
+
 module.exports = router;

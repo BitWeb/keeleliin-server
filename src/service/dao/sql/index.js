@@ -24,6 +24,8 @@ db['WorkflowDefinitionServiceParamValue'] = sequelize.import(__base + 'src/servi
 db['WorkflowServiceParamValue'] = sequelize.import(__base + 'src/service/dao/sql/models/workflow/workflowServiceParamValue');
 db['ServiceModel'] = sequelize.import(__base + 'src/service/dao/sql/models/serviceModel');
 db['ServiceModelParam'] = sequelize.import(__base + 'src/service/dao/sql/models/serviceModel/serviceModelParam');
+db['ServiceInputType'] = sequelize.import(__base + 'src/service/dao/sql/models/serviceModel/serviceInputType');
+db['ServiceOutputType'] = sequelize.import(__base + 'src/service/dao/sql/models/serviceModel/serviceOutputType');
 
 Object.keys(db).forEach(function(modelName) {
     if ("associate" in db[modelName]) {

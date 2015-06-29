@@ -13,12 +13,15 @@ function ServiceDaoService() {
             include: [
                 {
                     model: ServiceModelParam,
-                    as: 'service_params',
+                    as: 'serviceParams',
                     order: ['order_num', 'ASC']
                 }
             ]
         }).then(function(service) {
-           return callback(null, service);
+            if (!service) {
+                return callback('Service not found.');
+            }
+            return callback(null, service);
         });
     };
 
@@ -27,7 +30,7 @@ function ServiceDaoService() {
             include: [
                 {
                     model: ServiceModelParam,
-                    as: 'service_params',
+                    as: 'serviceParams',
                     order: ['order_num', 'ASC']
                 }
             ],

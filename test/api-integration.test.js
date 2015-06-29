@@ -127,6 +127,38 @@ describe('Routing', function() {
                         });
                 });
         });
+
+        var workflowDefinitionServiceId = null;
+
+        it('addes service to the workflow definition', function(done) {
+
+            request(url).post('/workflow-definition/1/service')
+                .expect(200)
+                .expect('Content-Type', /json/)
+                .send({
+                    service_id: 1
+                })
+                .end(function(err, res) {
+                    if (err) {
+                        throw err;
+                    }
+                    res.body.should.have.property('id');
+                    workflowDefinitionServiceId = res.body.id;
+                    done();
+                });
+        });
+
+        it('removes service from the workflow definition', function(done) {
+
+            request(url).delete('/workflow-definition/service/' + workflowDefinitionServiceId)
+                .expect(200)
+                .end(function(err, res) {
+                    if (err) {
+                        throw err;
+                    }
+                    done();
+                });
+        });
     });
 
     describe('/workflow', function(done) {

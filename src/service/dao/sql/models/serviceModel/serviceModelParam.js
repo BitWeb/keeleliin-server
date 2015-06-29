@@ -1,8 +1,6 @@
 /**
  * Created by taivo on 12.06.15.
  */
-
-
 "use strict";
 
 module.exports = function(sequelize, DataTypes) {
@@ -13,14 +11,14 @@ module.exports = function(sequelize, DataTypes) {
             primaryKey: true,
             autoIncrement: true
         },
-        service_id: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-            references: {
-                model: 'service',
-                key: 'id'
-            }
-        },
+        //service_id: {
+        //    type: DataTypes.INTEGER,
+        //    allowNull: false,
+        //    references: {
+        //        model: 'service',
+        //        key: 'id'
+        //    }
+        //},
         type: {
             type: DataTypes.STRING,
             allowNull: false,
@@ -56,6 +54,7 @@ module.exports = function(sequelize, DataTypes) {
 
         classMethods: {
             associate: function(models) {
+                ServiceModelParam.belongsTo(models.ServiceModel);
                 ServiceModelParam.hasMany(models.WorkflowDefinitionServiceParamValue, { foreignKey: 'service_param_id' });
             }
         }

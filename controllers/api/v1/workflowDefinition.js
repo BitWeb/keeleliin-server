@@ -12,6 +12,7 @@ router.get('/:workflowDefinitionId', function(req, res) {
         if (err) {
             return res.send({errors: err});
         }
+
         return res.send(workflowDefinition);
     });
 });
@@ -55,6 +56,48 @@ router.put('/:workflowDefinitionId', function(req, res) {
         }
 
         return res.send({id: workflowDefinition.id, date_updated: workflowDefinition.date_updated});
+    });
+});
+
+router.get('/service/:workflowDefinitionServiceId', function(req, res) {
+
+    workflowDefinitionService.getWorkflowDefinitionServiceModel(req, req.params.workflowDefinitionServiceId, function(err, workflowDefinitionServiceModel) {
+        if (err) {
+            return res.send(err);
+        }
+
+        return res.send(workflowDefinitionServiceModel);
+    });
+});
+
+router.post('/:workflowDefinitionId/service', function(req, res) {
+
+    workflowDefinitionService.createWorkflowDefinitionServiceModel(req, req.params.workflowDefinitionId, req.body, function(err, workflowDefinitionServiceModel) {
+        if (err) {
+            return res.send(err);
+        }
+
+        return res.send(workflowDefinitionServiceModel);
+    });
+});
+
+router.delete('/service/:workflowDefinitionServiceId', function(req, res) {
+
+    workflowDefinitionService.removeWorkflowDefinitionServiceModel(req, req.params.workflowDefinitionServiceId, function(err) {
+        if (err) {
+            return res.send(err);
+        }
+        return res.send();
+    });
+});
+
+router.post('/:workflowDefinitionId/sort', function(req, res) {
+
+    workflowDefinitionService.sortWorkflowDefinitionServices(req, req.body.idsString, function(err) {
+        if (err) {
+            return res.send(err);
+        }
+        return res.send();
     });
 });
 

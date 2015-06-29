@@ -35,6 +35,7 @@ log4js.configure({
 
 app.use(logger('dev'));
 app.use(bodyParser.json({limit: '10mb'})); // for parsing application/json
+app.use(bodyParser.urlencoded({extended: true}));
 app.use(multer({ dest: './uploads/'})); // for parsing multipart/form-data
 app.use(express.static(path.join(__dirname, 'public')));
 

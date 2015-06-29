@@ -17,7 +17,8 @@ module.exports = function(sequelize, DataTypes) {
             references: {
                 model: 'user',
                 key: 'id'
-            }
+            },
+            unique: false
         },
         input_resource_id: {
             type: DataTypes.INTEGER,
@@ -25,7 +26,8 @@ module.exports = function(sequelize, DataTypes) {
             references: {
                 model: 'resource',
                 key: 'id'
-            }
+            },
+            unique: false
         },
         name: {
             type: DataTypes.STRING,
@@ -51,7 +53,7 @@ module.exports = function(sequelize, DataTypes) {
 
         classMethods: {
             associate: function(models) {
-                WorkflowDefinition.hasMany(models.WorkflowDefinitionServiceModel, { as: 'workflow_services' });
+                WorkflowDefinition.hasMany(models.WorkflowDefinitionServiceModel, { as: 'workflowServices' , foreignKey: {name: 'workflow_definition_id', allowNull: true}});
                 WorkflowDefinition.hasMany(models.Workflow);
                 WorkflowDefinition.belongsToMany(models.Project, {through: 'project_workflow_definition', foreignKey: 'workflow_definition_id', otherKey: 'project_id', as: 'projects'});
             }

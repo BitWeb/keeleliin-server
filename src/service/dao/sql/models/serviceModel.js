@@ -18,6 +18,9 @@ module.exports = function(sequelize, DataTypes) {
         description: {
             type: DataTypes.TEXT,
             allowNull: true
+        },
+        url: {
+            type: DataTypes.TEXT
         }
     }, {
         tableName: 'service',
@@ -27,7 +30,9 @@ module.exports = function(sequelize, DataTypes) {
 
         classMethods: {
             associate: function(models) {
-                ServiceModel.hasMany(models.ServiceModelParam, { foreignKey: 'service_id', as: 'service_params' });
+                ServiceModel.hasMany(models.ServiceModelParam, { foreignKey: 'service_id', as: 'serviceParams' });
+                ServiceModel.hasMany(models.ServiceInputType, { foreignKey: 'service_id', as: 'serviceInputTypes' });
+                ServiceModel.hasMany(models.ServiceOutputType, { foreignKey: 'service_id', as: 'serviceOutputTypes' });
                 ServiceModel.belongsToMany(ServiceModel, {through: 'service_has_parent_service', as: 'ChildServiceModels', foreignKey: 'service_parent_id'});
                 ServiceModel.belongsToMany(ServiceModel, {through: 'service_has_parent_service', as: 'ParentServiceModels', foreignKey: 'service_sibling_id'});
             }

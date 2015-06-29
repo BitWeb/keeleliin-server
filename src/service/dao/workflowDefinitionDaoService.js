@@ -6,18 +6,35 @@ var WorkflowDefinition = require(__base + 'src/service/dao/sql').WorkflowDefinit
 var WorkflowDefinitionServiceModel = require(__base + 'src/service/dao/sql').WorkflowDefinitionServiceModel;
 var WorkflowDefinitionServiceParamValue = require(__base + 'src/service/dao/sql').WorkflowDefinitionServiceParamValue;
 var ServiceModelParam = require(__base + 'src/service/dao/sql').ServiceModelParam;
-//var sequelize = require(__base + 'src/service/dao/sql').sequelize;
 
 function WorkflowDefinitionDaoService() {
 
     var self = this;
+
+    this.findWorkflowDefinition = function(id, callback) {
+        WorkflowDefinition.find({
+            include: [
+                {
+                    model: WorkflowDefinitionServiceModel,
+                    as: 'workflowServices',
+                    attributes: ['id', 'service_id', 'order_num']
+                }
+            ],
+            where: { id: id }
+        }).then(function(workflowDefinition) {
+            if (!workflowDefinition) {
+                return callback('Not found.');
+            }
+            return callback(null, workflowDefinition);
+        });
+    };
 
     this.findWorkflowDefinitionsByProjectId = function(projectId, callback) {
         WorkflowDefinition.findAll({
             include: [
                 {
                     model: WorkflowDefinitionServiceModel,
-                    as: 'workflow_services',
+                    as: 'workflowServices',
                     attributes: ['id', 'service_id', 'order_num']
                 }
             ]
@@ -32,7 +49,7 @@ function WorkflowDefinitionDaoService() {
             include: [
                 {
                     model: ServiceModelParam,
-                    as: 'service_param',
+                    as: 'serviceParam',
                     attributes: ['id', 'type', 'key', 'value', 'order_num', 'is_editable', 'description']
                 }
             ],
@@ -42,6 +59,39 @@ function WorkflowDefinitionDaoService() {
         }).then(function(workflowDefinitionServiceModels) {
             return callback(null, workflowDefinitionServiceModels);
         });
+    };
+
+    this.findWorkflowDefinitionServiceModel = function(workflowDefinitionServiceModelId, callback) {
+        WorkflowDefinitionServiceModel.find({
+            include: [
+                {
+                    model: WorkflowDefinitionServiceParamValue,
+                    attributes: ['id', 'value'],
+                    as: 'paramValues',
+                    include: [
+                        {
+                            model: ServiceModelParam,
+                            as: 'service_param',
+                            attributes: ['id', 'type', 'key', 'value', 'order_num', 'is_editable', 'description']
+                        }
+                    ]
+                }
+            ],
+            where: {
+                id: workflowDefinitionServiceModelId
+            },
+            order: [
+                /* Ordering workflow service model parameters via param value order num */
+                [{model: WorkflowDefinitionServiceParamValue, as: 'param_values'}, {model: ServiceModelParam, as: 'service_param'}, 'order_num', 'ASC']
+            ]
+        }).then(function(workflowDefinitionServiceModel) {
+            if (!workflowDefinitionServiceModel) {
+                return callback('Not found.');
+            }
+
+            return callback(null, workflowDefinitionServiceModel);
+        });
+
     };
 
 }
