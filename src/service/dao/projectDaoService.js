@@ -22,7 +22,18 @@ function ProjectDaoService() {
             ]*/
         }).then(function (result) {
             if(!result){
-                return callback('Not found');
+                return callback('Projekti ei leitud');
+            }
+            return callback(null, result);
+        });
+    };
+
+    this.getProject = function (projectId, callback) {
+        Project.find({
+            where: { id: projectId}
+        }).then(function (result) {
+            if(!result){
+                return callback('Projekti ei leitud');
             }
             return callback(null, result);
         });

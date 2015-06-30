@@ -1,6 +1,6 @@
 INSERT INTO "user" (id, entu_id, email, name) SELECT 1, 1, 'taivo@bitweb.ee', 'taivo' WHERE NOT EXISTS (SELECT 1 FROM "user" WHERE "user".id = 1);
 INSERT INTO project (id, name, description, user_id) SELECT 1, 'test project', 'test project', 1 WHERE NOT EXISTS (SELECT 1 FROM project WHERE project.id = 1);
-INSERT INTO workflow_definition (id, user_id, name, description) SELECT 1, 1, 'Test workflow', 'Test workflow' WHERE NOT EXISTS (SELECT 1 FROM workflow_definition WHERE workflow_definition.id = 1);
+INSERT INTO workflow_definition (id, project_id, user_id, name, description) SELECT 1, 1, 1, 'Test workflow', 'Test workflow' WHERE NOT EXISTS (SELECT 1 FROM workflow_definition WHERE workflow_definition.id = 1);
 INSERT INTO project_workflow_definition (project_id, workflow_definition_id) SELECT 1, 1 WHERE NOT EXISTS (SELECT 1 FROM project_workflow_definition WHERE project_workflow_definition.project_id = 1 AND project_workflow_definition.workflow_definition_id = 1);
 INSERT INTO service (id, name) SELECT 1, 'test service' WHERE NOT EXISTS (SELECT 1 FROM service WHERE service.id = 1);
 INSERT INTO workflow_definition_service (id, workflow_definition_id, service_id, created_at, updated_at) SELECT 1, 1, 1, NOW(), NOW() WHERE NOT EXISTS (SELECT 1 FROM workflow_definition_service WHERE workflow_definition_service.id = 1);

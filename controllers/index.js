@@ -21,6 +21,16 @@ router.get('/generate', function(req, res, next) {
     });
 });
 
+router.get('/test', function(req, res, next) {
+    var InstanceBuilder = require('./../src/service/workflow/instanceBuilder');
+    var instanceBuilder = new InstanceBuilder();
+    instanceBuilder.createWithResource(1,1, function (err, data) {
+        if(err) return res.send(err);
+        res.send(data);
+    });
+
+});
+
 router.use('/api/v1/', require(__base + 'controllers/api/v1/index'));
 
 module.exports = router;
