@@ -11,7 +11,7 @@ function ResourceDaoService() {
 
         Resource.find({ where: {id: resourceId }}).then(function(resource) {
             if(!resource){
-                return cb('Not found');
+                return callback('resource not found');
             }
             return callback(null, resource);
         }).catch(function(error) {
