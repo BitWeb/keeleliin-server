@@ -4,9 +4,9 @@
 
 var Project = require(__base + 'src/service/dao/sql').Project;
 var Workflow = require(__base + 'src/service/dao/sql').Workflow;
-var WorkflowServiceModel = require(__base + 'src/service/dao/sql').WorkflowServiceModel;
+var WorkflowServiceModel = require(__base + 'src/service/dao/sql').WorkflowService;
 var WorkflowServiceParamValue = require(__base + 'src/service/dao/sql').WorkflowServiceParamValue;
-var ServiceModelParam = require(__base + 'src/service/dao/sql').ServiceModelParam;
+var ServiceModelParam = require(__base + 'src/service/dao/sql').ServiceParam;
 
 function WorkflowDaoService() {
 

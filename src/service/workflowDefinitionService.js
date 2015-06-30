@@ -5,7 +5,7 @@
 var workflowDefinitionDaoService = require(__base + 'src/service/dao/workflowDefinitionDaoService');
 var WorkflowDefinitionServiceParamValue = require(__base + 'src/service/dao/sql').WorkflowDefinitionServiceParamValue;
 var WorkflowDefinition = require(__base + 'src/service/dao/sql').WorkflowDefinition;
-var WorkflowDefinitionServiceModel = require(__base + 'src/service/dao/sql').WorkflowDefinitionServiceModel;
+var WorkflowDefinitionServiceModel = require(__base + 'src/service/dao/sql').WorkflowDefinitionService;
 var projectService = require(__base + 'src/service/projectService');
 var serviceService = require(__base + 'src/service/serviceService');
 var Sequelize = require('sequelize');

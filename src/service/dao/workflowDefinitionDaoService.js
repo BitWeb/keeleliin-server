@@ -1,11 +1,11 @@
 /**
  * Created by taivo on 12.06.15.
  */
-
+var logger = require('log4js').getLogger('workflow_definition_dao_service');
 var WorkflowDefinition = require(__base + 'src/service/dao/sql').WorkflowDefinition;
-var WorkflowDefinitionServiceModel = require(__base + 'src/service/dao/sql').WorkflowDefinitionServiceModel;
+var WorkflowDefinitionServiceModel = require(__base + 'src/service/dao/sql').WorkflowDefinitionService;
 var WorkflowDefinitionServiceParamValue = require(__base + 'src/service/dao/sql').WorkflowDefinitionServiceParamValue;
-var ServiceModelParam = require(__base + 'src/service/dao/sql').ServiceModelParam;
+var ServiceModelParam = require(__base + 'src/service/dao/sql').ServiceParam;
 
 function WorkflowDefinitionDaoService() {
 
@@ -44,6 +44,7 @@ function WorkflowDefinitionDaoService() {
     };
 
     this.findWorkflowDefinitionServiceParamValues = function(workflowDefinitionServiceId, callback) {
+
         WorkflowDefinitionServiceParamValue.findAll({
             attributes: ['id', 'value'],
             include: [

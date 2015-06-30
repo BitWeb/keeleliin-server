@@ -14,3 +14,6 @@ INSERT INTO workflow (id, project_id, workflow_definition_id) SELECT 1, 1, 1 WHE
 INSERT INTO workflow_service (id, service_id, workflow_id, workflow_definition_service_id) SELECT 1, 1, 1, 1 WHERE NOT EXISTS (SELECT 1 FROM workflow_service WHERE workflow_service.id = 1);
 INSERT INTO workflow_service_param_value (id, workflow_service_id, service_param_id, value) SELECT 1, 1, 1, 'ababaab' WHERE NOT EXISTS (SELECT 1 FROM workflow_service_param_value  WHERE workflow_service_param_value.id = 1);
 INSERT INTO workflow_service_param_value (id, workflow_service_id, service_param_id, value) SELECT 2, 1, 2, 'xxwsdds' WHERE NOT EXISTS (SELECT 1 FROM workflow_service_param_value  WHERE workflow_service_param_value.id = 2);
+
+
+

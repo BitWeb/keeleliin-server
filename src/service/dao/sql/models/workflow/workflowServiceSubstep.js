@@ -1,29 +1,26 @@
-/**
- * Created by taivo on 12.06.15.
- */
 "use strict";
 
 module.exports = function(sequelize, DataTypes) {
 
-    var Workflow = sequelize.define("Workflow", {
+    var WorkflowServiceSubstep = sequelize.define("WorkflowServiceSubstep", {
         id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true
         },
-        project_id: {
+        workflow_service_id: {
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
-                model: 'project',
+                model: 'workflow_service',
                 key: 'id'
             }
         },
-        input_resource_id: {
+        prev_substep_id: {
             type: DataTypes.INTEGER,
             allowNull: true,
             references: {
-                model: 'resource',
+                model: 'workflow_service_substep',
                 key: 'id'
             }
         },
@@ -31,6 +28,11 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.STRING,
             allowNull: false,
             defaultValue: 'INIT'
+        },
+        index: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 0
         },
         datetime_start: {
             type: DataTypes.DATE,
@@ -41,19 +43,19 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: true
         }
     }, {
-        tableName: 'workflow',
+        tableName: 'workflow_service_substep',
         timestamps: false,
         paranoid: true,
         underscored: true,
 
         classMethods: {
             associate: function(models) {
-                Workflow.hasMany(models.WorkflowService, {as: 'workflow_services'});
-                Workflow.belongsTo(models.WorkflowDefinition);
-                Workflow.belongsTo(models.Project, { as: 'project' })
+                WorkflowServiceSubstep.belongsTo(models.WorkflowService);
+                WorkflowServiceSubstep.belongsTo(models.WorkflowServiceSubstep);
+                WorkflowServiceSubstep.belongsToMany(models.Resource, {through: 'workflow_service_substep_has_resource', foreignKey: 'workflow_service_substep_id', otherKey: 'resource_id'});
             }
         }
     });
 
-    return Workflow;
+    return WorkflowServiceSubstep;
 };

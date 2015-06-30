@@ -11,7 +11,7 @@ module.exports = function(sequelize, DataTypes) {
             primaryKey: true,
             autoIncrement: true
         },
-        type: {
+        key: {
             type: DataTypes.STRING,
             allowNull: false
         }
@@ -23,7 +23,8 @@ module.exports = function(sequelize, DataTypes) {
 
         classMethods: {
             associate: function(models) {
-                ServiceInputType.belongsTo(models.ServiceModel);
+                ServiceInputType.belongsTo(models.Service);
+                ServiceInputType.belongsTo(models.ResourceType);
             }
         }
     });

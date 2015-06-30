@@ -2,8 +2,8 @@
  * Created by taivo on 15.06.15.
  */
 
-var ServiceModel = require(__base + 'src/service/dao/sql').ServiceModel;
-var ServiceModelParam = require(__base + 'src/service/dao/sql').ServiceModelParam;
+var ServiceModel = require(__base + 'src/service/dao/sql').Service;
+var ServiceModelParam = require(__base + 'src/service/dao/sql').ServiceParam;
 
 function ServiceDaoService() {
 

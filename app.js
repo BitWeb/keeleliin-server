@@ -1,6 +1,17 @@
+var server = require('./www/server');
+
+server.startCluster(1, function ( err ) {
+    console.log('Server started ' + process.pid);
+});
+
+/*
+
+
+*/
 /**
  * Created by priit on 2.06.15.
- */
+ *//*
+
 global.__base = __dirname + '/';
 
 var express = require('express');
@@ -50,9 +61,11 @@ app.use(errorhandlerMiddleware.common);
 app.use(controllers);
 app.use(errorhandlerMiddleware.error404);
 
+*/
 /**
  * Create HTTP server.
- */
+ *//*
+
 
 var port = config.port;
 app.set('port', config.port);
@@ -61,9 +74,11 @@ server.listen(config.port);
 server.on('error', onError);
 server.on('listening', onListening);
 
+*/
 /**
  * Event listener for HTTP server "error" event.
- */
+ *//*
+
 
 function onError(error) {
     if (error.syscall !== 'listen') {
@@ -87,9 +102,11 @@ function onError(error) {
     }
 }
 
+*/
 /**
  * Event listener for HTTP server "listening" event.
- */
+ *//*
+
 
 function onListening() {
     var addr = server.address();
@@ -97,4 +114,4 @@ function onListening() {
     debug('Listening on ' + bind);
 }
 
-module.exports = app;
+module.exports = app;*/

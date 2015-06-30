@@ -4,8 +4,8 @@
 
 var PaginationUtil = require(__base + 'src/util/paginationUtil');
 var serviceDaoService = require(__base + 'src/service/dao/serviceDaoService');
-var ServiceModel = require(__base + 'src/service/dao/sql').ServiceModel;
-var ServiceModelParam = require(__base + 'src/service/dao/sql').ServiceModelParam;
+var ServiceModel = require(__base + 'src/service/dao/sql').Service;
+var ServiceModelParam = require(__base + 'src/service/dao/sql').ServiceParam;
 var ServiceOutputType = require(__base + 'src/service/dao/sql').ServiceOutputType;
 var ServiceInputType = require(__base + 'src/service/dao/sql').ServiceInputType;
 

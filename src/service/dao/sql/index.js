@@ -13,19 +13,23 @@ var sequelize = new Sequelize(config.sql.database, config.sql.username, config.s
 });
 
 var db = {};
-db['User'] = sequelize.import(__base + 'src/service/dao/sql/models/user');
-db['Project'] = sequelize.import(__base + 'src/service/dao/sql/models/project');
-db['Resource'] = sequelize.import(__base + 'src/service/dao/sql/models/resource');
-db['WorkflowDefinition'] = sequelize.import(__base + 'src/service/dao/sql/models/workflowDefinition');
-db['WorkflowDefinitionServiceModel'] = sequelize.import(__base + 'src/service/dao/sql/models/workflowDefinition/workflowDefinitionServiceModel');
-db['Workflow'] = sequelize.import(__base + 'src/service/dao/sql/models/workflow');
-db['WorkflowServiceModel'] = sequelize.import(__base + 'src/service/dao/sql/models/workflow/workflowServiceModel');
-db['WorkflowDefinitionServiceParamValue'] = sequelize.import(__base + 'src/service/dao/sql/models/workflowDefinition/workflowDefinitionServiceParamValue');
-db['WorkflowServiceParamValue'] = sequelize.import(__base + 'src/service/dao/sql/models/workflow/workflowServiceParamValue');
-db['ServiceModel'] = sequelize.import(__base + 'src/service/dao/sql/models/serviceModel');
-db['ServiceModelParam'] = sequelize.import(__base + 'src/service/dao/sql/models/serviceModel/serviceModelParam');
-db['ServiceInputType'] = sequelize.import(__base + 'src/service/dao/sql/models/serviceModel/serviceInputType');
-db['ServiceOutputType'] = sequelize.import(__base + 'src/service/dao/sql/models/serviceModel/serviceOutputType');
+
+db['User'] = sequelize.import('./models/user');
+db['Project'] = sequelize.import('./models/project');
+db['Resource'] = sequelize.import('./models/resource');
+db['ResourceType'] = sequelize.import('./models/resource/resourceType');
+
+db['WorkflowDefinition'] = sequelize.import('./models/workflowDefinition');
+db['WorkflowDefinitionService'] = sequelize.import('./models/workflowDefinition/workflowDefinitionService');
+db['Workflow'] = sequelize.import('./models/workflow');
+db['WorkflowService'] = sequelize.import('./models/workflow/workflowService');
+db['WorkflowServiceSubstep'] = sequelize.import('./models/workflow/workflowServiceSubstep');
+db['WorkflowDefinitionServiceParamValue'] = sequelize.import('./models/workflowDefinition/workflowDefinitionServiceParamValue');
+db['WorkflowServiceParamValue'] = sequelize.import('./models/workflow/workflowServiceParamValue');
+db['Service'] = sequelize.import('./models/service');
+db['ServiceParam'] = sequelize.import('./models/service/serviceParam');
+db['ServiceInputType'] = sequelize.import('./models/service/serviceInputType');
+db['ServiceOutputType'] = sequelize.import('./models/service/serviceOutputType');
 
 Object.keys(db).forEach(function(modelName) {
     if ("associate" in db[modelName]) {

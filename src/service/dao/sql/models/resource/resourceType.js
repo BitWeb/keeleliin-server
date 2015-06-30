@@ -1,32 +1,37 @@
-/**
- * Created by taivo on 26.06.15.
- */
 "use strict";
 
 module.exports = function(sequelize, DataTypes) {
 
-    var ServiceOutputType = sequelize.define("ServiceOutputType", {
+    var ResourceType = sequelize.define("ResourceType", {
         id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true
         },
-        type: {
+        value: {
             type: DataTypes.STRING,
             allowNull: false
+        },
+        name: {
+            type: DataTypes.STRING,
+            allowNull: false
+        },
+        split_type: {
+            type: DataTypes.STRING,
+            allowNull: true
         }
     }, {
-        tableName: 'service_output_type',
+        tableName: 'resource_type',
         timestamps: false,
         paranoid: true,
         underscored: true,
 
         classMethods: {
             associate: function(models) {
-                ServiceOutputType.belongsTo(models.ServiceModel);
+                //ServiceInputType.belongsTo(models.Service);
             }
         }
     });
 
-    return ServiceOutputType;
+    return ResourceType;
 };

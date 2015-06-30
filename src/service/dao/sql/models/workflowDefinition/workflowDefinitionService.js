@@ -6,7 +6,7 @@
 
 module.exports = function(sequelize, DataTypes) {
 
-    var WorkflowDefinitionServiceModel = sequelize.define("WorkflowDefinitionServiceModel", {
+    var WorkflowDefinitionService = sequelize.define("WorkflowDefinitionService", {
         id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
@@ -33,11 +33,12 @@ module.exports = function(sequelize, DataTypes) {
 
         classMethods: {
             associate: function(models) {
-                WorkflowDefinitionServiceModel.belongsTo(models.WorkflowDefinition);
-                WorkflowDefinitionServiceModel.hasMany(models.WorkflowDefinitionServiceParamValue, { foreignKey: 'workflow_definition_service_id', as: 'paramValues'});
+                WorkflowDefinitionService.belongsTo(models.WorkflowDefinitionService);
+                WorkflowDefinitionService.belongsTo(models.WorkflowDefinition);
+                WorkflowDefinitionService.hasMany(models.WorkflowDefinitionServiceParamValue, { foreignKey: 'workflow_definition_service_id', as: 'paramValues'});
             }
         }
     });
 
-    return WorkflowDefinitionServiceModel;
+    return WorkflowDefinitionService;
 };
