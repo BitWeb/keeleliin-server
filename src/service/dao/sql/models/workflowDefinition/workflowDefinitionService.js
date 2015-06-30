@@ -33,7 +33,6 @@ module.exports = function(sequelize, DataTypes) {
 
         classMethods: {
             associate: function(models) {
-                WorkflowDefinitionService.belongsTo(models.WorkflowDefinitionService);
                 WorkflowDefinitionService.belongsTo(models.WorkflowDefinition);
                 WorkflowDefinitionService.hasMany(models.WorkflowDefinitionServiceParamValue, { foreignKey: 'workflow_definition_service_id', as: 'paramValues'});
             }

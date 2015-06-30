@@ -51,7 +51,7 @@ module.exports = function(sequelize, DataTypes) {
         classMethods: {
             associate: function(models) {
                 WorkflowServiceSubstep.belongsTo(models.WorkflowService);
-                WorkflowServiceSubstep.belongsTo(models.WorkflowServiceSubstep);
+                //WorkflowServiceSubstep.belongsTo(models.WorkflowServiceSubstep);
                 WorkflowServiceSubstep.belongsToMany(models.Resource, {through: 'workflow_service_substep_has_resource', foreignKey: 'workflow_service_substep_id', otherKey: 'resource_id'});
             }
         }

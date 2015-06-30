@@ -11,6 +11,17 @@ function WorkflowDefinitionDaoService() {
 
     var self = this;
 
+    this.getWorkflowDefinition = function(id, callback) {
+        WorkflowDefinition.find({
+            where: { id: id }
+        }).then(function(workflowDefinition) {
+            if (!workflowDefinition) {
+                return callback('Not found.');
+            }
+            return callback(null, workflowDefinition);
+        });
+    };
+
     this.findWorkflowDefinition = function(id, callback) {
         WorkflowDefinition.find({
             include: [

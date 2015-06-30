@@ -1,18 +1,22 @@
 /**
  * Created by taivo on 11.06.15.
  */
-
+var logger = require('log4js').getLogger('resource_dao_service');
 var Resource = require(__base + 'src/service/dao/sql').Resource;
 var Project = require(__base + 'src/service/dao/sql').Project;
 
 function ResourceDaoService() {
 
     this.getResource = function(resourceId, callback) {
-        Resource.find({where: { id: resourceId }}).then(function(resource) {
-            if (!resource) {
-                return callback('Resource not found!');
+
+        Resource.find({ where: {id: resourceId }}).then(function(resource) {
+            if(!resource){
+                return cb('Not found');
             }
             return callback(null, resource);
+        }).catch(function(error) {
+            logger.error(error);
+            return callback(error);
         });
     };
 

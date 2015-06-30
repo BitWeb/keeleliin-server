@@ -28,22 +28,6 @@ module.exports = function(sequelize, DataTypes) {
                 key: 'id'
             }
         },
-        workflow_definition_service_id: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-            references: {
-                model: 'workflow_definition_service',
-                key: 'id'
-            }
-        },
-        output_resource_id: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-            references: {
-                model: 'resource',
-                key: 'id'
-            }
-        },
         status: {
             type: DataTypes.STRING,
             allowNull: false,
