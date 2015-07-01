@@ -5,16 +5,38 @@
 var fs = require('fs');
 var resourceDaoService = require('./dao/resourceDaoService');
 var Resource = require(__base + 'src/service/dao/sql').Resource;
-var PipeContent = require(__base +  'src/pipecontent/content');
+var ResourceType = require(__base + 'src/service/dao/sql').ResourceType;
 var path = require('path');
+var async = require('async');
+var http = require('http');
+var config = require(__base + 'config');
+var formidable = require('formidable');
+var projectService = require(__base + 'src/service/projectService');
 
 function ResourceService() {
+
+    var self = this;
 
     this.getResource = function(req, resourceId, callback) {
 
         Resource.find({ where: {id: resourceId }}).then(function(resource) {
 
             return callback(null, resource);
+        }).catch(function(error) {
+
+            return callback(error);
+        });
+    };
+
+    this.getResourceType = function(req, resourceTypeId, callback) {
+        ResourceType.find({ where: {id: resourceTypeId }}).then(function(resourceType) {
+            if (!resourceType) {
+
+                return callback('No resource type found with id: ' + resourceTypeId);
+            }
+
+            return callback(null, resourceType);
+
         }).catch(function(error) {
 
             return callback(error);
@@ -60,61 +82,145 @@ function ResourceService() {
             });
         });
     };
-
+    //
+    //this.createResourceFromUrl = function(url, resourceType, extension, cb) {
+    //
+    //    var uniqid = require('uniqid'),
+    //        hash = uniqid();
+    //    var resourceFileLocation = config.resources.downloadLocation + hash + extension;
+    //    var file = fs.createWriteStream(resourceFileLocation);
+    //    var request = http.get(url, function(response) {
+    //        response.pipe(file);
+    //
+    //        file.on('finish', function() {
+    //
+    //        });
+    //
+    //        file.on('error', function(err) {
+    //            fs.unlink(resourceFileLocation);
+    //            return cb(err);
+    //        });
+    //
+    //    });
+    //
+    //};
 
     /**
      * TODO:
      * - multipart upload large files (e.g zip) (req.files.uploadFile)
-     * - project specific resource (separate folder for each project)
+     * - URL ?
      *
      * @param req
-     * @param callback
+     * @param cb
      */
-    this.createResourceFromUpload = function(req, callback) {
-
-        // TODO: get project id from req params, project related resources reside in project folder
-
-        var data = req.body;
-        var content = new Buffer(data.data, "base64").toString("utf8");
-        var uniqid = require('uniqid');
-        var self = this,
-            sourceOriginalFilename = data.name,
-            hash = uniqid(),
-            extension = path.extname(sourceOriginalFilename),
-            sourceFilename = 'source-' + hash + extension,
-            resourceFilename = 'res-' + hash + '.json';
-
-        var resourceData = {
-            source_original_name: sourceOriginalFilename,
-            name: sourceOriginalFilename,
-            source_filename: __base + 'uploads/' + sourceFilename,
-            filename: __base + 'uploads/' + resourceFilename,
-            hash: hash
-        };
-
-        self.saveFile(resourceData.source_filename, content, function(fileName) {
-            // on success create also pipe content file
-            var pipeContent = new PipeContent();
-            pipeContent.structure.content = data.data;
-            self.saveFile(resourceData.filename, JSON.stringify(pipeContent.structure), function(fileName) {
-                Resource.build(resourceData).save().then(function(resource) {
-                    return callback(null, resource);
-                }).catch(function(error) {
-                    return callback(error);
-                });
-            });
-        });
-
-    };
-
-    this.saveFile = function(fileName, content, callback) {
-        fs.writeFile(fileName, content, function(err) {
+    this.createResourceFromUpload = function(req, cb) {
+        var form = new formidable.IncomingForm();
+        form.parse(req, function(err, fields, files) {
             if (err) {
-                throw err;
+                return cb(err);
             }
-            return callback(fileName);
+
+            var resourceData = {
+                projectId: req.params.projectId,
+                resource_type_id: fields.resource_type_id,
+                file_type: fields.file_type,
+                name: fields.name,
+                resourceFile: files.resourceFile
+            };
+
+            return self.createResource(req, resourceData, cb);
+        });
+
+        form.on('error', function(err) {
+
+            return cb(err);
         });
     };
+
+    this.createResource = function(req, resourceData, cb) {
+        var resourceType,
+            resourceFileLocation,
+            projectLocation,
+            uniqid = require('uniqid'),
+            hash = uniqid(),
+            filename,
+            resourceProject = null;
+
+        async.waterfall([
+            // Get project
+            function(callback) {
+                projectService.getProject(req, resourceData.projectId, function(err, project) {
+                    if (project) {
+                        resourceProject = project;
+                    }
+                    return callback();
+                });
+            },
+
+            // Get resource type
+            function(callback) {
+                self.getResourceType(req, resourceData.resource_type_id, function(err, rType) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    resourceType = rType;
+                    callback();
+                });
+            },
+            // Rename files
+            function(callback) {
+                if (resourceData.resourceFile) {
+                    filename = hash + path.extname(resourceData.resourceFile.name);
+                    projectLocation = (resourceProject != null ? '/' + resourceProject.id : '');
+                    resourceFileLocation = config.resources.location + projectLocation;
+                    if (!fs.existsSync(config.resources.location )) {
+                        fs.mkdirSync(config.resources.location);
+                    }
+
+                    if (!fs.existsSync(resourceFileLocation)) {
+                        fs.mkdirSync(resourceFileLocation);
+                    }
+
+                    fs.rename(resourceData.resourceFile.path, resourceFileLocation + '/' + filename, function(err) {
+                        if (err) {
+                            return callback(err);
+                        }
+                        callback();
+                    });
+                } else {
+                    callback('No file attached.');
+                }
+            },
+            // Create resource
+            function(callback) {
+                var data = {
+                    resource_type_id: resourceType.id,
+                    file_type: resourceData.file_type,
+                    name: resourceData.name,
+                    filename: projectLocation + '/' + filename,
+                    source_original_name: resourceData.resourceFile.name,
+                    source_filename: '',
+                    hash: hash
+                };
+
+                var resource = Resource.build(data);
+                resource.save().then(function(resource) {
+                    if (resourceProject != null) {
+                        resource.addProject(resourceProject);
+                    }
+                    callback(null, resource);
+                }).catch(function(err) {
+                    callback(err);
+                });
+            }
+        ], function(err, resource) {
+            if (err) {
+                return cb(err);
+            }
+
+            return cb(null, resource);
+        });
+    }
 
 }
 
