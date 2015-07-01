@@ -8,3 +8,5 @@ dump.rdb
 uploads/*
 coverage
 tmp_test
+name
+name2

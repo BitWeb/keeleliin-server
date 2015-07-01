@@ -5,13 +5,14 @@ var logger = require('log4js').getLogger('workflow_runner');
 
 var workflowDaoService = require(__base + 'src/service/dao/workflowDaoService');
 var resourceDaoService = require(__base + 'src/service/dao/resourceDaoService');
+var apiService = require('./service/apiService');
 
 var WorkflowDefinition = require(__base + 'src/service/dao/sql').WorkflowDefinition;
 var Workflow = require(__base + 'src/service/dao/sql').Workflow;
 
 var WorkflowServiceSubstep = require(__base + 'src/service/dao/sql').WorkflowServiceSubstep;
 
-var SubstepServiceDtoMapper = require('./substep/substepServiceDtoMapper');
+var substepServiceDtoMapper = require('./substep/substepServiceDtoMapper');
 
 
 var async = require('async');
@@ -125,7 +126,10 @@ function Runner(){
         async.each(
             resources,
             function (resource, callback) {
-                self._makeWorkflowServiceStep(resource, workflowService);
+                self._makeWorkflowServiceSubStep(resource, workflowService, function (err, substep) {
+                    self._runSubstep(substep);
+                    callback();
+                });
             },
             function (err) {
                 if(err){
@@ -138,7 +142,8 @@ function Runner(){
         );
     };
 
-    this._makeWorkflowServiceStep = function (resource, workflowService) {
+
+    this._makeWorkflowServiceSubStep = function ( resource, workflowService, cb) {
 
         var substepData = {
             workflow_service_id: workflowService.id,
@@ -146,13 +151,9 @@ function Runner(){
             status: 'INIT',
             index: 0
         };
-
         WorkflowServiceSubstep.build(substepData).save().then(function (substep){
-
             substep.addInputResource(resource).then(function (){
-
-                self._runSubstep(substep);
-
+                cb(null, substep);
             }).catch(function (err) {
                 logger.error('Add resource error');
                 logger.error(err);
@@ -169,21 +170,53 @@ function Runner(){
         substep.datetime_start = new Date();
         substep.save().then(function (substep){
 
-            var mapper = SubstepServiceDtoMapper();
-            mapper.getSubstepServiceDto(substep, function (err, dto) {
-
-                //execute service
-
+            substepServiceDtoMapper.getSubstepServiceDto(substep, function (err, dto) {
+                logger.error(dto);
+                self.makeRequest(substep, dto);
             });
-
-
         }).catch(function (err) {
             logger.error('Save step error');
             logger.error(err);
         });
+    };
+
+    this.makeRequest = function (substep, dto){
+        //execute service
+        apiService.makeRequest(dto, function (err, response) {
+            logger.debug(response);
+            self.handleResponse(substep, dto, response);
+        });
 
     };
 
+    this.recheckRequest = function () {
+        //todo
+    };
+
+    this.handleResponse = function (substep, dto, response){
+
+        if(response.response.message == 'OK'){
+               self.finishSubstepRequest(substep, dto, response);
+        } else {
+            logger.error('TODO:: Not OK');
+        }
+    };
+
+    this.finishSubstepRequest = function (substep, dto, response) {
+        var fileKeys =  response.response.data.files;
+        async.eachSeries(fileKeys, function iterator(fileKey, callback) {
+
+            var outputPath = __base + substep.id;
+            var requestSessionId = response.response.serviceId;
+
+            apiService.loadRequestResponse(dto, requestSessionId, fileKey, outputPath, function (err) {
+                callback(err);
+            });
+        }, function done(err) {
+            logger.error('Done');
+            //todo goto next request or finish with that
+        });
+    };
 
 
 

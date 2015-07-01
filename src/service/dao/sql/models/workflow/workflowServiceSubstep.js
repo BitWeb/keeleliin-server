@@ -34,6 +34,11 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: false,
             defaultValue: 0
         },
+        service_session: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            defaultValue: 'INIT'
+        },
         datetime_start: {
             type: DataTypes.DATE,
             allowNull: true
@@ -50,7 +55,10 @@ module.exports = function(sequelize, DataTypes) {
 
         classMethods: {
             associate: function(models) {
-                WorkflowServiceSubstep.belongsTo(models.WorkflowService, {as: 'workflowService'});
+                WorkflowServiceSubstep.belongsTo(models.WorkflowService, {
+                        foreignKey: 'workflow_service_id',
+                        as: 'workflowService'}
+                );
                 WorkflowServiceSubstep.belongsTo(models.WorkflowServiceSubstep);
                 WorkflowServiceSubstep.belongsToMany(models.Resource, {
                         through: 'workflow_service_substep_has_input_resource',
