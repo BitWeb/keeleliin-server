@@ -25,10 +25,20 @@ router.get('/generate', function(req, res, next) {
 
 router.get('/test', function(req, res, next) {
     var WorkflowBuilder = require('./../src/service/workflow/workflowBuilder');
+    var WorkflowRunner = require('./../src/service/workflow/runner');
+
     var workflowBuilder = new WorkflowBuilder();
-    workflowBuilder.create( 1, 1, [1,2], function (err, data) {
+    workflowBuilder.create( 1, 1, [1,2], function (err, workflow) {
         if(err) return res.send(err);
-        res.send(data);
+
+        var workflowRunner = new WorkflowRunner();
+        workflowRunner.run(workflow.id, function(err, data){
+            if(err) return res.send(err);
+            res.send(data);
+        });
+
+
+
     });
 });
 

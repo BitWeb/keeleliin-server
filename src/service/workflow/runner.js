@@ -16,6 +16,9 @@ function Runner(){
 
     //Käivita töövoo
     this.run = function (workflowId, cb) {
+
+        logger.debug('Run workflow id: '  + workflowId);
+
         //todo
         //1 get workflow
         //2 check workflow status
@@ -31,49 +34,66 @@ function Runner(){
             function (callback) {
                 self.getWorkflow(workflowId, callback);
             },
-            self.checkStatusForRun(),
-            self.startWorkflow()
+            function (callback) {
+                self.checkStatusForRun(callback);
+            },
+            function (callback) {
+                self.startWorkflow(callback);
+            }
         ], function (err) {
-            if(err) return cb(err);
-            cb( workflow );
+            if(err){
+                logger.error(err);
+                return cb(err);
+            }
+            return cb(null, workflow);
         });
     };
 
-    this.getWorkflow = function (id, cb) {
-        workflowDaoService.getWorkflow(workflowId, function(err, item){
-            if(err) return callback(err);
+    self.getWorkflow = function (id, cb) {
+        workflowDaoService.getWorkflow(id, function(err, item){
+            if(err){
+                return cb(err);
+            }
             workflow = item;
-            callback();
+            cb();
         });
     };
 
-    this.checkStatusForRun = function(cb){
+    self.checkStatusForRun = function(cb){
         if(workflow.status != Workflow.statusCodes.INIT){
             return cb('Antud töövoo ühik on juba varem käivitatud');
         }
         return cb()
     };
 
-    this.startWorkflow = function (cb) {
+    self.startWorkflow = function (cb) {
 
         workflow.status = Workflow.statusCodes.RUNNING;
         workflow.datetime_start = new Date();
 
         workflow.save().then(function (updatedWorkflow) {
             workflow = updatedWorkflow;
-            cb(null, workflow);
 
-            self.handleServices();
+            cb(null, workflow); // return to user
+
+            self.startHandleServices();
         }).catch(function (err) {
             cb(err);
         });
     };
 
-    this.handleServices = function(){
+    var services;
+
+    self.startHandleServices = function(){
         logger.error('handleServices');
 
+        workflow.getWorkflowServices().then(function (data) {
+            services = data;
 
-
+            logger.error(services);
+        }).catch(function (err) {
+            self.finishWorkflow( Workflow.statusCodes.ERROR, function (err, item) {});
+        });
     };
 
 
@@ -81,7 +101,18 @@ function Runner(){
 
 
 
-
+//************
+    self.finishWorkflow = function (status, cb) {
+        workflow.status = status;
+        workflow.datetime_end = new Date();
+        workflow.save().then(function (updatedWorkflow) {
+            workflow = updatedWorkflow;
+            logger.info('Workflow id:'+updatedWorkflow.id+' finished with status: ' + workflow.status);
+            cb(null, workflow);
+        }).catch(function (err) {
+            cb(err);
+        });
+    }
 }
 
 module.exports = Runner;
