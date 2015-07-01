@@ -9,31 +9,27 @@ var async = require('async');
 function Runner(){
     var self = this;
 
-    //Käivita töövoo definitsioon
-    this.init = function (workflowDefinitionId, cb) {
+    //Käivita töövoo
+    this.init = function (workflowId, cb) {
         //todo
-    };
 
-    this.initWithResource = function (workflowDefinitionId, resourceId, cb) {
+        //1 get workflow
+        //2 check workflow status
+        //3 get next workflow_service or go 8
+        //4 check workflow_service status //error or running go 9
+        //5 get workflow_service input_resources | substep back or index
+        //6 check if resource is handled from service
+        //7 handle resource
+        //8 go 3
+        //9 finish
 
-        //var inInstanceBuilder
 
 
 
-        self.getWorkflowDefinition(workflowDefinitionId, function (err) {
-            
-        });
-        
-        
-
-        
-
-        // create workflow
-        // create workflow services with params
-        // run services
-            //get and split resources
 
     };
+
+
 
 
 
