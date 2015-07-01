@@ -29,7 +29,7 @@ function WorkflowBuilder(){
         async.waterfall([
             function (callback) {
                 projectDaoService.getProject(projectId, function (err, data) {
-                    if(err) return cb(err);
+                    if(err) return callback(err);
                     project = data;
                     logger.info('Got project: ' + data.id);
                     callback();
@@ -37,7 +37,7 @@ function WorkflowBuilder(){
             },
             function (callback) {
                 workflowDefinitionDaoService.getWorkflowDefinition(workflowDefinitionId, function (err, data) {
-                    if(err) return cb(err);
+                    if(err) return callback(err);
                     workflowDefinition = data;
                     logger.info('Got definition: ' + data.id);
                     callback();
@@ -53,8 +53,7 @@ function WorkflowBuilder(){
 
         var workflowData = {
             project_id: project.id,
-            workflow_definition_id: workflowDefinition.id,
-            input_resource_id: initResource.id
+            workflow_definition_id: workflowDefinition.id
         };
 
         Workflow.build(workflowData).save().then(function (item) {
@@ -71,16 +70,30 @@ function WorkflowBuilder(){
 
     this.setInitResources = function (cb) {
 
-        initResourceIds
-        /*   ,function (callback) {
-         resourceDaoService.getResource(resourceId, function (err, data) {
-         if(err) return cb(err);
-         initResource = data;
-         logger.info('Got resource: ' + data.id);
-         callback();
-         });
-         }*/
+        async.each(initResourceIds,
+            function (resourceId, callback) {
+                logger.info('Add init resource: ' + resourceId);
 
+                resourceDaoService.getResource(resourceId, function (err, data) {
+                    if(err) return cb(err);
+                    logger.info('Got resource: ' + data.id);
+                    workflow.addInputResource(data).then(function () {
+                        callback();
+                    }).catch(function (err) {
+                        return callback(err);
+                    });
+                });
+
+            }, function(err){
+                if(err){
+                    logger.error('Definition services copy failed');
+                    logger.error(err);
+                    return cb(err);
+                }
+                logger.debug('Definition services copied');
+                cb(null, workflow);
+            }
+        );
     };
 
     this.setServices = function (cb) {

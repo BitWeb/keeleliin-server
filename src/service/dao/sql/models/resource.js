@@ -14,7 +14,7 @@ module.exports = function(sequelize, DataTypes) {
         },
         parent_folder_id: {
             type: DataTypes.INTEGER,
-            allowNull: false,
+            allowNull: true,
             references: {
                 model: 'resource',
                 key: 'id'

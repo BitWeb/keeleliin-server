@@ -1,3 +1,17 @@
+INSERT INTO resource_type(id, value, name, split_type) VALUES (1, 'TEXT', 'Tekst', 'NONE');
+INSERT INTO resource_type(id, value, name, split_type) VALUES (2, 'WORD', 'Sõnad', 'NONE');
+
+INSERT INTO resource(
+            id, file_type, resource_type_id, source_original_name,
+            source_filename, filename, name)
+    VALUES (1, 'FILE', 1, 'name',
+    'name', 'name', 'name');
+INSERT INTO resource(
+            id, file_type, resource_type_id, source_original_name,
+            source_filename, filename, name)
+    VALUES (2, 'FILE', 1, 'name2',
+    'name2', 'name2', 'name2');
+
 INSERT INTO "user" (id, entu_id, email, name) SELECT 1, 1, 'taivo@bitweb.ee', 'taivo' WHERE NOT EXISTS (SELECT 1 FROM "user" WHERE "user".id = 1);
 INSERT INTO project (id, name, description, user_id) SELECT 1, 'test project', 'test project', 1 WHERE NOT EXISTS (SELECT 1 FROM project WHERE project.id = 1);
 INSERT INTO workflow_definition (id, project_id, user_id, name, description) SELECT 1, 1, 1, 'Test workflow', 'Test workflow' WHERE NOT EXISTS (SELECT 1 FROM workflow_definition WHERE workflow_definition.id = 1);

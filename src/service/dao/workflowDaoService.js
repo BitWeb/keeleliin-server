@@ -12,6 +12,17 @@ function WorkflowDaoService() {
 
     var self = this;
 
+    this.getWorkflow = function(id, cb){
+        Workflow.find({
+            where:{id:id}
+        }).then(function(item) {
+            if(!item){
+                return cb('workflow not found');
+            }
+            return cb(null, item);
+        }).catch(cb);
+    };
+
     this.findWorkflowsByProjectId = function(projectId, callback) {
 
         Workflow.findAll({
