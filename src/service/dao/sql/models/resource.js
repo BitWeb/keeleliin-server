@@ -25,7 +25,7 @@ module.exports = function(sequelize, DataTypes) {
             defaultValue: 'FILE',
             allowNull: false
         },
-        resource_type: {
+        resource_type_id: {
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
@@ -100,10 +100,23 @@ module.exports = function(sequelize, DataTypes) {
 
         classMethods: {
             associate: function(models) {
-                Resource.belongsToMany(models.Project, {through: 'project_has_resource', foreignKey: 'resource_id', otherKey: 'project_id'});
-                Resource.hasMany(models.Resource, { foreignKey: 'parent_folder_id', as: 'resourceFiles' });
-                Resource.belongsTo(models.Resource, { foreignKey: 'parent_folder_id', as: 'parent_folder' });
-
+                Resource.belongsTo(models.ResourceType, {
+                    foreignKey: 'resource_type_id',
+                    as: 'resourceType'
+                });
+                Resource.belongsToMany(models.Project, {
+                    through: 'project_has_resource',
+                    foreignKey: 'resource_id',
+                    otherKey: 'project_id',
+                    as: 'projects'
+                });
+                Resource.hasMany(models.Resource, {
+                    foreignKey: 'parent_folder_id',
+                    as: 'resourceFiles'
+                });
+                Resource.belongsTo(models.Resource, {
+                    foreignKey: 'parent_folder_id',
+                    as: 'parentFolder' });
                 Resource.belongsToMany(models.WorkflowDefinition, {
                     through: 'workflow_definition_has_input_resource',
                     foreignKey: 'resource_id',

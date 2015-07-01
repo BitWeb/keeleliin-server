@@ -19,10 +19,12 @@ function WorkflowBuilder(){
 
     var project;
     var workflowDefinition;
-    var initResource;
+    var initResourceIds;
     var workflow;
 
     this.create = function (projectId, workflowDefinitionId, resourceIds, cb) {
+
+        initResourceIds = resourceIds;
 
         async.waterfall([
             function (callback) {
@@ -38,14 +40,6 @@ function WorkflowBuilder(){
                     if(err) return cb(err);
                     workflowDefinition = data;
                     logger.info('Got definition: ' + data.id);
-                    callback();
-                });
-            },
-            function (callback) {
-                resourceDaoService.getResource(resourceId, function (err, data) {
-                    if(err) return cb(err);
-                    initResource = data;
-                    logger.info('Got resource: ' + data.id);
                     callback();
                 });
             }],
@@ -67,8 +61,26 @@ function WorkflowBuilder(){
             if(!item) return cb('Err');
             logger.info('Workflow created: ' + item.id);
             workflow = item;
-            self.setServices(cb);
+
+            self.setInitResources(function (err) {
+                if(err) return cb(err);
+                self.setServices(cb);
+            });
         }).catch(cb);
+    };
+
+    this.setInitResources = function (cb) {
+
+        initResourceIds
+        /*   ,function (callback) {
+         resourceDaoService.getResource(resourceId, function (err, data) {
+         if(err) return cb(err);
+         initResource = data;
+         logger.info('Got resource: ' + data.id);
+         callback();
+         });
+         }*/
+
     };
 
     this.setServices = function (cb) {
