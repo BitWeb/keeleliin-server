@@ -19,14 +19,6 @@ module.exports = function(sequelize, DataTypes) {
                 key: 'id'
             }
         },
-        input_resource_id: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-            references: {
-                model: 'resource',
-                key: 'id'
-            }
-        },
         status: {
             type: DataTypes.STRING,
             allowNull: false,
@@ -50,7 +42,11 @@ module.exports = function(sequelize, DataTypes) {
             associate: function(models) {
                 Workflow.hasMany(models.WorkflowService, {as: 'workflow_services'});
                 Workflow.belongsTo(models.WorkflowDefinition);
-                Workflow.belongsTo(models.Project, { as: 'project' })
+                Workflow.belongsTo(models.Project, { as: 'project' });
+                Workflow.belongsToMany(models.Resource, {
+                        through: 'workflow_has_input_resource',
+                        foreignKey: 'workflow_id'}
+                );
             }
         }
     });

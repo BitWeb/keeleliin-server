@@ -22,7 +22,7 @@ function WorkflowBuilder(){
     var initResource;
     var workflow;
 
-    this.create = function (projectId, workflowDefinitionId, resourceId, cb) {
+    this.create = function (projectId, workflowDefinitionId, resourceIds, cb) {
 
         async.waterfall([
             function (callback) {

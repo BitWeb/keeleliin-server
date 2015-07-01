@@ -12,6 +12,27 @@ module.exports = function(sequelize, DataTypes) {
             primaryKey: true,
             autoIncrement: true
         },
+        parent_folder_id: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: 'resource',
+                key: 'id'
+            }
+        },
+        file_type: {
+            type: DataTypes.STRING,
+            defaultValue: 'FILE',
+            allowNull: false
+        },
+        resource_type: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: 'resource_type',
+                key: 'id'
+            }
+        },
         source_original_name: {
             type: DataTypes.STRING,
             allowNull: false,
@@ -80,6 +101,31 @@ module.exports = function(sequelize, DataTypes) {
         classMethods: {
             associate: function(models) {
                 Resource.belongsToMany(models.Project, {through: 'project_has_resource', foreignKey: 'resource_id', otherKey: 'project_id'});
+                Resource.hasMany(models.Resource, { foreignKey: 'parent_folder_id', as: 'resourceFiles' });
+                Resource.belongsTo(models.Resource, { foreignKey: 'parent_folder_id', as: 'parent_folder' });
+
+                Resource.belongsToMany(models.WorkflowDefinition, {
+                    through: 'workflow_definition_has_input_resource',
+                    foreignKey: 'resource_id',
+                    otherKey: 'workflow_definition_id',
+                    as: 'workflowDefinitions'}
+                );
+                Resource.belongsToMany(models.Workflow, {
+                    through: 'workflow_has_input_resource',
+                    foreignKey: 'resource_id',
+                    otherKey: 'workflow_id',
+                    as: 'workflows'}
+                );
+                Resource.belongsToMany(models.WorkflowServiceSubstep, {
+                        through: 'workflow_service_substep_has_input_resource',
+                        foreignKey: 'resource_id',
+                        otherKey: 'workflow_service_substep_id'}
+                );
+                Resource.belongsToMany(models.WorkflowServiceSubstep, {
+                        through: 'workflow_service_substep_has_output_resource',
+                        foreignKey: 'resource_id',
+                        otherKey: 'workflow_service_substep_id'}
+                );
             }
         },
 

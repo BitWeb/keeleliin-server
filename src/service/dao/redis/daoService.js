@@ -5,7 +5,7 @@
  */
 var logger = require('log4js').getLogger('redis_dao_service');
 var redis = require('redis');
-redis.debug_mode = true;
+redis.debug_mode = false;
 
 var config = require(__base + 'config');
 

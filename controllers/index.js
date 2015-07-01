@@ -24,11 +24,10 @@ router.get('/generate', function(req, res, next) {
 router.get('/test', function(req, res, next) {
     var WorkflowBuilder = require('./../src/service/workflow/workflowBuilder');
     var workflowBuilder = new WorkflowBuilder();
-    workflowBuilder.create(1,1,1, function (err, data) {
+    workflowBuilder.create( 1, 1, [1], function (err, data) {
         if(err) return res.send(err);
         res.send(data);
     });
-
 });
 
 router.use('/api/v1/', require(__base + 'controllers/api/v1/index'));
