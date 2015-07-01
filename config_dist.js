@@ -23,4 +23,9 @@ config.entu = {
     apiUrl: 'https://entu.keeleressursid.ee/'
 };
 
+config.resources = {
+    location: '../keeleliin-files',
+    downloadLocation: '../keeleliin-files/downloads'
+};
+
 module.exports = config;
