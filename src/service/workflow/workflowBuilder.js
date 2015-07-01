@@ -11,11 +11,10 @@ var WorkflowDefinition = require(__base + 'src/service/dao/sql').WorkflowDefinit
 var Workflow = require(__base + 'src/service/dao/sql').Workflow;
 var WorkflowService = require(__base + 'src/service/dao/sql').WorkflowService;
 var WorkflowServiceParamValue = require(__base + 'src/service/dao/sql').WorkflowServiceParamValue;
-
 var async = require('async');
 
 
-function InstanceBuilder(){
+function WorkflowBuilder(){
     var self = this;
 
     var project;
@@ -133,9 +132,7 @@ function InstanceBuilder(){
 
     this.copyDefinitionServiceParamValue = function (definitionParamValue, workflowService, cb) {
 
-
         logger.info('Copy definition param value: ' + definitionParamValue.id);
-
         var data = {
             workflow_service_id: workflowService.id,
             service_param_id: definitionParamValue.service_param_id,
@@ -146,9 +143,6 @@ function InstanceBuilder(){
             cb(null, item);
         }).catch(cb);
     }
-
-
-
 }
 
-module.exports = InstanceBuilder;
+module.exports = WorkflowBuilder;

@@ -4,9 +4,7 @@
 var logger = require('log4js').getLogger('workflow_runner');
 var WorkflowDefinition = require(__base + 'src/service/dao/sql').WorkflowDefinition;
 var Workflow = require(__base + 'src/service/dao/sql').Workflow;
-var InstanceBuilder = require('./instanceBuilder');
 var async = require('async');
-
 
 function Runner(){
     var self = this;

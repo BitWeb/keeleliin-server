@@ -22,9 +22,9 @@ router.get('/generate', function(req, res, next) {
 });
 
 router.get('/test', function(req, res, next) {
-    var InstanceBuilder = require('./../src/service/workflow/instanceBuilder');
-    var instanceBuilder = new InstanceBuilder();
-    instanceBuilder.create(1,1,1, function (err, data) {
+    var WorkflowBuilder = require('./../src/service/workflow/workflowBuilder');
+    var workflowBuilder = new WorkflowBuilder();
+    workflowBuilder.create(1,1,1, function (err, data) {
         if(err) return res.send(err);
         res.send(data);
     });
