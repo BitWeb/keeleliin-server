@@ -6,6 +6,11 @@
 
 module.exports = function(sequelize, DataTypes) {
 
+    var fileTypes = {
+        FOLDER  : 'FOLDER',
+        FILE    : 'FILE'
+    };
+
     var Resource = sequelize.define("Resource", {
         id: {
             type: DataTypes.INTEGER,
@@ -22,7 +27,7 @@ module.exports = function(sequelize, DataTypes) {
         },
         file_type: {
             type: DataTypes.STRING,
-            defaultValue: 'FILE',
+            defaultValue: fileTypes.FILE,
             allowNull: false
         },
         resource_type_id: {
@@ -153,6 +158,8 @@ module.exports = function(sequelize, DataTypes) {
             }
         }
     });
+
+    Resource.fileTypes = fileTypes;
 
     return Resource;
 };

@@ -4,15 +4,23 @@
 var logger = require('log4js').getLogger('workflow_runner');
 
 var workflowDaoService = require(__base + 'src/service/dao/workflowDaoService');
+var resourceDaoService = require(__base + 'src/service/dao/resourceDaoService');
 
 var WorkflowDefinition = require(__base + 'src/service/dao/sql').WorkflowDefinition;
 var Workflow = require(__base + 'src/service/dao/sql').Workflow;
+
+var WorkflowServiceSubstep = require(__base + 'src/service/dao/sql').WorkflowServiceSubstep;
+
+var SubstepServiceDtoMapper = require('./substep/substepServiceDtoMapper');
+
+
 var async = require('async');
 
 function Runner(){
     var self = this;
 
     var workflow;
+    var workflowServices;
 
     //Käivita töövoo
     this.run = function (workflowId, cb) {
@@ -32,13 +40,13 @@ function Runner(){
 
         async.waterfall([
             function (callback) {
-                self.getWorkflow(workflowId, callback);
+                self._getWorkflow(workflowId, callback);
             },
             function (callback) {
-                self.checkStatusForRun(callback);
+                self._checkStatusForRun(callback);
             },
             function (callback) {
-                self.startWorkflow(callback);
+                self._startWorkflow(callback);
             }
         ], function (err) {
             if(err){
@@ -49,7 +57,7 @@ function Runner(){
         });
     };
 
-    self.getWorkflow = function (id, cb) {
+    this._getWorkflow = function (id, cb) {
         workflowDaoService.getWorkflow(id, function(err, item){
             if(err){
                 return cb(err);
@@ -59,14 +67,14 @@ function Runner(){
         });
     };
 
-    self.checkStatusForRun = function(cb){
+    this._checkStatusForRun = function(cb){
         if(workflow.status != Workflow.statusCodes.INIT){
             return cb('Antud töövoo ühik on juba varem käivitatud');
         }
         return cb()
     };
 
-    self.startWorkflow = function (cb) {
+    this._startWorkflow = function (cb) {
 
         workflow.status = Workflow.statusCodes.RUNNING;
         workflow.datetime_start = new Date();
@@ -76,24 +84,104 @@ function Runner(){
 
             cb(null, workflow); // return to user
 
-            self.startHandleServices();
+            self._startHandleServices();
         }).catch(function (err) {
             cb(err);
         });
     };
 
-    var services;
-
-    self.startHandleServices = function(){
+    this._startHandleServices = function(){
         logger.error('handleServices');
 
-        workflow.getWorkflowServices().then(function (data) {
-            services = data;
-
-            logger.error(services);
+        //
+        workflow.getWorkflowServices({order: [['order_num', 'ASC']]}).then(function (data) {
+            workflowServices = data;
+            logger.error(workflowServices);
+            self._handleFirstWorkflowService();
         }).catch(function (err) {
             self.finishWorkflow( Workflow.statusCodes.ERROR, function (err, item) {});
         });
+    };
+
+    this._handleFirstWorkflowService = function(){
+
+        var workflowService = workflowServices[0];
+        if(!workflowService){
+            logger.info('No service to handle on index' + 0);
+            return true;
+        }
+
+        workflowService.order_num = 0;
+
+        workflow.getInputResources().then(function (resources) {
+            self._handleFirstWorkflowServiceResources(resources, workflowService);
+        }).catch(function (err) {
+            logger.error(err);
+        });
+    };
+
+    this._handleFirstWorkflowServiceResources = function ( resources, workflowService ) {
+
+        async.each(
+            resources,
+            function (resource, callback) {
+                self._makeWorkflowServiceStep(resource, workflowService);
+            },
+            function (err) {
+                if(err){
+                    logger.error('_handleFirstWorkflowServiceResources');
+                    logger.error(err);
+                    return false;
+                }
+                logger.info('First service handle started');
+            }
+        );
+    };
+
+    this._makeWorkflowServiceStep = function (resource, workflowService) {
+
+        var substepData = {
+            workflow_service_id: workflowService.id,
+            prev_substep_id: null,
+            status: 'INIT',
+            index: 0
+        };
+
+        WorkflowServiceSubstep.build(substepData).save().then(function (substep){
+
+            substep.addInputResource(resource).then(function (){
+
+                self._runSubstep(substep);
+
+            }).catch(function (err) {
+                logger.error('Add resource error');
+                logger.error(err);
+            });
+        }).catch(function (err) {
+            logger.error('Save step error');
+            logger.error(err);
+        });
+    };
+
+    this._runSubstep = function (substep) {
+
+        substep.status = 'RUNNING';
+        substep.datetime_start = new Date();
+        substep.save().then(function (substep){
+
+            var mapper = SubstepServiceDtoMapper();
+            mapper.getSubstepServiceDto(substep, function (err, dto) {
+
+                //execute service
+
+            });
+
+
+        }).catch(function (err) {
+            logger.error('Save step error');
+            logger.error(err);
+        });
+
     };
 
 

@@ -6,7 +6,7 @@ var Project = require(__base + 'src/service/dao/sql').Project;
 var Workflow = require(__base + 'src/service/dao/sql').Workflow;
 var WorkflowServiceModel = require(__base + 'src/service/dao/sql').WorkflowService;
 var WorkflowServiceParamValue = require(__base + 'src/service/dao/sql').WorkflowServiceParamValue;
-var ServiceModelParam = require(__base + 'src/service/dao/sql').ServiceParam;
+var ServiceParam = require(__base + 'src/service/dao/sql').ServiceParam;
 
 function WorkflowDaoService() {
 
@@ -49,7 +49,7 @@ function WorkflowDaoService() {
             attributes: ['id', 'value'],
             include: [
                 {
-                    model: ServiceModelParam,
+                    model: ServiceParam,
                     as: 'service_param',
                     attributes: ['id', 'type', 'key', 'value', 'order_num', 'is_editable', 'description']
                 }

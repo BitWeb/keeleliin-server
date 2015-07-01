@@ -14,6 +14,11 @@ module.exports = function(sequelize, DataTypes) {
         key: {
             type: DataTypes.STRING,
             allowNull: false
+        },
+        do_parallel: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false
         }
     }, {
         tableName: 'service_input_type',
