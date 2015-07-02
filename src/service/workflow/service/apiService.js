@@ -5,6 +5,7 @@ var logger = require('log4js').getLogger('api_service');
 var request = require('request');
 var fs = require('fs');
 var http = require('http');
+var config = require(__base  + 'config');
 
 function ApiService(){
 
@@ -23,10 +24,11 @@ function ApiService(){
         }
 
         for(var j in dto.files){
-            formData[j] = fs.createReadStream( dto.files[j] );
+            formData[j] = fs.createReadStream( config.resources.location + dto.files[j] );
         }
 
-        logger.error(formData);
+        logger.info( formData );
+
 
         request.post( { url: url, formData: formData }, function (err, resp, body) {
             if (err) {
@@ -52,7 +54,7 @@ function ApiService(){
     this.loadRequestResponse = function (dto, id, key, outputPath, cb) {
 
         var url = dto.url + 'service' + '/' + id + '/' + key;
-        var file = fs.createWriteStream(outputPath);
+        var file = fs.createWriteStream( config.resources.location + outputPath );
         var request = http.get(url, function(response) {
             response.pipe(file);
             file.on('finish', function() {

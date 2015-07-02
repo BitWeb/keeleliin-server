@@ -2,20 +2,23 @@
  * Created by priit on 30.06.15.
  */
 var logger = require('log4js').getLogger('workflow_runner');
+var async = require('async');
 
-var workflowDaoService = require(__base + 'src/service/dao/workflowDaoService');
-var resourceDaoService = require(__base + 'src/service/dao/resourceDaoService');
-var apiService = require('./service/apiService');
+var config = require(__base + 'config');
 
 var WorkflowDefinition = require(__base + 'src/service/dao/sql').WorkflowDefinition;
 var Workflow = require(__base + 'src/service/dao/sql').Workflow;
-
 var WorkflowServiceSubstep = require(__base + 'src/service/dao/sql').WorkflowServiceSubstep;
+var WorkflowService = require(__base + 'src/service/dao/sql').WorkflowService;
+var Resource = require(__base + 'src/service/dao/sql').Resource;
 
-var substepServiceDtoMapper = require('./substep/substepServiceDtoMapper');
+var workflowDaoService = require(__base + 'src/service/dao/workflowDaoService');
 
 
-var async = require('async');
+
+var substepRunner = require('./substep/substepRunner');
+
+
 
 function Runner(){
     var self = this;
@@ -25,20 +28,7 @@ function Runner(){
 
     //Käivita töövoo
     this.run = function (workflowId, cb) {
-
         logger.debug('Run workflow id: '  + workflowId);
-
-        //todo
-        //1 get workflow
-        //2 check workflow status
-        //3 get next workflow_service or go 8
-        //4 check workflow_service status //error or running go 9
-        //5 get workflow_service input_resources | substep back or index
-        //6 check if resource is handled from service
-        //7 handle resource
-        //8 go 3
-        //9 finish
-
         async.waterfall([
             function (callback) {
                 self._getWorkflow(workflowId, callback);
@@ -55,6 +45,60 @@ function Runner(){
                 return cb(err);
             }
             return cb(null, workflow);
+        });
+    };
+
+    this.check = function (workflowId, cb) {
+
+        Workflow.find({
+            as: 'workflow',
+            where: {
+                id: workflowId
+            },
+            include: [
+                {
+                    model: Resource,
+                    as: 'inputResources',
+                    attributes: ['id','name', 'file_type', 'date_created']
+
+                },{
+                    model: WorkflowService,
+                    as: 'workflowServices',
+                    where: {},
+                    include: [
+                        {
+                            model: WorkflowServiceSubstep,
+                            as: 'subSteps',
+                            where: {},
+                            include: [
+                                {
+                                    model: Resource,
+                                    as: 'inputResources',
+                                    where: {},
+                                    attributes: ['id','name', 'file_type', 'date_created']
+                                },
+                                {
+                                    model: Resource,
+                                    as: 'outputResources',
+                                    where: {},
+                                    attributes: ['id','name', 'file_type', 'date_created']
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }).then(function (item) {
+
+            logger.error(item);
+
+            if(!item){
+                return cb('Töövoogu ei leitud');
+            }
+            cb(null, item)
+        }).catch(function (err) {
+            logger.error(err);
+            cb(err);
         });
     };
 
@@ -105,28 +149,66 @@ function Runner(){
     };
 
     this._handleFirstWorkflowService = function(){
-
+        logger.debug('Handle first');
         var workflowService = workflowServices[0];
         if(!workflowService){
             logger.info('No service to handle on index' + 0);
-            return true;
+            return self.finishWorkflow(Workflow.statusCodes.FINISHED, function () {});
         }
 
         workflowService.order_num = 0;
 
-        workflow.getInputResources().then(function (resources) {
-            self._handleFirstWorkflowServiceResources(resources, workflowService);
-        }).catch(function (err) {
-            logger.error(err);
+        self.startWorkflowService(workflowService, function (err, workflowService) {
+            workflow.getInputResources().then(function (resources) {
+                logger.debug('Start handle first resources');
+                self._handleWorkflowServiceResources(resources, workflowService, null);
+            }).catch(function (err) {
+                logger.error(err);
+            });
         });
     };
 
-    this._handleFirstWorkflowServiceResources = function ( resources, workflowService ) {
 
+    this.startWorkflowService = function (workflowService, cb) {
+        if(workflowService.status == WorkflowService.statusCodes.INIT){
+            workflowService.status = WorkflowService.statusCodes.RUNNING;
+            workflowService.datetime_start = new Date();
+
+            return workflowService.save().then(function (workflowService) {
+                cb(null, workflowService);
+            }).catch(cb);
+
+        } else if(workflowService.status == WorkflowService.statusCodes.ERROR){
+
+            return cb('Töövoos on tekkinud viga');
+        }
+
+        logger.debug('Workflow already started');
+        cb(null, workflowService);
+    };
+
+    this.finishWorkflowService = function (workflowService,status, cb) {
+
+        if(workflowService.status =! WorkflowService.statusCodes.ERROR){
+            workflowService.status = status;
+            workflowService.datetime_end = new Date();
+        }
+
+        workflowService.save().then(function (workflowService) {
+            cb(null, workflowService);
+        }).catch(cb);
+    };
+/********/
+    this._handleWorkflowServiceResources = function ( resources, workflowService, previousStep ) {
+
+        logger.error('_handleWorkflowServiceResources' + resources.length + ' ' + workflowService.id);
+
+
+        //todo: eeldatakse, et kõik sisendressursid on ühte tüüpi ja sobivad teenusele
         async.each(
             resources,
             function (resource, callback) {
-                self._makeWorkflowServiceSubStep(resource, workflowService, function (err, substep) {
+                self._makeWorkflowServiceSubStep(resource, workflowService, previousStep, function (err, substep) {
                     self._runSubstep(substep);
                     callback();
                 });
@@ -137,13 +219,13 @@ function Runner(){
                     logger.error(err);
                     return false;
                 }
-                logger.info('First service handle started');
+                logger.info('Service handle started');
             }
         );
     };
 
 
-    this._makeWorkflowServiceSubStep = function ( resource, workflowService, cb) {
+    this._makeWorkflowServiceSubStep = function ( resource, workflowService, previousStep, cb) {
 
         var substepData = {
             workflow_service_id: workflowService.id,
@@ -151,6 +233,11 @@ function Runner(){
             status: 'INIT',
             index: 0
         };
+
+        if(previousStep){
+            substepData.prev_substep_id = previousStep.id
+        }
+
         WorkflowServiceSubstep.build(substepData).save().then(function (substep){
             substep.addInputResource(resource).then(function (){
                 cb(null, substep);
@@ -166,62 +253,106 @@ function Runner(){
 
     this._runSubstep = function (substep) {
 
-        substep.status = 'RUNNING';
-        substep.datetime_start = new Date();
-        substep.save().then(function (substep){
-
-            substepServiceDtoMapper.getSubstepServiceDto(substep, function (err, dto) {
-                logger.error(dto);
-                self.makeRequest(substep, dto);
-            });
-        }).catch(function (err) {
-            logger.error('Save step error');
-            logger.error(err);
+        substepRunner.run(substep, function(err, substep){
+            logger.info('Substep is finishe running: ' + substep.id + ' status: ' + substep.status);
+            self._continueRunFromSubstep( substep );
         });
     };
 
-    this.makeRequest = function (substep, dto){
-        //execute service
-        apiService.makeRequest(dto, function (err, response) {
-            logger.debug(response);
-            self.handleResponse(substep, dto, response);
-        });
+    this._continueRunFromSubstep = function (substep) {
 
-    };
+        substep.getWorkflowService().then(function (workflowService) {
+            var orderNum = workflowService.order_num;
+            var nextOrderNum = orderNum + 1;
+            var nextWorkflowService =  workflowServices[nextOrderNum];
 
-    this.recheckRequest = function () {
-        //todo
-    };
+            if(nextWorkflowService){
+                nextWorkflowService.order_num = nextOrderNum;
+                self._handleWorkflowService(nextWorkflowService, substep);
+            } else {
+                self.tryToCloseWorkflowService(workflowService, function () {
 
-    this.handleResponse = function (substep, dto, response){
 
-        if(response.response.message == 'OK'){
-               self.finishSubstepRequest(substep, dto, response);
-        } else {
-            logger.error('TODO:: Not OK');
-        }
-    };
-
-    this.finishSubstepRequest = function (substep, dto, response) {
-        var fileKeys =  response.response.data.files;
-        async.eachSeries(fileKeys, function iterator(fileKey, callback) {
-
-            var outputPath = __base + substep.id;
-            var requestSessionId = response.response.serviceId;
-
-            apiService.loadRequestResponse(dto, requestSessionId, fileKey, outputPath, function (err) {
-                callback(err);
-            });
-        }, function done(err) {
-            logger.error('Done');
-            //todo goto next request or finish with that
+                    logger.error('No next nextWorkflowService. Tried to close id: ' + workflowService.id);
+                });
+            }
         });
     };
 
+    this._handleWorkflowService = function (workflowService, fromSubstep) {
+
+        async.waterfall([
+            function checkPast(callback){
+                fromSubstep.getWorkflowService().then(function (fromWorkflowService) {
+                    self.tryToCloseWorkflowService(fromWorkflowService, callback);
+                });
+            },
+            function startWfService(callback) {
+                self.startWorkflowService(workflowService, callback);
+            },
+            function handleFromSubstepOutputResources(workflowService, callback) {
+                fromSubstep.getOutputResources().then(function (resources) {
+                    self._handleWorkflowServiceResources(resources, workflowService, fromSubstep);
+                    callback();
+                });
+            }
+        ], function (err) {
+            logger.info('workflow service '+ workflowService +' handling started from substep ' + fromSubstep.id);
+        });
+    };
+
+    this.tryToCloseWorkflowService = function (workflowService, cb) {
+
+        logger.error('ORDER NUM' + workflowService.order_num + ' ID:' + workflowService.id);
+
+
+        ///
+        WorkflowService.count({
+            where: {
+                workflow_id: workflowService.workflow_id,
+                status: {
+                    ne: WorkflowServiceSubstep.statusCodes.FINISHED
+                },
+                order_num:{
+                    lte: workflowService.order_num
+                }
+            }
+        }).then(function (notClosedCount) {
+            logger.error('BEFORE1');
+            logger.error(notClosedCount);
+        });
+
+        //kas kõik selle ja eelnevate teenusele sammud on lõpetanud
+        WorkflowServiceSubstep.count({
+            where: {
+                status: {
+                    ne: WorkflowServiceSubstep.statusCodes.FINISHED
+                }
+            },
+            include: [{
+                model: WorkflowService,
+                as: 'workflowService',
+                required: true,
+                where: {
+                    workflow_id: workflowService.workflow_id,
+                    order_num:{
+                        lte: workflowService.order_num
+                    }
+                }
+            }]
+        }).then(function (notClosedCount) {
+            logger.error('BEFORE2');
+            logger.error(notClosedCount);
+        });
 
 
 
 
+
+
+
+        cb();
+    };
 //************
     self.finishWorkflow = function (status, cb) {
         workflow.status = status;

@@ -58,19 +58,15 @@ function SubstepServiceDtoMapper(){
     this.setDtoFiles = function (dto, service, resources, cb) {
         dto.files = {};
         service.getServiceInputTypes().then(function (inputypes) {
-
-            logger.error('COMP');
-            logger.error(inputypes);
+            logger.info('Input types count: ' + inputypes.length);
 
             for(i in inputypes){
                 var inputype = inputypes[i];
                 for(j in resources){
-
-                    logger.error('COMP');
-
                     var resource = resources[j];
                     if(inputype.resource_type_id == resource.resource_type_id){
-                        dto.files[inputype.key] = __base + resource.filename;
+                        logger.error('Suitable input resource found: ' + resource.id);
+                        dto.files[inputype.key] = resource.filename;
                     }
                 }
             }

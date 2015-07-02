@@ -2,9 +2,11 @@
  * Created by taivo on 11.06.15.
  */
 
-var express = require('express'),
-    router = express.Router(),
-    resourceService = require('../../../src/service/resourceService');
+var express = require('express');
+var router = express.Router();
+var resourceService = require('../../../src/service/resourceService');
+var fs = require('fs');
+var config = require(__base + 'config');
 
 router.get('/', function(req, res) {
 
@@ -21,6 +23,16 @@ router.get('/:resourceId', function(req, res) {
         return res.send(resource);
     });
 });
+
+router.get('/download/:resourceId', function(req, res) {
+    resourceService.getResource(req, req.params.resourceId, function(error, resource) {
+        if (error) {
+            res.send({errors: 'Resource not found'});
+        }
+        fs.createReadStream(config.resources.location + resource.filename).pipe(res);
+    });
+});
+
 
 router.post('/', function(req, res) {
 

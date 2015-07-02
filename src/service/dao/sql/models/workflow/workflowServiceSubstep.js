@@ -2,6 +2,14 @@
 
 module.exports = function(sequelize, DataTypes) {
 
+    var statusCodes = {
+        INIT: 'INIT',
+        RUNNING: 'RUNNING',
+        ERROR: 'ERROR',
+        FINISHED: 'FINISHED'
+    };
+
+
     var WorkflowServiceSubstep = sequelize.define("WorkflowServiceSubstep", {
         id: {
             type: DataTypes.INTEGER,
@@ -10,6 +18,7 @@ module.exports = function(sequelize, DataTypes) {
         },
         workflow_service_id: {
             type: DataTypes.INTEGER,
+            foreignKey: true,
             allowNull: false,
             references: {
                 model: 'workflow_service',
@@ -27,7 +36,7 @@ module.exports = function(sequelize, DataTypes) {
         status: {
             type: DataTypes.STRING,
             allowNull: false,
-            defaultValue: 'INIT'
+            defaultValue: statusCodes.INIT
         },
         index: {
             type: DataTypes.INTEGER,
@@ -73,6 +82,8 @@ module.exports = function(sequelize, DataTypes) {
             }
         }
     });
+
+    WorkflowServiceSubstep.statusCodes = statusCodes;
 
     return WorkflowServiceSubstep;
 };

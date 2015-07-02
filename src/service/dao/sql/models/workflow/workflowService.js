@@ -6,6 +6,13 @@
 
 module.exports = function(sequelize, DataTypes) {
 
+    var statusCodes = {
+        INIT: 'INIT',
+        RUNNING: 'RUNNING',
+        ERROR: 'ERROR',
+        FINISHED: 'FINISHED'
+    };
+
     var WorkflowService = sequelize.define("WorkflowService", {
         id: {
             type: DataTypes.INTEGER,
@@ -31,7 +38,7 @@ module.exports = function(sequelize, DataTypes) {
         status: {
             type: DataTypes.STRING,
             allowNull: false,
-            defaultValue: 'INIT'
+            defaultValue: statusCodes.INIT
         },
         order_num: {
             type: DataTypes.INTEGER,
@@ -56,10 +63,14 @@ module.exports = function(sequelize, DataTypes) {
             associate: function(models) {
                 WorkflowService.belongsTo(models.Service, {as: 'service'});
                 WorkflowService.belongsTo(models.Workflow);
+                WorkflowService.hasMany(models.WorkflowServiceSubstep, {foreignKey: 'workflow_service_id', as: 'subSteps'});
                 WorkflowService.hasMany(models.WorkflowServiceParamValue, {foreignKey: 'workflow_service_id', as: 'paramValues'});
             }
         }
     });
+
+    WorkflowService.statusCodes = statusCodes;
+
 
     return WorkflowService;
 };

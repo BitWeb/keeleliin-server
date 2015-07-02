@@ -1,7 +1,7 @@
 /**
  * Created by priit on 30.06.15.
  */
-var logger = require('log4js').getLogger('instance_builder');
+var logger = require('log4js').getLogger('workflow_instance_builder');
 
 var projectDaoService = require(__base + 'src/service/dao/projectDaoService');
 var workflowDefinitionDaoService = require(__base + 'src/service/dao/workflowDefinitionDaoService');
@@ -22,9 +22,14 @@ function WorkflowBuilder(){
     var initResourceIds;
     var workflow;
 
-    this.create = function (projectId, workflowDefinitionId, resourceIds, cb) {
+    this.create = function (data, cb) {
 
-        initResourceIds = resourceIds;
+
+        logger.error(data);
+
+        var projectId = data.project_id;
+        var workflowDefinitionId = data.workflow_definition_id;
+        initResourceIds = data.resources;
 
         async.waterfall([
             function (callback) {
