@@ -17,8 +17,8 @@ router.get('/', function(req, res) {
 
 router.get('/:resourceId', function(req, res) {
     resourceService.getResource(req, req.params.resourceId, function(error, resource) {
-        if (error) {
-            res.send({errors: 'Resource not found'});
+        if (error || !resource) {
+            res.status(404).send({errors: 'Resource not found'});
         }
         return res.send(resource);
     });
@@ -26,8 +26,8 @@ router.get('/:resourceId', function(req, res) {
 
 router.get('/download/:resourceId', function(req, res) {
     resourceService.getResource(req, req.params.resourceId, function(error, resource) {
-        if (error) {
-            res.send({errors: 'Resource not found'});
+        if (error || !resource) {
+            res.status(404).send({errors: 'Resource not found'});
         }
         fs.createReadStream(config.resources.location + resource.filename).pipe(res);
     });

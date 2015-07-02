@@ -33,7 +33,7 @@ function ApiService(){
         request.post( { url: url, formData: formData }, function (err, resp, body) {
             if (err) {
                 logger.error('Error!');
-                return cb(err);
+                return cb(err.message);
             }
             cb(null, JSON.parse(resp.body));
         });
@@ -44,10 +44,10 @@ function ApiService(){
         request.get( { url: url }, function (err, resp, body) {
             if (err) {
                 logger.error('Error!');
-                logger.error(err);
-                cb(err);
+                logger.error(err.message);
+                return cb(err.message);
             }
-            cb(null, JSON.parse(resp.body));
+            return cb(null, JSON.parse(resp.body));
         });
     };
 
