@@ -50,10 +50,8 @@ function SubStepRunner(){
     };
 
     this.handleResponse = function (substep, dto, response, cb){
-        logger.debug('Handle response ' + response.response.message);
-        logger.debug(dto);
 
-        if(! response.response){
+        if(!response || !response.response){
             logger.error('TODO:: No response');
             self._updateSubstepFinishStatus(substep, WorkflowServiceSubstep.statusCodes.ERROR, cb);
         }else if(response.response.message == 'OK') {
@@ -69,9 +67,9 @@ function SubStepRunner(){
     };
 
     this._recheckRequest = function (substep, dto, response, cb) {
-        logger.error('Recheck request on ' + response.response.recheckInterval);
-        logger.error(dto);
-        logger.error(response);
+        logger.debug('Recheck request on ' + response.response.recheckInterval);
+        logger.debug(dto);
+        logger.debug(response);
 
         setTimeout(function () {
             apiService.recheckRequest(dto, response.response.serviceId, function (error, response) {
@@ -118,7 +116,7 @@ function SubStepRunner(){
                 self._updateSubstepFinishStatus(substep, WorkflowServiceSubstep.statusCodes.FINISHED, wfCallback);
             }
         ], function (err, data) {
-            logger.error('Finished');
+            logger.debug('Finished: ' + substep.id);
             cb(err, data);
         });
     };
@@ -202,7 +200,6 @@ function SubStepRunner(){
             }
         ], cb );
     };
-
 }
 
 module.exports = new SubStepRunner();

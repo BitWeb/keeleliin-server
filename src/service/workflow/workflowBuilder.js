@@ -24,8 +24,7 @@ function WorkflowBuilder(){
 
     this.create = function (data, cb) {
 
-
-        logger.error(data);
+        logger.debug('Init data: ' +  JSON.stringify(data));
 
         var projectId = data.project_id;
         var workflowDefinitionId = data.workflow_definition_id;

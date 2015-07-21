@@ -187,13 +187,12 @@ function Runner(){
 /********/
     this._handleWorkflowServiceResources = function ( resources, workflowService, previousStep ) {
 
-        logger.error('_handleWorkflowServiceResources' + resources.length + ' ' + workflowService.id);
-
+        logger.error('Handle workflow service resources. Count: ' + resources.length + ' Service id: ' + workflowService.id);
 
         //todo: eeldatakse, et kõik sisendressursid on ühte tüüpi ja sobivad teenusele. Päringu dto mappimisel kontrollitakse sobivus üle
         async.each(
             resources,
-            function (resource, callback) {
+            function makeResourceSubStep(resource, callback) {
                 self._makeWorkflowServiceSubStep(resource, workflowService, previousStep, function (err, substep) {
                     self._runSubstep(substep);
                     callback();
@@ -257,7 +256,7 @@ function Runner(){
                 self._handleWorkflowService(nextWorkflowService, substep);
             } else {
                 self.tryToFinishWorkflowService(workflowService, function () {
-                    logger.error('No next nextWorkflowService. Tried to close id: ' + workflowService.id);
+                    logger.info('No next nextWorkflowService. Tried to close id: ' + workflowService.id);
 
                     self.tryToFinishWorkflow(function () {
                         logger.debug('Tried to finish workflow id: ' + workflow.id + ' Status: ' + workflow.status);
@@ -367,9 +366,7 @@ function Runner(){
     };
 
     this.finishWorkflowService = function (workflowService, status, cb) {
-        logger.error('Set status ' + status);
-        logger.error('Set status codes');
-        logger.error(WorkflowService.statusCodes);
+        logger.info('Set service status ' + status);
 
         if(workflowService.status != WorkflowService.statusCodes.ERROR){
             workflowService.status = status;
@@ -384,16 +381,30 @@ function Runner(){
     this.tryToFinishWorkflow = function (cb) {
 
         async.waterfall([
+            function areThereAnyErrorsBefore(callback){
+                WorkflowService.count({
+                    where: {
+                        workflow_id: workflow.id,
+                        status: WorkflowService.statusCodes.ERROR
+                    }
+                }).then(function (errorsCount) {
+                    logger.debug('Services with errors: ' + errorsCount);
+                    if(errorsCount > 0){
+                        return self.finishWorkflow(Workflow.statusCodes.ERROR, cb); //Finish with error
+                    }
+                    callback();
+                }).catch(cb);
+            },
             function areThereAnyNotFinishedServices(callback) {
                 WorkflowService.count({
                     where: {
                         workflow_id: workflow.id,
                         status: {
-                            ne: WorkflowService.statusCodes.FINISHED
+                            in: [ WorkflowService.statusCodes.INIT, WorkflowService.statusCodes.RUNNING]
                         }
                     }
                 }).then(function (notFinishedCount) {
-                    logger.debug('Not finished count: ' + notFinishedCount);
+                    logger.debug( 'Not finished count: ' + notFinishedCount );
 
                     if(notFinishedCount > 0){
                         return cb();
@@ -412,6 +423,7 @@ function Runner(){
     };
 
     this.finishWorkflow = function (status, cb) {
+        logger.debug('Set workflow status: ' + status);
         workflow.status = status;
         workflow.datetime_end = new Date();
         workflow.save().then(function (updatedWorkflow) {
