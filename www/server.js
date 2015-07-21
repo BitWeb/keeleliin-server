@@ -36,11 +36,11 @@ log4js.configure({
                 }
             }
         },
-        { type: 'file', filename: 'keeleliin.log' }
+        { type: 'file', filename: __base + 'keeleliin-server.log' }
     ]
 });
 
-var log4jsLogger = log4js.getLogger('app_js');
+var log4jsLogger = log4js.getLogger('server_js');
 app.use(logger('dev'));
 app.use(bodyParser.json({limit: '1000mb'})); // for parsing application/json
 app.use(bodyParser.urlencoded({extended: true}));

@@ -38,6 +38,9 @@ function SubstepServiceDtoMapper(){
                 self._setInputResources(dto, workflowSubstep, service, callback);
             }
         ], function (err, dto) {
+
+            logger.debug('Made dto: ' + JSON.stringify(dto));
+
             cb(err, dto);
         });
     };
@@ -87,7 +90,8 @@ function SubstepServiceDtoMapper(){
                     for(j in resources){
                         var resource = resources[j];
                         if(inputype.resource_type_id == resource.resource_type_id){
-                            logger.error('Suitable input resource found: ' + resource.id);
+                            logger.debug('Suitable input resource found: ' + resource.id);
+                            logger.debug('Key: ' + inputype.key + ' Filename: ' + resource.filename);
                             dto.files[inputype.key] = resource.filename;
                         }
                     }
