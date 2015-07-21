@@ -35,14 +35,20 @@ function SubStepRunner(){
             function (dto, callback) {
                 self.makeRequest(substep, dto, callback);
             }
-        ], function (err, substep) {
-            if(err) logger.error(err);
-            cb(err, substep);
+        ], function (err) {
+            if(err){
+                logger.error(err);
+                substep.log = err;
+                return self._updateSubstepFinishStatus(substep, WorkflowServiceSubstep.statusCodes.ERROR, cb);
+            }
+
+            cb(null, substep);
         });
     };
 
     this.makeRequest = function (substep, dto, cb){
         apiService.makeRequest(dto, function (err, response) {
+            if(err){ return cb(err); }
             logger.debug(response);
             self.handleResponse(substep, dto, response, cb);
         });
@@ -53,6 +59,7 @@ function SubStepRunner(){
 
         if(!response || !response.response){
             logger.error('TODO:: No response');
+            substep.log = 'No service response';
             self._updateSubstepFinishStatus(substep, WorkflowServiceSubstep.statusCodes.ERROR, cb);
         }else if(response.response.message == 'OK') {
             logger.info('Message OK');
@@ -60,8 +67,14 @@ function SubStepRunner(){
         } else if(response.response.message == 'RUNNING'){
             logger.info('Message RUNNING');
             self._recheckRequest(substep, dto, response, cb);
+        } else if(response.response.message == 'ERROR'){
+            logger.info('Message ERROR');
+            logger.error(response.response);
+            substep.log = 'Got service error: ' + JSON.stringify(response.response.errors);
+            self._updateSubstepFinishStatus(substep, WorkflowServiceSubstep.statusCodes.ERROR, cb);
         } else {
             logger.error('TODO:: Not OK');
+            substep.log = 'No service response message not mapped: ' + response.response.message;
             self._updateSubstepFinishStatus(substep, WorkflowServiceSubstep.statusCodes.ERROR, cb);
         }
     };

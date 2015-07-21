@@ -45,8 +45,13 @@ module.exports = function(sequelize, DataTypes) {
         },
         service_session: {
             type: DataTypes.STRING,
-            allowNull: false,
-            defaultValue: 'INIT'
+            allowNull: true,
+            defaultValue: ''
+        },
+        log: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            defaultValue: ''
         },
         datetime_start: {
             type: DataTypes.DATE,

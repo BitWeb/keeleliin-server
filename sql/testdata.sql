@@ -24,12 +24,17 @@ INSERT INTO workflow_definition_service (id, workflow_definition_id, service_id,
 SELECT 1, 1, 1, 0, NOW(), NOW() WHERE NOT EXISTS (SELECT 1 FROM workflow_definition_service WHERE workflow_definition_service.id = 1);
 INSERT INTO service_param (id, service_id, key, value) SELECT 1, 1, 'key', 'valye' WHERE NOT EXISTS (SELECT 1 FROM service_param WHERE service_param.id = 1);
 INSERT INTO service_param (id, service_id, key, value) SELECT 2, 2, 'key1', 'valye1' WHERE NOT EXISTS (SELECT 1 FROM service_param WHERE service_param.id = 2);
+INSERT INTO service_param (id, service_id, key, value) SELECT 3, 1, 'is_async', '1' WHERE NOT EXISTS (SELECT 1 FROM service_param WHERE service_param.id = 3);
+INSERT INTO service_param (id, service_id, key, value) SELECT 4, 2, 'is_async', '1' WHERE NOT EXISTS (SELECT 1 FROM service_param WHERE service_param.id = 4);
 
 INSERT INTO workflow_definition_service_param_value (id, workflow_definition_service_id, service_param_id) SELECT 1, 1, 1 WHERE NOT EXISTS (
 SELECT 1 FROM workflow_definition_service_param_value WHERE workflow_definition_service_param_value.id = 1);
 INSERT INTO workflow_definition_service_param_value (id, workflow_definition_service_id, service_param_id) SELECT 2, 1, 2 WHERE NOT EXISTS (
 SELECT 1 FROM workflow_definition_service_param_value WHERE workflow_definition_service_param_value.id = 2);
-
+INSERT INTO workflow_definition_service_param_value (id, workflow_definition_service_id, service_param_id) SELECT 3, 1, 3 WHERE NOT EXISTS (
+SELECT 1 FROM workflow_definition_service_param_value WHERE workflow_definition_service_param_value.id = 3);
+INSERT INTO workflow_definition_service_param_value (id, workflow_definition_service_id, service_param_id) SELECT 4, 1, 4 WHERE NOT EXISTS (
+SELECT 1 FROM workflow_definition_service_param_value WHERE workflow_definition_service_param_value.id = 4);
 
 INSERT INTO workflow_definition_service (id, workflow_definition_id, service_id, order_num, created_at, updated_at)
 SELECT 2, 1, 2, 1, NOW(), NOW() WHERE NOT EXISTS (SELECT 1 FROM workflow_definition_service WHERE workflow_definition_service.id = 2);

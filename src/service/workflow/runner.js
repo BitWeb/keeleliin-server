@@ -133,7 +133,8 @@ function Runner(){
     };
 
     this._startHandleServices = function(){
-        logger.error('Handle services');
+
+        logger.debug('Handle services');
 
         workflow.getWorkflowServices({order: [['order_num', 'ASC']]}).then(function (data) {
             workflowServices = data;
@@ -187,7 +188,7 @@ function Runner(){
 /********/
     this._handleWorkflowServiceResources = function ( resources, workflowService, previousStep ) {
 
-        logger.error('Handle workflow service resources. Count: ' + resources.length + ' Service id: ' + workflowService.id);
+        logger.debug('Handle workflow service resources. Count: ' + resources.length + ' Service id: ' + workflowService.id);
 
         //todo: eeldatakse, et kõik sisendressursid on ühte tüüpi ja sobivad teenusele. Päringu dto mappimisel kontrollitakse sobivus üle
         async.each(
@@ -240,7 +241,12 @@ function Runner(){
 
         substepRunner.run(substep, function(err, substep){
             logger.info('Substep is finishe running: ' + substep.id + ' status: ' + substep.status);
-            self._continueRunFromSubstep( substep );
+
+            if(err || substep.status != WorkflowServiceSubstep.statusCodes.FINISHED){
+                return self._breakFromSubstep( substep );
+            }
+            //can continue
+            return self._continueRunFromSubstep( substep );
         });
     };
 
@@ -264,6 +270,30 @@ function Runner(){
 
                 });
             }
+        });
+    };
+
+    this._breakFromSubstep = function ( substep ) {
+
+        async.waterfall([
+            function (callback) {
+                substep.getWorkflowService().then(function (workflowService) {
+                    callback( null, workflowService);
+                });
+            },
+            function (workflowService, callback) {
+                self.finishWorkflowService(workflowService, WorkflowService.statusCodes.ERROR, function (err) {
+                    callback(err);
+                });
+            },
+            function (callback) {
+                self.finishWorkflow(Workflow.statusCodes.ERROR, callback);
+            }
+        ], function (err) {
+            if(err){
+                return logger.error(err);
+            }
+            logger.error('Substep id: ' + substep.id + ' breaked workflow.');
         });
     };
 
