@@ -1,3 +1,0 @@
-forever start /var/www/bitweb.ee/keeleliin.bitweb.ee/server/app.js
-forever start /var/www/bitweb.ee/keeleliin.bitweb.ee/wrapper/tokenizer/app.js
-forever start /var/www/bitweb.ee/keeleliin.bitweb.ee/wrapper/morfyhestaja/app.js
