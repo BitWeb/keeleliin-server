@@ -71,9 +71,14 @@ function startCluster( instanceCount, cb ){
 
         cluster.on('exit', function(worker, code, signal) {
             log4jsLogger.info('worker ' + worker.process.pid + ' died; Code: ' + code + '; Signal: ' + signal);
+
+            if(code != 0){
+                log4jsLogger.info('Restart one instance');
+                startInstance(cb);
+            }
         });
     } else {
-        startInstance(cb)
+        startInstance(cb);
     }
 }
 
