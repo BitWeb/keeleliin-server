@@ -2,6 +2,7 @@ var logger = require('log4js').getLogger('router_middleware');
 
 module.exports = {
     common: function(err, req, res, next) {
+        logger.error(err);
         logger.error(err.stack);
 
         res.status(err.status || 500);

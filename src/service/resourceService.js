@@ -197,7 +197,7 @@ function ResourceService() {
                     resource_type_id: resourceType.id,
                     file_type: resourceData.file_type,
                     name: resourceData.name,
-                    filename: projectLocation + '/' + filename,
+                    filename: projectLocation ? projectLocation + '/' : '' + filename,
                     source_original_name: resourceData.resourceFile.name,
                     source_filename: '',
                     hash: hash
