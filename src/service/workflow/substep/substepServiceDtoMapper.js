@@ -102,8 +102,10 @@ function SubstepServiceDtoMapper(){
 
                 }catch ( e ){
                     logger.error(e);
-                    return callback( null, e );
+                    return callback(e);
                 }
+
+                logger.debug('Inputs are mapped');
 
                 return callback(null, dto);
             }
