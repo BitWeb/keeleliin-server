@@ -85,18 +85,27 @@ function SubstepServiceDtoMapper(){
                 });
             },
             function mapInputs(callback) {
-                for(i in inputTypes){
-                    var inputype = inputTypes[i];
-                    for(j in resources){
-                        var resource = resources[j];
-                        if(inputype.resource_type_id == resource.resource_type_id){
-                            logger.debug('Suitable input resource found: ' + resource.id);
-                            logger.debug('Key: ' + inputype.key + ' Filename: ' + resource.filename);
-                            dto.files[inputype.key] = resource.filename;
+
+                try{
+
+                    for(i in inputTypes){
+                        var inputype = inputTypes[i];
+                        for(j in resources){
+                            var resource = resources[j];
+                            if(inputype.resource_type_id == resource.resource_type_id){
+                                logger.debug('Suitable input resource found: ' + resource.id);
+                                logger.debug('Key: ' + inputype.key + ' Filename: ' + resource.filename);
+                                dto.files[inputype.key] = resource.filename;
+                            }
                         }
                     }
+
+                }catch ( e ){
+                    logger.error(e);
+                    return callback( null, e );
                 }
-                callback(null, dto);
+
+                return callback(null, dto);
             }
         ], function (err, dto) {
             if(err){
