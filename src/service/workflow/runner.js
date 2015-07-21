@@ -2,6 +2,8 @@
  * Created by priit on 30.06.15.
  */
 var logger = require('log4js').getLogger('workflow_runner');
+var mailLogger = require('log4js').getLogger('mailer');
+
 var async = require('async');
 
 var config = require(__base + 'config');
@@ -44,7 +46,6 @@ function Runner(){
 
     this.check = function (workflowId, cb) {
 
-        logger.error('Find workflow: ' + workflowId);
 
 
         Workflow.find({
@@ -454,11 +455,17 @@ function Runner(){
 
     this.finishWorkflow = function (status, cb) {
         logger.debug('Set workflow status: ' + status);
+
         workflow.status = status;
         workflow.datetime_end = new Date();
         workflow.save().then(function (updatedWorkflow) {
             workflow = updatedWorkflow;
             logger.info('Workflow id:'+updatedWorkflow.id+' finished with status: ' + workflow.status);
+
+            if(status == Workflow.statusCodes.ERROR){
+                mailLogger.info('Workflow id:'+updatedWorkflow.id+' finished with status: ' + workflow.status);
+            }
+
             cb(null, workflow);
         }).catch(function (err) {
             cb(err);

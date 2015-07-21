@@ -25,22 +25,10 @@ app.set('views', path.join(__base, 'views'));// view engine setup
 app.set('view engine', 'jade');// view engine setup
 app.use(express.static(__base + '/public'));
 
-log4js.configure({
-    appenders: [
-        { type: 'console',
-            layout: {
-                type: 'pattern',
-                pattern: "[%d] %[[%x{pid}] [%5.5p]%] %c - %m",
-                tokens: {
-                    pid: process.pid
-                }
-            }
-        },
-        { type: 'file', filename: __base + 'keeleliin-server.log' }
-    ]
-});
+log4js.configure(config.lof4js);
 
 var log4jsLogger = log4js.getLogger('server_js');
+
 app.use(logger('dev'));
 app.use(bodyParser.json({limit: '1000mb'})); // for parsing application/json
 app.use(bodyParser.urlencoded({extended: true}));
