@@ -49,7 +49,7 @@ function SubstepServiceDtoMapper(){
         dto.url = service.url;
 
         dto.params = {
-            is_async: true // Default value. Can be overwritten
+            is_async: 1 // Default value. Can be overwritten
         };
 
         workflowService.getParamValues().then(function (paramValues) {
