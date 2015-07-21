@@ -42,7 +42,6 @@ function SubStepRunner(){
     };
 
     this.makeRequest = function (substep, dto, cb){
-        //execute service
         apiService.makeRequest(dto, function (err, response) {
             logger.debug(response);
             self.handleResponse(substep, dto, response, cb);
@@ -50,12 +49,9 @@ function SubStepRunner(){
 
     };
 
-    this.recheckRequest = function () {
-        //todo
-    };
-
     this.handleResponse = function (substep, dto, response, cb){
-
+        logger.debug('Handle response ' + response.response.message);
+        logger.debug(dto);
 
         if(! response.response){
             logger.error('TODO:: No response');
@@ -64,12 +60,27 @@ function SubStepRunner(){
             logger.info('Message OK');
             self._finishSubstepRequest(substep, dto, response, cb);
         } else if(response.response.message == 'RUNNING'){
-            //todo
+            logger.info('Message RUNNING');
+            self._recheckRequest(substep, dto, response, cb);
         } else {
             logger.error('TODO:: Not OK');
             self._updateSubstepFinishStatus(substep, WorkflowServiceSubstep.statusCodes.ERROR, cb);
         }
     };
+
+    this._recheckRequest = function (substep, dto, response, cb) {
+        logger.error('Recheck request on ' + response.response.recheckInterval);
+        logger.error(dto);
+        logger.error(response);
+
+        setTimeout(function () {
+            apiService.recheckRequest(dto, response.response.serviceId, function (error, response) {
+                if(error){return cb(error)}
+                self.handleResponse(substep, dto, response, cb);
+            })
+        }, response.response.recheckInterval);
+    };
+
 
     this._finishSubstepRequest = function (substep, dto, response, cb) {
         var fileKeys =  response.response.data.files;

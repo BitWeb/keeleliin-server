@@ -1,6 +1,7 @@
 /**
  * Created by priit on 2.06.15.
  */
+var logger = require('log4js').getLogger('index');
 var express = require('express');
 var router = express.Router();
 var config = require(__base + 'config');
@@ -25,21 +26,63 @@ router.get('/generate', function(req, res, next) {
 
 router.get('/test', function(req, res, next) {
     var WorkflowBuilder = require('./../src/service/workflow/workflowBuilder');
-    var WorkflowRunner = require('./../src/service/workflow/runner');
+    var Runner = require('./../src/service/workflow/runner');
+    ////////////
+    var workflowRunner;
+    var initData = {
+        "project_id": 1,
+        "workflow_definition_id": 1,
+        "resources": [1,2]
+    };
 
-    var workflowBuilder = new WorkflowBuilder();
-    workflowBuilder.create( 1, 1, [1,2], function (err, workflow) {
-        if(err) return res.send(err);
+    createWorkflow(initData, function (err, wf) {
+        runWorkflow(wf, function (err, data) {
+            logger.error(data);
+            logger.info('returned to user');
 
-        var workflowRunner = new WorkflowRunner();
-        workflowRunner.run(workflow.id, function(err, data){
-            if(err) return res.send(err);
-            res.send(data);
-        });
+            handleRunCallback(data, function (err, data) {
 
-
-
+                if(err){ logger.error( err ); }
+                logger.error(data);
+                res.send(data);
+                logger.error('FINITO');
+            });
+        })
     });
+
+    function createWorkflow(data, cb){
+        var workflowBuilder = new WorkflowBuilder();
+        workflowBuilder.create( data, cb);
+    }
+
+    function runWorkflow(wf, cb){
+        workflowRunner = new Runner();
+        workflowRunner.run(wf.id, cb);
+    }
+
+    function handleRunCallback(data, cb){
+        logger.error(data);
+
+
+        if(data.status == 'RUNNING'){
+
+            setTimeout(function () {
+                logger.error('---------');
+                logger.error(data.id);
+
+                workflowRunner.check(data.id, function (err, data) {
+                    if(err){ return cb(err); }
+                    handleRunCallback(data, cb);
+                });
+            }, 3000);
+
+        } else {
+            cb(null, data);
+        }
+    }
+
+
+    ////////////
 });
 
 

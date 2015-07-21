@@ -13,9 +13,7 @@ function ApiService(){
 
         var url = dto.url + 'service';
 
-        var formData = {
-            "is_async": 0
-        };
+        var formData = {};
 
         for(var i in dto.params){
             if(dto.params[i] != null){
@@ -24,7 +22,7 @@ function ApiService(){
         }
 
         for(var j in dto.files){
-            formData[j] = fs.createReadStream( config.resources.location + dto.files[j] );
+            formData[j] = fs.createReadStream( config.resources.location + '/' + dto.files[j] );
         }
 
         logger.info( formData );
@@ -32,7 +30,7 @@ function ApiService(){
 
         request.post( { url: url, formData: formData }, function (err, resp, body) {
             if (err) {
-                logger.error('Error!');
+                logger.error(err.message);
                 return cb(err.message);
             }
             cb(null, JSON.parse(resp.body));
@@ -43,7 +41,6 @@ function ApiService(){
         var url = dto.url + 'service' + '/' + id;
         request.get( { url: url }, function (err, resp, body) {
             if (err) {
-                logger.error('Error!');
                 logger.error(err.message);
                 return cb(err.message);
             }
@@ -54,7 +51,7 @@ function ApiService(){
     this.loadRequestResponse = function (dto, id, key, outputPath, cb) {
 
         var url = dto.url + 'service' + '/' + id + '/' + key;
-        var file = fs.createWriteStream( config.resources.location + outputPath );
+        var file = fs.createWriteStream( config.resources.location + '/' + outputPath );
         var request = http.get(url, function(response) {
             response.pipe(file);
             file.on('finish', function() {

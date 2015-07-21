@@ -40,9 +40,6 @@ router.get('/service/:workflowServiceId/params', function(req, res) {
 
 router.post('/', function(req, res) {
 
-    logger.error(req.body);
-
-
     var workflowBuilder = new WorkflowBuilder();
     workflowBuilder.create( req.body, function (err, workflow) {
         if(err) return res.send({errors: err});
