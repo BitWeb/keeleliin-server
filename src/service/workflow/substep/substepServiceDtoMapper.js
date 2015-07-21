@@ -94,7 +94,12 @@ function SubstepServiceDtoMapper(){
                 }
                 callback(null, dto);
             }
-        ], cb);
+        ], function (err, dto) {
+            if(err){
+               logger.error( err );
+            }
+            cb(err, dto);
+        });
     };
 }
 
