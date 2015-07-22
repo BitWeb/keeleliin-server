@@ -4,6 +4,7 @@
 
 var ServiceModel = require(__base + 'src/service/dao/sql').Service;
 var ServiceModelParam = require(__base + 'src/service/dao/sql').ServiceParam;
+var ServiceInputType = require(__base + 'src/service/dao/sql').ServiceInputType;
 
 function ServiceDaoService() {
 
@@ -40,6 +41,35 @@ function ServiceDaoService() {
             return callback(null, services);
         });
     };
+
+    this.findServicesByIds = function(ids, callback) {
+
+    },
+
+    this.findServicesByInputResourceTypes = function(resourceTypeIds, excludeServiceId, callback) {
+        ServiceModel.findAll({
+            include: [
+                {
+                    model: ServiceModelParam,
+                    as: 'serviceParams',
+                    order: ['order_num', 'ASC']
+                },
+                {
+                    model: ServiceInputType,
+                    as: 'serviceInputTypes',
+                    where: {
+                        resource_type_id: resourceTypeIds
+                    }
+                }
+            ],
+            where: {
+                id: { $ne: excludeServiceId }
+            }
+        }).then(function(services) {
+            return callback(null, services)
+        });
+    }
+
 }
 
 module.exports = new ServiceDaoService();

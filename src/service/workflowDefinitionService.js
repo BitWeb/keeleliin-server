@@ -9,6 +9,7 @@ var WorkflowDefinitionServiceModel = require(__base + 'src/service/dao/sql').Wor
 var projectService = require(__base + 'src/service/projectService');
 var serviceService = require(__base + 'src/service/serviceService');
 var Sequelize = require('sequelize');
+var async = require('async');
 
 function WorkflowDefinitionService() {
 
@@ -29,27 +30,118 @@ function WorkflowDefinitionService() {
         return workflowDefinitionDaoService.findWorkflowDefinitionServiceParamValues(workflowDefinitionServiceId, callback);
     };
 
-    this.createWorkflowDefinition = function(req, projectId, workflowDefinitionData, callback) {
+    this.createWorkflowDefinition = function(req, projectId, workflowDefinitionData, cb) {
+        workflowDefinitionData.project_id = projectId;
+        workflowDefinitionData.user_id = 1;
 
-        projectService.getProject(req, projectId, function(error, project) {
-            if (error) {
-                return callback(error);
-            }
+        async.waterfall([
+            function getProject(callback) {
+                projectService.getProject(req, projectId, function(error, project) {
+                    if (error) {
+                        return callback(error);
+                    }
+                    return callback(null, project);
+                });
+            },
 
-            WorkflowDefinition.create(workflowDefinitionData).then(function(workflowDefinition) {
-
-                project.addWorkflowDefinition(workflowDefinition).then(function() {
-
-                    return callback(null, workflowDefinition);
+            function createWorkflowDefinition(project, callback) {
+                WorkflowDefinition.create(workflowDefinitionData).then(function(workflowDefinition) {
+                    return callback(null, project, workflowDefinition);
                 }).catch(function(error) {
-
                     return callback(error);
                 });
-            }).catch(function(error) {
+            },
 
-                return callback(error);
-            });
+            function addWorkflowDefinitionToProject(project, workflowDefinition, callback) {
+                project.addWorkflowDefinition(workflowDefinition).then(function() {
+                    return callback(null, workflowDefinition);
+                }).catch(function(error) {
+                    return callback(error);
+                });
+            },
+
+            function createWorkflowDefinitionServices(workflowDefinition, callback) {
+                var orderNum = 0;
+
+                async.eachSeries(workflowDefinitionData.serviceIds, function(serviceId, innerCallback) {
+                    serviceService.getService(req, serviceId, function(err, service) {
+                        var idx = workflowDefinitionData.serviceIds.indexOf(serviceId + '');
+                        if (err) {
+                            return callback(err);
+                        }
+
+                        var workflowDefinitionServiceModel = WorkflowDefinitionServiceModel.build({
+                            service_id: service.id,
+                            order_num: orderNum
+                        });
+
+                        orderNum++;
+
+                        workflowDefinitionServiceModel.save().then(function(workflowDefinitionServiceModel) {
+                            workflowDefinition.addWorkflowService(workflowDefinitionServiceModel).then(function(workflowDefinition) {
+                                for (var j = 0; j < workflowDefinitionData.serviceParam[idx].length; j++) {
+                                    var serviceParamData = workflowDefinitionData.serviceParam[idx][j];
+                                    var workflowDefinitionServiceParamValue = WorkflowDefinitionServiceParamValue.build({
+                                        service_param_id: serviceParamData.id,
+                                        value: serviceParamData.value
+                                    });
+                                    workflowDefinitionServiceParamValue.save().then(function(workflowDefinitionServiceParamValue) {
+                                        workflowDefinitionServiceModel.addParamValue(workflowDefinitionServiceParamValue);
+                                    }).catch(function(error) {
+                                        innerCallback(error);
+                                    });
+                                }
+                                innerCallback();
+                            }).catch(function(error) {
+                                console.log(error);
+
+                                innerCallback(error);
+                            });
+                        }).catch(function(error) {
+                            console.log(error);
+
+                            innerCallback(error);
+                        });
+                    });
+                }, function(err) {
+                    if (err) {
+                        return callback(err);
+                    }
+
+                    return callback(null, workflowDefinition);
+                });
+            }
+        ], function(err, workflowDefinition) {
+            if (err) {
+                return cb(err);
+            }
+            return cb(null, workflowDefinition);
         });
+
+        //projectService.getProject(req, projectId, function(error, project) {
+        //    if (error) {
+        //        return callback(error);
+        //    }
+        //
+        //
+        //
+        //
+        //
+        //
+        //    WorkflowDefinition.create(workflowDefinitionData).then(function(workflowDefinition) {
+        //
+        //        project.addWorkflowDefinition(workflowDefinition).then(function() {
+        //
+        //            return callback(null, workflowDefinition);
+        //        }).catch(function(error) {
+        //
+        //            return callback(error);
+        //        });
+        //    }).catch(function(error) {
+        //
+        //        return callback(error);
+        //    });
+        //});
 
     };
 

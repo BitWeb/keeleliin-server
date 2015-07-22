@@ -27,6 +27,14 @@ function ServiceService() {
         })
     };
 
+    this.getServicesByIds = function(serviceIds, callback) {
+        var ids = serviceIds || [];
+        ServiceModel.findAll({ where: { id: ids }}).then(function(services) {
+
+            return callback(null, services);
+        });
+    };
+
     this.getServiceOutputTypesByIds = function(serviceOutputTypeIds, callback) {
         var ids = serviceOutputTypeIds || [];
 
@@ -55,6 +63,28 @@ function ServiceService() {
         }
 
         return serviceDaoService.findServices(pagination, callback);
+    };
+
+    this.getDependentServices = function(req, serviceId, callback) {
+        self.getService(req, serviceId, function(err, service) {
+            if (err) {
+                return callback(err);
+            }
+
+            service.getServiceOutputTypes().then(function(serviceOutputTypes) {
+                var resourceTypeIds = [];
+                serviceOutputTypes.forEach(function(serviceOutputType) {
+                    resourceTypeIds.push(serviceOutputType.resource_type_id);
+                });
+
+                return self._getServicesByInputResourceTypes(req, resourceTypeIds, serviceId, callback);
+            });
+        });
+    };
+
+    this._getServicesByInputResourceTypes = function(req, resourceTypeIds, excludeServiceId, callback) {
+
+        return serviceDaoService.findServicesByInputResourceTypes(resourceTypeIds, excludeServiceId, callback);
     };
 
     this.createService = function(req, serviceData, callback) {

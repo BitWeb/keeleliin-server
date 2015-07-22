@@ -33,4 +33,13 @@ router.post('/', function(req, res) {
     });
 });
 
+router.get('/get-dependent-services/:serviceId', function(req, res) {
+    serviceService.getDependentServices(req, req.params.serviceId, function(err, services) {
+        if (err) {
+            return res.send(err);
+        }
+        return res.send(services);
+    });
+});
+
 module.exports = router;

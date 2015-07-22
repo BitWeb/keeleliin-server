@@ -38,7 +38,6 @@ router.get('/service/:workflowDefinitionServiceId/params', function(req, res) {
 });
 
 router.post('/projectId/:projectId', function(req, res) {
-
     workflowDefinitionService.createWorkflowDefinition(req, req.params.projectId, req.body, function(err, workflowDefinion) {
         if (err) {
             return res.send({errors: err});
