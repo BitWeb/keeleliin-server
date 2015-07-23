@@ -5,6 +5,11 @@
 
 module.exports = function(sequelize, DataTypes) {
 
+    var sizeUnits = {
+        PIECE: 'piece',
+        BYTE: 'byte'
+    };
+
     var ServiceInputType = sequelize.define("ServiceInputType", {
         id: {
             type: DataTypes.INTEGER,
@@ -19,6 +24,16 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.BOOLEAN,
             allowNull: false,
             defaultValue: false
+        },
+        size_limit: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 0
+        },
+        size_unit: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            defaultValue: sizeUnits.BYTE
         }
     }, {
         tableName: 'service_input_type',
@@ -28,11 +43,13 @@ module.exports = function(sequelize, DataTypes) {
 
         classMethods: {
             associate: function(models) {
-                ServiceInputType.belongsTo(models.Service);
-                ServiceInputType.belongsTo(models.ResourceType);
+                ServiceInputType.belongsTo(models.Service, {as: 'service'});
+                ServiceInputType.belongsTo(models.ResourceType, {as: 'resourceType'});
             }
         }
     });
+
+    ServiceInputType.sizeUnits = sizeUnits;
 
     return ServiceInputType;
 };

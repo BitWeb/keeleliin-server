@@ -2,6 +2,11 @@
 
 module.exports = function(sequelize, DataTypes) {
 
+    var splitTypes = {
+        NONE        : "NONE",
+        LINE    : "LINE"
+    };
+
     var ResourceType = sequelize.define("ResourceType", {
         id: {
             type: DataTypes.INTEGER,
@@ -32,6 +37,8 @@ module.exports = function(sequelize, DataTypes) {
             }
         }
     });
+
+    ResourceType.splitTypes = splitTypes;
 
     return ResourceType;
 };

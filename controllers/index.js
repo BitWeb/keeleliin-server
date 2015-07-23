@@ -27,7 +27,7 @@ router.get('/generate', function(req, res, next) {
 
 router.get('/test', function(req, res, next) {
     var WorkflowBuilder = require('./../src/service/workflow/workflowBuilder');
-    var Runner = require('./../src/service/workflow/runner');
+    var Runner = require('./../src/service/workflow/workflowRunner');
     ////////////
     var workflowRunner;
     var initData = {
@@ -36,15 +36,18 @@ router.get('/test', function(req, res, next) {
         "resources": [1,2]
     };
 
+    var counter = 3;
+
+
     createWorkflow(initData, function (err, wf) {
         runWorkflow(wf, function (err, data) {
-            logger.error(data);
+            logger.trace(data.id);
             logger.info('returned to user');
 
             handleRunCallback(data, function (err, data) {
 
                 if(err){ logger.error( err ); }
-                logger.error(data);
+                logger.trace(data.id);
                 res.send(data);
                 logger.error('FINITO');
             });
@@ -62,11 +65,11 @@ router.get('/test', function(req, res, next) {
     }
 
     function handleRunCallback(data, cb){
-        logger.error(data);
+        logger.trace(data.id);
 
 
-        if(data.status == 'RUNNING'){
-
+        if(data.status == 'RUNNING' && counter > 0){
+            counter--;
             setTimeout(function () {
                 logger.error('---------');
                 logger.error(data.id);

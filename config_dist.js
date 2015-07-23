@@ -43,21 +43,24 @@ config.lof4js = {
             filename: __dirname + 'keeleliin-server.log'
         },
         {
-            "type": "smtp",
-            "recipients": "***********",
-            "sendInterval": 5,
-            "transport": "SMTP",
-            "SMTP": {
-                "host": "smtp.gmail.com",
-                "secureConnection": false,
-                "port": 587,
-                "auth": {
-                    "user": "***********",
-                    "pass": "***********"
-                },
-                "debug": true
-            },
-            "category": "mailer"
+            "type": "logLevelFilter",
+            "level": "ERROR",
+            "appender": {
+                "type": "smtp",
+                "recipients": "*************",
+                "sendInterval": 10, //sec
+                "transport": "SMTP",
+                "SMTP": {
+                    "host": "smtp.gmail.com",
+                    "secureConnection": false,
+                    "port": 587,
+                    "auth": {
+                        "user": "*************",
+                        "pass": "*************"
+                    },
+                    "debug": true
+                }
+            }
         }
     ]
 };

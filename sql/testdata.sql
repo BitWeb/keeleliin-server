@@ -1,5 +1,6 @@
-INSERT INTO resource_type(id, value, name, split_type) VALUES (1, 'TEXT', 'Tekst', 'NONE');
-INSERT INTO resource_type(id, value, name, split_type) VALUES (2, 'WORD', 'Sõnad', 'NONE');
+INSERT INTO resource_type(id, value, name, split_type) VALUES (1, 'TEXT', 'Tekst', 'LINE');
+INSERT INTO resource_type(id, value, name, split_type) VALUES (2, 'WORD', 'Sõnad', 'LINE');
+
 INSERT INTO resource(
             id, file_type, resource_type_id, source_original_name,
             source_filename, filename, name)
@@ -49,8 +50,8 @@ INSERT INTO workflow_service (id, service_id, workflow_id) SELECT 1, 1, 1 WHERE 
 INSERT INTO workflow_service_param_value (id, workflow_service_id, service_param_id, value) SELECT 1, 1, 1, 'ababaab' WHERE NOT EXISTS (SELECT 1 FROM workflow_service_param_value  WHERE workflow_service_param_value.id = 1);
 INSERT INTO workflow_service_param_value (id, workflow_service_id, service_param_id, value) SELECT 2, 1, 2, 'xxwsdds' WHERE NOT EXISTS (SELECT 1 FROM workflow_service_param_value  WHERE workflow_service_param_value.id = 2);
 
-INSERT INTO service_input_type( id, key, do_parallel, service_id, resource_type_id) VALUES (1, 'content', FALSE, 1, 1);
-INSERT INTO service_input_type( id, key, do_parallel, service_id, resource_type_id) VALUES (2, 'content', FALSE, 2, 1);
+INSERT INTO service_input_type( id, key, do_parallel, service_id, resource_type_id, size_limit, size_unit) VALUES (1, 'content', TRUE, 1, 1, 4, 'piece');
+INSERT INTO service_input_type( id, key, do_parallel, service_id, resource_type_id, size_limit, size_unit) VALUES (2, 'content', TRUE, 2, 1, 10, 'byte');
 
 INSERT INTO service_output_type( id, key, service_id, resource_type_id) VALUES (1, 'output', 1, 1);
 INSERT INTO service_output_type( id, key, service_id, resource_type_id) VALUES (2, 'output', 2, 1);

@@ -7,7 +7,7 @@ var router = express.Router();
 var workflowService = require(__base + 'src/service/workflowService');
 
 var WorkflowBuilder = require('./../../../src/service/workflow/workflowBuilder');
-var WorkflowRunner = require('./../../../src/service/workflow/runner');
+var WorkflowRunner = require('./../../../src/service/workflow/workflowRunner');
 
 router.get('/:workflowId', function(req, res) {
     workflowService.getWorkflow(req, req.params.workflowId, function(err, workflow) {

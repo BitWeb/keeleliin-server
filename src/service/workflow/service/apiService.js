@@ -25,8 +25,6 @@ function ApiService(){
             formData[j] = fs.createReadStream( config.resources.location + '/' + dto.files[j] );
         }
 
-        //logger.info( formData );
-
         request.post( { url: url, formData: formData }, function (err, resp, body) {
             if (err) {
                 logger.error(err.message);
