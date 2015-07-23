@@ -24,8 +24,8 @@ config.entu = {
 };
 
 config.resources = {
-    location: '../keeleliin-files',
-    downloadLocation: '../keeleliin-files/downloads'
+    location: __dirname + '/../keeleliin-files',
+    downloadLocation: __dirname + '/../keeleliin-files/downloads'
 };
 
 config.lof4js = {

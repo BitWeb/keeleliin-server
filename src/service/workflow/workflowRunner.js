@@ -340,7 +340,7 @@ function Runner() {
                             return;
                         }
                         logger.debug('Handle input resource id: ' + resource.id);
-                        self._handleWorkflowServiceInputResource(resource, workflowService, null);
+                        self._handleWorkflowServiceInputResource(resource, workflowService, fromSubstep);
                     },
                     function (err) {
                         logger.debug('Workflow service resources traversed');

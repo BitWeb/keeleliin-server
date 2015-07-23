@@ -33,7 +33,7 @@ function SubStepRunner(){
                 substepServiceDtoMapper.getSubstepServiceDto(substep, callback);
             },
             function (dto, callback) {
-                self.makeRequest(substep, dto, callback);
+                self.startProcessing(substep, dto, callback);
             }
         ], function (err) {
             if(err){
@@ -46,7 +46,7 @@ function SubStepRunner(){
         });
     };
 
-    this.makeRequest = function (substep, dto, cb){
+    this.startProcessing = function (substep, dto, cb){
         apiService.makeRequest(dto, function (err, response) {
             if(err){ return cb(err); }
             logger.debug(response);
@@ -61,7 +61,13 @@ function SubStepRunner(){
             logger.error('TODO:: No response');
             substep.log = 'No service response';
             self._updateSubstepFinishStatus(substep, WorkflowServiceSubstep.statusCodes.ERROR, cb);
-        }else if(response.response.message == 'OK') {
+
+            return;
+        }
+
+        substep.service_session = response.response.serviceId;
+
+        if(response.response.message == 'OK') {
             logger.info('Message OK');
             self._finishSubstepRequest(substep, dto, response, cb);
         } else if(response.response.message == 'RUNNING'){
