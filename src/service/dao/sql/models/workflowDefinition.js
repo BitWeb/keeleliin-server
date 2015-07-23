@@ -19,15 +19,15 @@ module.exports = function(sequelize, DataTypes) {
                 key: 'id'
             }
         },
-        user_id: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-            references: {
-                model: 'user',
-                key: 'id'
-            },
-            unique: false
-        },
+        //user_id: {
+        //    type: DataTypes.INTEGER,
+        //    allowNull: false,
+        //    references: {
+        //        model: 'user',
+        //        key: 'id'
+        //    },
+        //    unique: false
+        //},
         name: {
             type: DataTypes.STRING,
             allowNull: false,
