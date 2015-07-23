@@ -276,7 +276,7 @@ function WorkflowDefinitionService() {
                 });
             },
 
-            function removeWorkflowServices(workflowDefinition,workflowServiceIds, addedWorkflowServiceIds, callback) {
+            function removeWorkflowServices(workflowDefinition, workflowServiceIds, addedWorkflowServiceIds, callback) {
                 var removableIds = ArrayUtils.arrayDiff(workflowServiceIds, addedWorkflowServiceIds);
                 if (removableIds.length > 0) {
                     WorkflowDefinitionServiceModel.destroy({ where: { id: removableIds }}).then(function() {
