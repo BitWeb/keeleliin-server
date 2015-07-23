@@ -49,9 +49,9 @@ router.post('/projectId/:projectId', function(req, res) {
 
 router.put('/:workflowDefinitionId', function(req, res) {
 
-    workflowDefinitionService.saveWorkflowDefinition(req, req.params.workflowDefinitionId, req.body, function(err, workflowDefinition) {
+    return workflowDefinitionService.saveWorkflowDefinition(req, req.params.workflowDefinitionId, req.body, function(err, workflowDefinition) {
         if (err) {
-            return res.send({errors: err});
+            return res.send(err);
         }
 
         return res.send({id: workflowDefinition.id, date_updated: workflowDefinition.date_updated});
