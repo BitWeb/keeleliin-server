@@ -32,91 +32,106 @@ function WorkflowDefinitionService() {
 
     this.createWorkflowDefinition = function(req, projectId, workflowDefinitionData, cb) {
         workflowDefinitionData.project_id = projectId;
-        workflowDefinitionData.user_id = 1;
+        //workflowDefinitionData.user_id = 1;
 
-        async.waterfall([
-            function getProject(callback) {
-                projectService.getProject(req, projectId, function(error, project) {
-                    if (error) {
+        //sequelize.transaction(function(t) {
+
+            async.waterfall([
+                function getProject(callback) {
+                    projectService.getProject(req, projectId, function(error, project) {
+                        if (error) {
+                            return callback(error);
+                        }
+                        return callback(null, project);
+                    });
+                },
+
+                function createWorkflowDefinition(project, callback) {
+                    WorkflowDefinition.create(workflowDefinitionData).then(function(workflowDefinition) {
+                        return callback(null, project, workflowDefinition);
+                    }).catch(function(error) {
                         return callback(error);
+                    });
+                },
+
+                function addWorkflowDefinitionToProject(project, workflowDefinition, callback) {
+                    project.addWorkflowDefinition(workflowDefinition).then(function() {
+                        return callback(null, workflowDefinition);
+                    }).catch(function(error) {
+                        return callback(error);
+                    });
+                },
+
+                function createWorkflowDefinitionServices(workflowDefinition, callback) {
+                    if (workflowDefinitionData.serviceIds == undefined) {
+
+                        return callback(null, workflowDefinition);
                     }
-                    return callback(null, project);
-                });
-            },
 
-            function createWorkflowDefinition(project, callback) {
-                WorkflowDefinition.create(workflowDefinitionData).then(function(workflowDefinition) {
-                    return callback(null, project, workflowDefinition);
-                }).catch(function(error) {
-                    return callback(error);
-                });
-            },
+                    var orderNum = 0;
+                    async.eachSeries(workflowDefinitionData.serviceIds, function(serviceId, innerCallback) {
+                        return serviceService.getService(req, serviceId, function(err, service) {
+                            var idx = workflowDefinitionData.serviceIds.indexOf(serviceId + '');
+                            if (err) {
+                                return innerCallback(err);
+                            }
 
-            function addWorkflowDefinitionToProject(project, workflowDefinition, callback) {
-                project.addWorkflowDefinition(workflowDefinition).then(function() {
-                    return callback(null, workflowDefinition);
-                }).catch(function(error) {
-                    return callback(error);
-                });
-            },
+                            WorkflowDefinitionServiceModel.create({
+                                service_id: service.id,
+                                order_num: orderNum
+                            }).then(function(workflowDefinitionServiceModel) {
+                                workflowDefinition.addWorkflowService(workflowDefinitionServiceModel).then(function(workflowDefinition) {
+                                    if (workflowDefinitionData.serviceParam[idx] == undefined) {
+                                        return innerCallback();
+                                    }
 
-            function createWorkflowDefinitionServices(workflowDefinition, callback) {
-                var orderNum = 0;
+                                    for (var j = 0; j < workflowDefinitionData.serviceParam[idx].length; j++) {
+                                        var serviceParamData = workflowDefinitionData.serviceParam[idx][j];
+                                        var workflowDefinitionServiceParamValue = WorkflowDefinitionServiceParamValue.build({
+                                            service_param_id: serviceParamData.id,
+                                            value: serviceParamData.value
+                                        });
 
-                async.eachSeries(workflowDefinitionData.serviceIds, function(serviceId, innerCallback) {
-                    serviceService.getService(req, serviceId, function(err, service) {
-                        var idx = workflowDefinitionData.serviceIds.indexOf(serviceId + '');
+                                        WorkflowDefinitionServiceParamValue.create({
+                                            service_param_id: serviceParamData.id,
+                                            value: serviceParamData.value
+                                        }).then(function(workflowDefinitionServiceParamValue) {
+                                            workflowDefinitionServiceModel.addParamValue(workflowDefinitionServiceParamValue).catch(function(err) {
+                                                return innerCallback(err);
+                                            });
+                                        }).catch(function(err) {
+                                            return innerCallback(err);
+                                        });
+                                    }
+                                    return innerCallback();
+                                }).catch(function(err) {
+
+                                    return innerCallback(err);
+                                });
+
+                            });
+
+                            orderNum++;
+                        });
+                    }, function(err) {
                         if (err) {
                             return callback(err);
                         }
 
-                        var workflowDefinitionServiceModel = WorkflowDefinitionServiceModel.build({
-                            service_id: service.id,
-                            order_num: orderNum
-                        });
-
-                        orderNum++;
-
-                        workflowDefinitionServiceModel.save().then(function(workflowDefinitionServiceModel) {
-                            workflowDefinition.addWorkflowService(workflowDefinitionServiceModel).then(function(workflowDefinition) {
-                                for (var j = 0; j < workflowDefinitionData.serviceParam[idx].length; j++) {
-                                    var serviceParamData = workflowDefinitionData.serviceParam[idx][j];
-                                    var workflowDefinitionServiceParamValue = WorkflowDefinitionServiceParamValue.build({
-                                        service_param_id: serviceParamData.id,
-                                        value: serviceParamData.value
-                                    });
-                                    workflowDefinitionServiceParamValue.save().then(function(workflowDefinitionServiceParamValue) {
-                                        workflowDefinitionServiceModel.addParamValue(workflowDefinitionServiceParamValue);
-                                    }).catch(function(error) {
-                                        innerCallback(error);
-                                    });
-                                }
-                                innerCallback();
-                            }).catch(function(error) {
-                                console.log(error);
-
-                                innerCallback(error);
-                            });
-                        }).catch(function(error) {
-                            console.log(error);
-
-                            innerCallback(error);
-                        });
+                        return callback(null, workflowDefinition);
                     });
-                }, function(err) {
-                    if (err) {
-                        return callback(err);
-                    }
+                }
+            ], function(err, workflowDefinition) {
+                if (err) {
+                    return cb(err);
+                }
+                return cb(null, workflowDefinition);
+            });
 
-                    return callback(null, workflowDefinition);
-                });
-            }
-        ], function(err, workflowDefinition) {
-            if (err) {
-                return cb(err);
-            }
-            return cb(null, workflowDefinition);
-        });
+        //}).catch(function(err) {
+        //
+        //    return cb(err);
+        //});
 
         //projectService.getProject(req, projectId, function(error, project) {
         //    if (error) {
