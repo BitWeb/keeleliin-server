@@ -45,6 +45,11 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: false,
             defaultValue: 0
         },
+        log: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            defaultValue: ''
+        },
         datetime_start: {
             type: DataTypes.DATE,
             allowNull: true

@@ -192,6 +192,7 @@ function Runner() {
         ], function (err) {
             if (err) {
                 logger.error(err);
+                workflowService.log(err);
                 self.finishWorkflowService(workflowService, WorkflowService.statusCodes.ERROR, function (err) {
                     logger.debug('WorkflowService finished with error: ' + err);
                 });
@@ -199,6 +200,57 @@ function Runner() {
         });
     };
 
+    this._handleWorkflowService = function (workflowService, fromSubstep) {
+
+        async.waterfall([
+            function checkPast(callback) {
+                fromSubstep.getWorkflowService().then(function (fromWorkflowService) {
+                    self.tryToFinishWorkflowService(fromWorkflowService, function (err) {
+                        if (err) {
+                            logger.error('Got Error');
+                            logger.error(err);
+                        }
+                        callback();
+                    });
+                });
+            },
+            function startWfService(callback) {
+                self.startWorkflowService(workflowService, callback);
+            },
+            function handleFromSubstepOutputResources(workflowService, callback) {
+                fromSubstep.getOutputResources().then(function (resources) {
+                    callback(null, resources);
+                });
+            }, function (resources, callback) {
+
+                resourceHandler.getWorkflowServiceSubstepsInputResources(
+                    resources,
+                    workflowService,
+                    function (err, resource) {
+                        if(err){
+                            logger.error(err);
+                            return;
+                        }
+                        logger.debug('Handle input resource id: ' + resource.id);
+                        self._handleWorkflowServiceInputResource(resource, workflowService, fromSubstep);
+                    },
+                    function (err) {
+                        logger.debug('Workflow service resources traversed');
+                        callback(err);
+                    }
+                );
+            }
+        ], function (err) {
+            logger.info('workflow service ' + workflowService + ' handling started from substep ' + fromSubstep.id);
+            if (err) {
+                logger.error(err);
+                workflowService.log(err);
+                self.finishWorkflowService(workflowService, WorkflowService.statusCodes.ERROR, function (err) {
+                    logger.debug('WorkflowService finished with error: ' + err);
+                });
+            }
+        });
+    };
 
     this.startWorkflowService = function (workflowService, cb) {
         if (workflowService.status == WorkflowService.statusCodes.INIT) {
@@ -307,51 +359,6 @@ function Runner() {
                 return logger.error(err);
             }
             logger.error('Substep id: ' + substep.id + ' breaked workflow.');
-        });
-    };
-
-    this._handleWorkflowService = function (workflowService, fromSubstep) {
-
-        async.waterfall([
-            function checkPast(callback) {
-                fromSubstep.getWorkflowService().then(function (fromWorkflowService) {
-                    self.tryToFinishWorkflowService(fromWorkflowService, function (err) {
-                        if (err) {
-                            logger.error('Got Error');
-                            logger.error(err);
-                        }
-                        callback();
-                    });
-                });
-            },
-            function startWfService(callback) {
-                self.startWorkflowService(workflowService, callback);
-            },
-            function handleFromSubstepOutputResources(workflowService, callback) {
-                fromSubstep.getOutputResources().then(function (resources) {
-                    callback(null, resources);
-                });
-            }, function (resources, callback) {
-
-                resourceHandler.getWorkflowServiceSubstepsInputResources(
-                    resources,
-                    workflowService,
-                    function (err, resource) {
-                        if(err){
-                            logger.error(err);
-                            return;
-                        }
-                        logger.debug('Handle input resource id: ' + resource.id);
-                        self._handleWorkflowServiceInputResource(resource, workflowService, fromSubstep);
-                    },
-                    function (err) {
-                        logger.debug('Workflow service resources traversed');
-                        callback(err);
-                    }
-                );
-            }
-        ], function (err) {
-            logger.info('workflow service ' + workflowService + ' handling started from substep ' + fromSubstep.id);
         });
     };
 
