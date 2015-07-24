@@ -435,7 +435,7 @@ function Runner() {
 
         workflowService.save().then(function (workflowService) {
 
-            if (workflowService.status != WorkflowService.statusCodes.ERROR) {
+            if (workflowService.status == WorkflowService.statusCodes.ERROR) {
                 self.finishWorkflow(Workflow.statusCodes.ERROR, function (err) {
                     cb(null, workflowService);
                 });
