@@ -301,9 +301,6 @@ function Runner() {
                 self.finishWorkflowService(workflowService, WorkflowService.statusCodes.ERROR, function (err) {
                     callback(err);
                 });
-            },
-            function (callback) {
-                self.finishWorkflow(Workflow.statusCodes.ERROR, callback);
             }
         ], function (err) {
             if (err) {
@@ -437,7 +434,14 @@ function Runner() {
         }
 
         workflowService.save().then(function (workflowService) {
-            cb(null, workflowService);
+
+            if (workflowService.status != WorkflowService.statusCodes.ERROR) {
+                self.finishWorkflow(Workflow.statusCodes.ERROR, function (err) {
+                    cb(null, workflowService);
+                });
+            } else {
+                cb(null, workflowService);
+            }
         }).catch(cb);
     };
 
