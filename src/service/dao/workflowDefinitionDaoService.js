@@ -94,7 +94,7 @@ function WorkflowDefinitionDaoService() {
             },
             order: [
                 /* Ordering workflow service model parameters via param value order num */
-                [{model: WorkflowDefinitionServiceParamValue, as: 'param_values'}, {model: ServiceModelParam, as: 'service_param'}, 'order_num', 'ASC']
+                [{model: WorkflowDefinitionServiceParamValue, as: 'paramValues'}, {model: ServiceModelParam, as: 'service_param'}, 'order_num', 'ASC']
             ]
         }).then(function(workflowDefinitionServiceModel) {
             if (!workflowDefinitionServiceModel) {
