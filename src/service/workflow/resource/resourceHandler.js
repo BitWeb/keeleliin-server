@@ -135,7 +135,7 @@ function ResourceHandler() {
             subResourceCallback(null, resource);
             return cb();
         } else if (resourceType.split_type == ResourceType.splitTypes.LINE) {
-            logger.debug('Start line split');
+            logger.debug('Start line split for resource id: ' + resource.id);
             self._splitOnLine(resource, serviceInputType, workflowService, subResourceCallback, cb);
         } else {
             logger.error('Split type split not defined: ' + resourceType.split_type);
