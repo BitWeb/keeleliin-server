@@ -15,6 +15,7 @@
     "express": "~4.12.4",
     "formidable": "^1.0.17",
     "fs": "0.0.2",
+    "graceful-fs": "^4.1.2",
     "jade": "~1.9.2",
     "line-reader": "^0.2.4",
     "log4js": "^0.6.25",

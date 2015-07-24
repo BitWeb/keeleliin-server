@@ -6,6 +6,10 @@ global.__base = __dirname + '/../';
 var express = require('express');
 var app = express();
 
+var realFs = require('fs');
+var gracefulFs = require('graceful-fs');
+gracefulFs.gracefulify(realFs); //monkey-patch for EMFILE
+
 var log4js = require('log4js');
 var path = require('path');
 var logger = require('morgan');

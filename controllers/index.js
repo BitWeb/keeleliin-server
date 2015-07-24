@@ -33,7 +33,7 @@ router.get('/test', function(req, res, next) {
     var initData = {
         "project_id": 1,
         "workflow_definition_id": 1,
-        "resources": [1,2]
+        "resources": [85]
     };
 
     var counter = 3;
