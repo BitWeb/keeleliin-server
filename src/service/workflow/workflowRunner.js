@@ -178,10 +178,12 @@ function Runner() {
                     resources,
                     workflowService,
                     function (err, resource) {
+                        if(err){ return callback(err); }
                         logger.debug('Handle input resource id: ' + resource.id);
                         self._handleWorkflowServiceInputResource(resource, workflowService, null);
                     },
                     function (err) {
+                        if(err){ return callback(err); }
                         logger.debug('Workflow service resources traversed');
                         callback(err);
                     }
@@ -190,6 +192,9 @@ function Runner() {
         ], function (err) {
             if (err) {
                 logger.error(err);
+                self.finishWorkflowService(workflowService, WorkflowService.statusCodes.ERROR, function (err) {
+                    logger.debug('WorkflowService finished with error: ' + err);
+                });
             }
         });
     };

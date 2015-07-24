@@ -66,6 +66,31 @@ function ResourceHandler() {
         var resourceType;
 
         async.waterfall([
+            function checkIfResourceExcists(callback) {
+
+                var pathToSourceFile = config.resources.location + '/' + resource.filename;
+
+                fs.lstat( pathToSourceFile, function (err, inodeStatus) {
+                    var errorMessage;
+                    if (err) {
+                        if (err.code === 'ENOENT' ) {
+                            errorMessage = 'Ressursi faili ei leitud. Id:' + resource.id;
+                            logger.error(errorMessage);
+                            return callback(errorMessage);
+                        }
+                        logger.error(err.message);
+                        return callback(err.message);
+                    }
+
+                    if(inodeStatus.isDirectory()){
+                        errorMessage = 'Tegemist on kaustaga. Id:' + resource.id;
+                        logger.error(errorMessage);
+                        return callback(errorMessage);
+                    }
+
+                    return callback();
+                });
+            },
             function getResourceResourceType(callback) {
                 logger.debug('Get resource type');
                 resource.getResourceType().then(function (item) {
