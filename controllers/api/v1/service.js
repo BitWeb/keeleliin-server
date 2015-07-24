@@ -29,7 +29,32 @@ router.post('/', function(req, res) {
         if (err) {
             return res.send(err);
         }
-        return res.send(service);
+
+        // Get service with persisted data
+        serviceService.getService(req, service.id, function(err, service) {
+            if (err) {
+                return res.send(err);
+            }
+            return res.send(service);
+        });
+    });
+});
+
+router.put('/:serviceId', function(req, res) {
+    serviceService.saveService(req, req.params.serviceId, req.body, function(err, service) {
+        if (err) {
+            return res.send(err);
+        }
+
+        // Get service with persisted data
+        serviceService.getService(req, req.params.serviceId, function(err, service) {
+            if (err) {
+                return res.send(err);
+            }
+
+            return res.send(service);
+
+        });
     });
 });
 

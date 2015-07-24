@@ -152,6 +152,37 @@ function ServiceService() {
         });
     };
 
+    this.saveService = function(req, serviceId, serviceData, cb) {
+        self.getService(req, serviceId, function(err, serviceModel) {
+            if (err) {
+                return cb(err);
+            }
+
+            async.waterfall([
+                function(callback) {
+                    serviceModel.updateAttributes(serviceData).then(function(serviceModel) {
+                        return callback(null, serviceModel);
+                    }).catch(function(error) {
+                        return callback(error);
+                    });
+                },
+
+                function(serviceModel, callback) {
+                    self._addServiceParamValues(req, serviceData, serviceModel, callback);
+                },
+
+                function(serviceModel, callback) {
+                    self._addServiceInputTypes(req, serviceData, serviceModel, callback);
+                },
+
+                function(serviceModel, callback) {
+                    self._addServiceOutputTypes(req, serviceData, serviceModel, callback);
+                }
+            ], cb);
+
+        });
+    };
+
     this._addServiceParamValues = function(req, serviceData, service, cb) {
         async.waterfall([
             function(callback) {
@@ -179,7 +210,7 @@ function ServiceService() {
                             key: serviceParam.key,
                             value: serviceParam.value,
                             description: serviceParam.description,
-                            order: orderNum
+                            order_num: orderNum
                         };
 
                         if (serviceModelParam) {
@@ -192,7 +223,7 @@ function ServiceService() {
                             });
                         } else {
                             ServiceModelParam.create(serviceParamData).then(function(serviceModelParam) {
-                                service.addServiceParam(serviceModelParam).then(function() {
+                                service.addServiceParam(serviceModelParam).then(function(serviceModelParam) {
                                     return innerCallback();
                                 }).catch(function(err) {
                                     return innerCallback(err);
@@ -208,7 +239,6 @@ function ServiceService() {
                     if (err) {
                         return callback(err);
                     }
-
                     return callback(null, service, ids, addedIds);
                 });
             },
@@ -222,15 +252,11 @@ function ServiceService() {
 
                         return callback(error);
                     });
+                } else {
+                    return callback(null, service);
                 }
-                return callback(null, service);
             }
-        ], function(err, serviceModel) {
-            if (err) {
-                return cb(err);
-            }
-            return cb(null, serviceModel);
-        });
+        ], cb);
     };
 
     this._addServiceInputTypes = function(req, serviceData, service, cb) {
@@ -304,15 +330,11 @@ function ServiceService() {
                     }).catch(function(error) {
                         return callback(error);
                     });
+                } else {
+                    return callback(null, serviceModel);
                 }
-                return callback(null, serviceModel);
             }
-        ], function(err, serviceModel) {
-            if (err) {
-                return cb(err);
-            }
-            return cb(null, serviceModel);
-        });
+        ], cb);
     };
 
     this._addServiceOutputTypes = function(req, serviceData, service, cb) {
@@ -342,6 +364,7 @@ function ServiceService() {
                         };
 
                         if (serviceOutputType) {
+                            addedIds.push(serviceOutputType.id);
                             serviceOutputType.updateAttributes(data).then(function(serviceOutputType) {
 
                                 return innerCallback();
@@ -380,15 +403,11 @@ function ServiceService() {
                     }).catch(function(error) {
                         return callback(error);
                     });
+                } else {
+                    return callback(null, serviceModel);
                 }
-                return callback(null, serviceModel);
             }
-        ], function(err, serviceModel) {
-            if (err) {
-                return cb(err);
-            }
-            return cb(null, serviceModel);
-        });
+        ], cb);
     };
 }
 
