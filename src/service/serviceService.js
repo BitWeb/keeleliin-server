@@ -169,15 +169,16 @@ function ServiceService() {
                 var addedIds = [],
                     orderNum = 0;
 
-                if (serviceData.serviceParam == undefined) {
+                if (serviceData.serviceParams == undefined) {
                     return callback(null, service, ids, addedIds);
                 }
 
-                async.eachSeries(serviceData.serviceParam, function(serviceParam, innerCallback) {
+                async.eachSeries(serviceData.serviceParams, function(serviceParam, innerCallback) {
                     self.getServiceModelParam(req, serviceParam.id, function(err, serviceModelParam) {
                         var serviceParamData = {
                             key: serviceParam.key,
                             value: serviceParam.value,
+                            description: serviceParam.description,
                             order: orderNum
                         };
 
@@ -248,11 +249,11 @@ function ServiceService() {
             function(ids, callback) {
                 var addedIds = [];
 
-                if (serviceData.serviceInputType == undefined) {
+                if (serviceData.serviceInputTypes == undefined) {
                     return callback(null, service, ids, addedIds);
                 }
 
-                async.eachSeries(serviceData.serviceInputType, function(serviceInputTypeData, innerCallback) {
+                async.eachSeries(serviceData.serviceInputTypes, function(serviceInputTypeData, innerCallback) {
 
                     self.getServiceInputType(req, serviceInputTypeData.id, function(err, serviceInputType) {
                         var data = {
@@ -328,11 +329,11 @@ function ServiceService() {
 
             function(ids, callback) {
                 var addedIds = [];
-                if (serviceData.serviceOutputType == undefined) {
+                if (serviceData.serviceOutputTypes == undefined) {
                     return callback(null, service, ids, addedIds);
                 }
 
-                async.eachSeries(serviceData.serviceOutputType, function(serviceOutputTypeData, innerCallback) {
+                async.eachSeries(serviceData.serviceOutputTypes, function(serviceOutputTypeData, innerCallback) {
 
                     self.getServiceOutputType(req, serviceOutputTypeData.id, function(err, serviceOutputType) {
                         var data = {

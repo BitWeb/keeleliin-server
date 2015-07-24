@@ -5,6 +5,7 @@
 var ServiceModel = require(__base + 'src/service/dao/sql').Service;
 var ServiceModelParam = require(__base + 'src/service/dao/sql').ServiceParam;
 var ServiceInputType = require(__base + 'src/service/dao/sql').ServiceInputType;
+var ServiceOutputType = require(__base + 'src/service/dao/sql').ServiceOutputType;
 
 function ServiceDaoService() {
 
@@ -16,6 +17,14 @@ function ServiceDaoService() {
                     model: ServiceModelParam,
                     as: 'serviceParams',
                     order: ['order_num', 'ASC']
+                },
+                {
+                    model: ServiceInputType,
+                    as: 'serviceInputTypes'
+                },
+                {
+                    model: ServiceOutputType,
+                    as: 'serviceOutputTypes'
                 }
             ]
         }).then(function(service) {
@@ -33,6 +42,14 @@ function ServiceDaoService() {
                     model: ServiceModelParam,
                     as: 'serviceParams',
                     order: ['order_num', 'ASC']
+                },
+                {
+                    model: ServiceInputType,
+                    as: 'serviceInputTypes'
+                },
+                {
+                    model: ServiceOutputType,
+                    as: 'serviceOutputTypes'
                 }
             ],
             limit: pagination.limit,
