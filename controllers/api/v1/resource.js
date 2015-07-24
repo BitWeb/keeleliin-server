@@ -56,12 +56,23 @@ router.get('/projectId/:projectId', function(req, res) {
 
 
 router.post('/upload/:projectId?', function(req, res) {
-    resourceService.createResourceFromUpload(req, function(err, resource) {
+    resourceService.createResource(req, function(err, resource) {
         if (err) {
             return res.send({errors: err});
         }
         return res.send(resource);
     });
 });
+//
+//router.get('/test', function(req, res) {
+//    var location = '/home/taivo/Documents/pipecontent_example.zip';
+//    var destination = '/home/taivo/Documents/Test';
+//    resourceService.extractArchiveFile(location, destination, function(err) {
+//        if (err) {
+//            return res.send(err);
+//        }
+//        return res.send({status: 'OK'});
+//    });
+//});
 
 module.exports = router;

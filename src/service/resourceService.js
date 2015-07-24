@@ -12,6 +12,12 @@ var http = require('http');
 var config = require(__base + 'config');
 var formidable = require('formidable');
 var projectService = require(__base + 'src/service/projectService');
+var uniqid = require('uniqid');
+var tar = require('tar');
+var zlib = require('zlib');
+var unzip = require('unzip');
+var mkdirp = require('mkdirp'); // used to create directory tree
+
 
 function ResourceService() {
 
@@ -82,38 +88,96 @@ function ResourceService() {
             });
         });
     };
-    //
-    //this.createResourceFromUrl = function(url, resourceType, extension, cb) {
-    //
-    //    var uniqid = require('uniqid'),
-    //        hash = uniqid();
-    //    var resourceFileLocation = config.resources.downloadLocation + hash + extension;
-    //    var file = fs.createWriteStream(resourceFileLocation);
-    //    var request = http.get(url, function(response) {
-    //        response.pipe(file);
-    //
-    //        file.on('finish', function() {
-    //
-    //        });
-    //
-    //        file.on('error', function(err) {
-    //            fs.unlink(resourceFileLocation);
-    //            return cb(err);
-    //        });
-    //
-    //    });
-    //
-    //};
 
-    /**
-     * TODO:
-     * - multipart upload large files (e.g zip) (req.files.uploadFile)
-     * - URL ?
-     *
-     * @param req
-     * @param cb
-     */
-    this.createResourceFromUpload = function(req, cb) {
+    this.createResourceFromUrl = function(req, resourceData, url, cb) {
+        async.waterfall([
+            function(callback) {
+                projectService.getProject(req, resourceData.projectId, function(err, project) {
+                    return callback(null, project);
+                });
+            },
+
+            function(project, callback) {
+                self.getResourceType(req, resourceData.resource_type_id, function(err, resourceType) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    return callback(null, project, resourceType);
+                });
+            },
+
+            function(project, resourceType, callback) {
+                var projectLocation = (project != null ? '/' + project.id : ''),
+                    hash = uniqid(),
+                    fileName = hash + path.extname(url),
+                    resourceFileLocation = config.resources.location + projectLocation;
+
+                if (!fs.existsSync(config.resources.location)) {
+                    fs.mkdirSync(config.resources.location);
+                }
+
+                if (!fs.existsSync(resourceFileLocation)) {
+                    fs.mkdirSync(resourceFileLocation);
+                }
+
+                var filePath = resourceFileLocation + '/' + fileName;
+                var request = http.get(url, function(response) {
+                    if (response.statusCode === 200) {
+
+                        var resourceFile = fs.createWriteStream(filePath);
+                        response.pipe(resourceFile);
+
+                        resourceFile.on('finish', function() {
+                            return callback(null, project, resourceType, filePath, fileName);
+                        });
+
+                        resourceFile.on('error', function(err) {
+                            return callback(err);
+                        });
+                    } else {
+                        request.abort();
+                        return callback('File not found from URL: ' + url);
+                    }
+                });
+            },
+
+            function(project, resourceType, filePath, fileName, callback) {
+                self._createResourceInstance(req, {
+                    filename: filePath,
+                    file_type: Resource.fileTypes.FILE,
+                    resource_type_id: resourceType.id,
+                    source_original_name: fileName,
+                    source_filename: fileName,
+                    name: fileName
+                }, function(err, resource) {
+                    if (err) {
+                        return callback(err);
+                    }
+
+                    if (project != null) {
+                        resource.addProject(project).then(function() {
+                            return callback(null, resource);
+                        }).catch(function(error) {
+                            return callback(error);
+                        });
+                    }
+
+                    return callback(null, resource);
+                });
+
+            }
+        ], cb);
+    };
+
+    this._createResourceInstance = function(req, resourceData, cb) {
+        Resource.create(resourceData).then(function(resource) {
+            return cb(null, resource);
+        }).catch(function(error) {
+            return cb(error.message);
+        });
+    };
+
+    this.createResource = function(req, cb) {
         var form = new formidable.IncomingForm();
         form.parse(req, function(err, fields, files) {
             if (err) {
@@ -124,11 +188,15 @@ function ResourceService() {
                 projectId: req.params.projectId,
                 resource_type_id: fields.resource_type_id,
                 file_type: fields.file_type,
-                name: fields.name,
-                resourceFile: files.resourceFile
+                name: fields.name
             };
 
-            return self.createResource(req, resourceData, cb);
+            if (fields.url && fields.url != '') {
+
+                return self.createResourceFromUrl(req, resourceData, fields.url, cb);
+            }
+
+            return self.createResourceFromUpload(req, resourceData, files.resourceFile, cb);
         });
 
         form.on('error', function(err) {
@@ -137,42 +205,35 @@ function ResourceService() {
         });
     };
 
-    this.createResource = function(req, resourceData, cb) {
-        var resourceType,
-            resourceFileLocation,
-            projectLocation,
-            uniqid = require('uniqid'),
-            hash = uniqid(),
-            filename,
-            resourceProject = null;
+    this.createResourceFromUpload = function(req, resourceData, resourceFile, cb) {
 
         async.waterfall([
             // Get project
             function(callback) {
                 projectService.getProject(req, resourceData.projectId, function(err, project) {
-                    if (project) {
-                        resourceProject = project;
-                    }
-                    return callback();
+                    return callback(null, project);
                 });
             },
 
             // Get resource type
-            function(callback) {
+            function(project, callback) {
                 self.getResourceType(req, resourceData.resource_type_id, function(err, rType) {
                     if (err) {
                         return callback(err);
                     }
-                    resourceType = rType;
-                    callback();
+                    return callback(null, project, rType);
                 });
             },
+
             // Rename files
-            function(callback) {
-                if (resourceData.resourceFile) {
-                    filename = hash + path.extname(resourceData.resourceFile.name);
-                    projectLocation = (resourceProject != null ? '/' + resourceProject.id : '');
-                    resourceFileLocation = config.resources.location + projectLocation;
+            function(project, resourceType, callback) {
+                if (resourceFile) {
+
+                    var hash = uniqid(),
+                        filename = hash + path.extname(resourceFile.name),
+                        projectLocation = (project != null ? '/' + project.id : ''),
+                        resourceFileLocation = config.resources.location + projectLocation;
+
                     if (!fs.existsSync(config.resources.location )) {
                         fs.mkdirSync(config.resources.location);
                     }
@@ -181,37 +242,42 @@ function ResourceService() {
                         fs.mkdirSync(resourceFileLocation);
                     }
 
-                    fs.rename(resourceData.resourceFile.path, resourceFileLocation + '/' + filename, function(err) {
+                    fs.rename(resourceFile.path, resourceFileLocation + '/' + filename, function(err) {
                         if (err) {
                             return callback(err);
                         }
-                        callback();
+                        return callback(null, project, resourceType, resourceFileLocation, filename);
                     });
                 } else {
-                    callback('No file attached.');
+                    return callback('No file attached.');
                 }
             },
+
             // Create resource
-            function(callback) {
-                var data = {
+            function(project, resourceType, filePath, fileName, callback) {
+                self._createResourceInstance(req, {
                     resource_type_id: resourceType.id,
                     file_type: resourceData.file_type,
                     name: resourceData.name,
-                    filename: projectLocation ? projectLocation + '/' : '' + filename,
-                    source_original_name: resourceData.resourceFile.name,
-                    source_filename: '',
-                    hash: hash
-                };
-
-                var resource = Resource.build(data);
-                resource.save().then(function(resource) {
-                    if (resourceProject != null) {
-                        resource.addProject(resourceProject);
+                    filename: filePath + '/' + fileName,
+                    source_original_name: fileName,
+                    source_filename: fileName
+                }, function(err, resource) {
+                    if (err) {
+                        return callback(err);
                     }
-                    callback(null, resource);
-                }).catch(function(err) {
-                    callback(err);
+
+                    if (project != null) {
+                        resource.addProject(project).then(function() {
+                            return callback(null, resource);
+                        }).catch(function(error) {
+                            return callback(error);
+                        });
+                    }
+
+                    return callback(null, resource);
                 });
+
             }
         ], function(err, resource) {
             if (err) {
@@ -220,7 +286,41 @@ function ResourceService() {
 
             return cb(null, resource);
         });
-    }
+    };
+
+    /**
+     * Different methods for *.tar.gz and *.zip.
+     */
+    this.extractArchiveFile = function(location, destination, cb) {
+
+        fs.createReadStream(location)
+            .on('error', function(err) {
+                return cb(err);
+            })
+            //.pipe(zlib.Unzip())
+            //.pipe(tar.Parse())
+            .pipe(unzip.Parse())
+            .on('entry', function(entry) {
+                var isFile = ('File' == entry.type);
+                var fullpath = path.join(destination, entry.path);
+                var directory = (isFile ? path.dirname(fullpath) : fullpath);
+
+                mkdirp(directory, function(err) {
+                    if (err) {
+                        return cb(err);
+                    }
+
+                    if (isFile) {
+                        entry.pipe(fs.createWriteStream(fullpath));
+                    }
+                });
+            })
+            .on('close', function() {
+                return cb();
+            });
+
+    };
+
 
 }
 
