@@ -28,7 +28,7 @@ config.resources = {
     downloadLocation: __dirname + '/../keeleliin-files/downloads'
 };
 
-config.lof4js = {
+config.log4js = {
     appenders: [
         { type: 'console',
             layout: {

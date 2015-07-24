@@ -29,7 +29,7 @@ app.set('views', path.join(__base, 'views'));// view engine setup
 app.set('view engine', 'jade');// view engine setup
 app.use(express.static(__base + '/public'));
 
-log4js.configure(config.lof4js);
+log4js.configure(config.log4js);
 
 var log4jsLogger = log4js.getLogger('server_js');
 
