@@ -45,9 +45,9 @@ function ApiService(){
         });
     };
 
-    this.loadRequestResponse = function (dto, id, key, outputPath, cb) {
+    this.loadRequestResponse = function (dto, id, fileData, outputPath, cb) {
 
-        var url = dto.url + 'service' + '/' + id + '/' + key;
+        var url = dto.url + 'service' + '/' + id + '/' + fileData.key;
         var file = fs.createWriteStream( config.resources.location + '/' + outputPath );
         var request = http.get(url, function(response) {
             response.pipe(file);
