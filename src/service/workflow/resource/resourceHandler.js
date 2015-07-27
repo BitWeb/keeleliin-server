@@ -10,42 +10,41 @@ var ResourceCreator = require('./resourceCreator');
 
 var fs = require('fs');
 var lineReader = require('line-reader');
-var JSONStream = require('JSONStream');
 var config = require(__base + 'config');
 
 function ResourceHandler() {
 
     var self = this;
 
-    this.getWorkflowServiceSubstepsInputResources = function (resources, workflowService, resourceCallback, cb) {
+    this.getWorkflowServiceSubStepsInputResources = function (resources, workflowService, resourceCallback, cb) {
 
         var service;
         var inputType;
         var inputResourceType;
 
         async.waterfall([
-            function (callback) {
+            function getService(callback) {
                 logger.debug('Get service');
                 workflowService.getService().then(function (item) {
                     service = item;
                     callback();
                 }).catch(callback);
             },
-            function (callback) {
+            function getServiceInputType(callback) {
                 logger.debug('Get input resources');
                 service.getServiceInputTypes().then(function (inputTypes) {
                     inputType = inputTypes.pop(); //Currently one
                     callback();
                 }).catch(callback);
             },
-            function (callback) {
+            function getInputTypeResourceType(callback) {
                 logger.debug('Get input resource types');
                 inputType.getResourceType().then(function (item) {
                     inputResourceType = item;
                     callback();
                 }).catch(callback);
             },
-            function (callback) {
+            function traverseAndSplitResources(callback) {
                 logger.debug('Traverse resources');
                 async.eachSeries(
                     resources,

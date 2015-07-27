@@ -13,10 +13,6 @@ var config = require(__base + 'config');
 var formidable = require('formidable');
 var projectService = require(__base + 'src/service/projectService');
 var uniqid = require('uniqid');
-var tar = require('tar');
-var zlib = require('zlib');
-var unzip = require('unzip');
-var mkdirp = require('mkdirp'); // used to create directory tree
 
 
 function ResourceService() {

@@ -6,7 +6,6 @@
 var resourceService = require(__base + 'src/service/resourceService');
 var workflowDaoService = require(__base + 'src/service/dao/workflowDaoService');
 var workflowDefinitionService = require(__base + 'src/service/workflowDefinitionService');
-var GrepWrapper = require(__base + 'src/wrapper/grepWrapper/grepWrapper');
 var Workflow = require(__base + 'src/service/dao/sql').Workflow;
 
 function WorkflowService() {
