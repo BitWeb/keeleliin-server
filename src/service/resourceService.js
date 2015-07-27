@@ -288,40 +288,6 @@ function ResourceService() {
         });
     };
 
-    /**
-     * Different methods for *.tar.gz and *.zip.
-     */
-    this.extractArchiveFile = function(location, destination, cb) {
-
-        fs.createReadStream(location)
-            .on('error', function(err) {
-                return cb(err);
-            })
-            //.pipe(zlib.Unzip())
-            //.pipe(tar.Parse())
-            .pipe(unzip.Parse())
-            .on('entry', function(entry) {
-                var isFile = ('File' == entry.type);
-                var fullpath = path.join(destination, entry.path);
-                var directory = (isFile ? path.dirname(fullpath) : fullpath);
-
-                mkdirp(directory, function(err) {
-                    if (err) {
-                        return cb(err);
-                    }
-
-                    if (isFile) {
-                        entry.pipe(fs.createWriteStream(fullpath));
-                    }
-                });
-            })
-            .on('close', function() {
-                return cb();
-            });
-
-    };
-
-
 }
 
 module.exports = new ResourceService();

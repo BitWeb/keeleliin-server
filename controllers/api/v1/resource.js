@@ -63,16 +63,5 @@ router.post('/upload/:projectId?', function(req, res) {
         return res.send(resource);
     });
 });
-//
-//router.get('/test', function(req, res) {
-//    var location = '/home/taivo/Documents/pipecontent_example.zip';
-//    var destination = '/home/taivo/Documents/Test';
-//    resourceService.extractArchiveFile(location, destination, function(err) {
-//        if (err) {
-//            return res.send(err);
-//        }
-//        return res.send({status: 'OK'});
-//    });
-//});
 
 module.exports = router;
