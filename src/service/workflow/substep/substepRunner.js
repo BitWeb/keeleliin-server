@@ -100,7 +100,7 @@ function SubStepRunner(){
 
 
     this._finishSubstepRequest = function (substep, dto, response, cb) {
-        var fileKeys =  response.response.data.files;
+        var files =  response.response.data.files;
 
         async.waterfall([
             function getWorkflowId(wfCallback) {
@@ -110,16 +110,16 @@ function SubStepRunner(){
             },
             function loadOutputResources(workflowId, wfCallback) {
                 async.eachSeries(
-                    fileKeys,
-                    function iterator(fileKey, callback) {
+                    files,
+                    function iterator(fileData, callback) {
 
-                        self.getSubstepOutputResourceType(substep, fileKey, function (err, resourceType) {
+                        self.getSubstepOutputResourceType(substep, fileData, function (err, resourceType) {
                            if(err) return callback(null, substep); //SKIP if not used
 
-                            var outputPath = self.getOutputResourcePath(substep, fileKey, workflowId);
+                            var outputPath = self.getOutputResourcePath(substep, fileData, workflowId);
                             var requestSessionId = response.response.serviceId;
-                            apiService.loadRequestResponse(dto, requestSessionId, fileKey, outputPath, function (err) {
-                                self.addSubstepOutputResource(substep, outputPath, fileKey, resourceType, function (err, updatedSubstep) {
+                            apiService.loadRequestResponse(dto, requestSessionId, fileData, outputPath, function (err) {
+                                self.addSubstepOutputResource(substep, outputPath, fileData, resourceType, function (err, updatedSubstep) {
                                     substep = updatedSubstep;
                                     logger.debug('Output resource added: ' +  updatedSubstep.id);
                                     callback(err, substep);
@@ -148,7 +148,7 @@ function SubStepRunner(){
         }).catch(cb);
     };
 
-    this.getOutputResourcePath = function ( substep, filekey, workflowId) {
+    this.getOutputResourcePath = function ( substep, fileData, workflowId) {
 
         var rootLocation = config.resources.location;
         if (!fs.existsSync( rootLocation )) {
@@ -160,18 +160,18 @@ function SubStepRunner(){
             fs.mkdirSync( rootLocation + location );
         }
 
-        return location + '/substep_' + substep.id + '_' + filekey;
+        return location + '/substep_' + substep.id + '_' + fileData.key;
     };
 
-    this.addSubstepOutputResource = function (substep, outputPath, fileKey, resourceType, cb) {
+    this.addSubstepOutputResource = function (substep, outputPath, fileData, resourceType, cb) {
 
         var data = {
             filename: outputPath,
             file_type: Resource.fileTypes.FILE,
             resource_type_id: resourceType.id,
-            source_original_name: fileKey,
-            source_filename: fileKey,
-            name: fileKey
+            source_original_name: fileData.key,
+            source_filename: fileData.key,
+            name: fileData.key
         };
 
         async.waterfall([
@@ -191,7 +191,7 @@ function SubStepRunner(){
         ], cb);
     };
 
-    this.getSubstepOutputResourceType = function(substep, fileKey, cb){
+    this.getSubstepOutputResourceType = function(substep, fileData, cb){
 
         async.waterfall([
             function (callback) {
@@ -205,13 +205,13 @@ function SubStepRunner(){
                 });
             },
             function (service, callback) {
-                service.getServiceOutputTypes({where: {key: fileKey}}).then(function (types) {
+                service.getServiceOutputTypes({where: {key: fileData.key}}).then(function (types) {
                     callback(null, types.pop());
                 });
             },
             function (outputType, callback) {
                 if(!outputType){
-                    return callback('Output type for key' + fileKey +' not found');
+                    return callback('Output type for key' + fileData.key +' not found');
                 }
                 outputType.getResourceType().then(function (resourceType) {
                     callback(null, resourceType);
