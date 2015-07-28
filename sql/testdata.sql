@@ -55,3 +55,6 @@ INSERT INTO service_input_type(key, do_parallel, service_id, resource_type_id, s
 
 INSERT INTO service_output_type(key, service_id, resource_type_id) VALUES ('output', 1, 1);
 INSERT INTO service_output_type(key, service_id, resource_type_id) VALUES ('output', 2, 1);
+
+
+INSERT INTO resource_type (value, name, split_type) SELECT 'ZIP', 'Zip-file', 'NONE' WHERE NOT EXISTS (SELECT 1 FROM resource_type WHERE resource_type.value = 'ZIP');
