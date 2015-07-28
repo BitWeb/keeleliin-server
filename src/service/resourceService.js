@@ -183,7 +183,7 @@ function ResourceService() {
                 return self.createResourceFromUrl(req, resourceData, fields.url, cb);
             }
 
-            return self.createResourceFromUpload(req, resourceData, files.resourceFile, cb);
+            return self.createResourceFromUpload(req, resourceData, files.resource_file, cb);
         });
 
         form.on('error', function(err) {

@@ -167,7 +167,8 @@ function SubStepRunner(){
             file_type: Resource.fileTypes.FILE,
             resource_type_id: resourceType.id,
             original_name: fileData.fileName,
-            name: self._normalizeFileName(fileData.fileName)
+            name: self._normalizeFileName(fileData.fileName),
+            content_type: fileData.contentType
         };
 
         async.waterfall([
