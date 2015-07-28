@@ -101,7 +101,6 @@ function SubStepRunner(){
 
     this._finishSubstepRequest = function (substep, dto, response, cb) {
         var files =  response.response.data.files;
-
         async.waterfall([
             function getWorkflowId(wfCallback) {
                 substep.getWorkflowService().then(function (workflowService) {
@@ -112,7 +111,6 @@ function SubStepRunner(){
                 async.eachSeries(
                     files,
                     function iterator(fileData, callback) {
-
                         self.getSubstepOutputResourceType(substep, fileData, function (err, resourceType) {
                            if(err) return callback(null, substep); //SKIP if not used
 
@@ -164,14 +162,12 @@ function SubStepRunner(){
     };
 
     this.addSubstepOutputResource = function (substep, outputPath, fileData, resourceType, cb) {
-
         var data = {
             filename: outputPath,
             file_type: Resource.fileTypes.FILE,
             resource_type_id: resourceType.id,
-            source_original_name: fileData.key,
-            source_filename: fileData.key,
-            name: fileData.key
+            original_name: fileData.fileName,
+            name: self._normalizeFileName(fileData.fileName)
         };
 
         async.waterfall([
@@ -205,13 +201,13 @@ function SubStepRunner(){
                 });
             },
             function (service, callback) {
-                service.getServiceOutputTypes({where: {key: fileData.key}}).then(function (types) {
+                service.getServiceOutputTypes({where: {key: fileData.type}}).then(function (types) {
                     callback(null, types.pop());
                 });
             },
             function (outputType, callback) {
                 if(!outputType){
-                    return callback('Output type for key' + fileData.key +' not found');
+                    return callback('Output type for key' + fileData.type +' not found');
                 }
                 outputType.getResourceType().then(function (resourceType) {
                     callback(null, resourceType);
@@ -219,6 +215,13 @@ function SubStepRunner(){
             }
         ], cb );
     };
+
+    this._normalizeFileName = function(fileName, replaceStr) {
+        if (replaceStr == undefined) {
+            replaceStr = '_';
+        }
+        return fileName.replace(/[\/\\]/g, replaceStr);
+    }
 }
 
 module.exports = new SubStepRunner();

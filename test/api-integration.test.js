@@ -233,8 +233,7 @@ describe('Routing', function() {
                         throw err;
                     }
                     res.body.should.have.property('id');
-                    res.body.should.have.property('source_original_name');
-                    res.body.should.have.property('source_filename');
+                    res.body.should.have.property('original_name');
                     res.body.should.have.property('filename');
                     res.body.should.have.property('name');
                     res.body.should.have.property('date_created');

@@ -3,7 +3,7 @@
  */
 global.__base = __dirname + '/../';
 
-require('v8-profiler');
+//require('v8-profiler');
 
 var express = require('express');
 var app = express();

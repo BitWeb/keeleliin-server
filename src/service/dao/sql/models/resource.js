@@ -38,19 +38,14 @@ module.exports = function(sequelize, DataTypes) {
                 key: 'id'
             }
         },
-        source_original_name: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            primaryKey: false
-        },
-        source_filename: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            primaryKey: false
-        },
         filename: {
             type: DataTypes.STRING,
             allowNull: true,
+            primaryKey: false
+        },
+        original_name: {
+            type: DataTypes.STRING,
+            allowNull: false,
             primaryKey: false
         },
         name: {
@@ -93,9 +88,6 @@ module.exports = function(sequelize, DataTypes) {
         },
         date_updated: {
             type: DataTypes.DATE
-        },
-        hash: {
-            type: DataTypes.STRING
         }
     }, {
         tableName: 'resource',

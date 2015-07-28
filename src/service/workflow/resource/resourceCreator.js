@@ -53,8 +53,7 @@ function ResourceCreator(sourceResource, workflowService, globalLineIndex){
             content_type: self.sourceResource.content_type,
             encoding: self.sourceResource.encoding,
             name: self.sourceResource.name,
-            source_original_name: self.sourceResource.source_original_name,
-            source_filename: self.sourceResource.source_filename
+            original_name: self.sourceResource.original_name
         };
 
         var resource = Resource.build(data);

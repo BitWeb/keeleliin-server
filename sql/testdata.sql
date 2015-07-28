@@ -2,15 +2,11 @@ INSERT INTO resource_type(value, name, split_type) VALUES ('TEXT', 'Tekst', 'LIN
 INSERT INTO resource_type(value, name, split_type) VALUES ('WORD', 'Sõnad', 'LINE');
 
 INSERT INTO resource(
-            file_type, resource_type_id, source_original_name,
-            source_filename, filename, name)
-    VALUES ('FILE', 1, 'name',
-    'name', 'name', 'name');
+            file_type, resource_type_id, original_name, filename, name)
+    VALUES ('FILE', 1, 'name', 'name', 'name');
 INSERT INTO resource(
-            file_type, resource_type_id, source_original_name,
-            source_filename, filename, name)
-    VALUES ('FILE', 1, 'name2',
-    'name2', 'name2', 'name2');
+            file_type, resource_type_id, original_name, filename, name)
+    VALUES ('FILE', 1, 'name2', 'name2');
 
 
 INSERT INTO "user" (entu_id, email, name) SELECT 1, 'taivo@bitweb.ee', 'taivo' WHERE NOT EXISTS (SELECT 1 FROM "user" WHERE "user".email = 'taivo@bitweb.ee');
@@ -58,3 +54,7 @@ INSERT INTO service_output_type(key, service_id, resource_type_id) VALUES ('outp
 
 
 INSERT INTO resource_type (value, name, split_type) SELECT 'ZIP', 'Zip-file', 'NONE' WHERE NOT EXISTS (SELECT 1 FROM resource_type WHERE resource_type.value = 'ZIP');
+INSERT INTO service (name, url) SELECT 'archive-unzipper', 'http://dev.bitweb.ee:3004/api/v1/' WHERE NOT EXISTS (SELECT 1 FROM service WHERE service.name = 'archive-unzipper');
+INSERT INTO service_input_type(key, do_parallel, service_id, resource_type_id, size_limit, size_unit) VALUES ('content', FALSE, 3, 3, 0, 'none');
+INSERT INTO service_output_type(key, service_id, resource_type_id) VALUES ('output', 3, 1);
+

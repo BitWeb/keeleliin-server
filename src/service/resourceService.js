@@ -3,6 +3,7 @@
  */
 
 var fs = require('fs');
+var urlHelper = require('url');
 var resourceDaoService = require('./dao/resourceDaoService');
 var Resource = require(__base + 'src/service/dao/sql').Resource;
 var ResourceType = require(__base + 'src/service/dao/sql').ResourceType;
@@ -65,19 +66,7 @@ function ResourceService() {
             if (err) {
                 return callback(err);
             }
-
-            /**
-             * TODO: a separate mapper
-             */
-            if (resourceData.source_file_location != undefined) {
-                resource.source_file_location = resourceData.source_file_location;
-            }
-
-            if (resourceData.file_location != undefined) {
-                resource.file_location = resourceData.file_location;
-            }
-
-            resource.save().then(function (updatedResource) {
+            resource.updateAttributes(resourceData).then(function (updatedResource) {
                 return callback(null, updatedResource);
             }).catch(function (error) {
                 return callback(error);
@@ -105,7 +94,9 @@ function ResourceService() {
             function(project, resourceType, callback) {
                 var projectLocation = (project != null ? '/' + project.id : ''),
                     hash = uniqid(),
+                    parsedUrl = urlHelper.parse(url),
                     fileName = hash + path.extname(url),
+                    originalFileName = path.basename(parsedUrl.pathname),
                     resourceFileLocation = config.resources.location + projectLocation;
 
                 if (!fs.existsSync(config.resources.location)) {
@@ -117,6 +108,7 @@ function ResourceService() {
                 }
 
                 var filePath = resourceFileLocation + '/' + fileName;
+
                 var request = http.get(url, function(response) {
                     if (response.statusCode === 200) {
 
@@ -124,7 +116,7 @@ function ResourceService() {
                         response.pipe(resourceFile);
 
                         resourceFile.on('finish', function() {
-                            return callback(null, project, resourceType, filePath, fileName);
+                            return callback(null, project, resourceType, (projectLocation + '/' + fileName), fileName, originalFileName);
                         });
 
                         resourceFile.on('error', function(err) {
@@ -137,13 +129,12 @@ function ResourceService() {
                 });
             },
 
-            function(project, resourceType, filePath, fileName, callback) {
+            function(project, resourceType, filePath, fileName, originalFileName, callback) {
                 self._createResourceInstance(req, {
                     filename: filePath,
                     file_type: Resource.fileTypes.FILE,
                     resource_type_id: resourceType.id,
-                    source_original_name: fileName,
-                    source_filename: fileName,
+                    original_name: originalFileName,
                     name: fileName
                 }, function(err, resource) {
                     if (err) {
@@ -226,7 +217,8 @@ function ResourceService() {
                 if (resourceFile) {
 
                     var hash = uniqid(),
-                        filename = hash + path.extname(resourceFile.name),
+                        fileName = hash + path.extname(resourceFile.name),
+                        originalFileName = path.basename(resourceFile.name),
                         projectLocation = (project != null ? '/' + project.id : ''),
                         resourceFileLocation = config.resources.location + projectLocation;
 
@@ -238,11 +230,11 @@ function ResourceService() {
                         fs.mkdirSync(resourceFileLocation);
                     }
 
-                    fs.rename(resourceFile.path, resourceFileLocation + '/' + filename, function(err) {
+                    fs.rename(resourceFile.path, resourceFileLocation + '/' + fileName, function(err) {
                         if (err) {
                             return callback(err);
                         }
-                        return callback(null, project, resourceType, resourceFileLocation, filename);
+                        return callback(null, project, resourceType, (projectLocation + '/' + fileName), fileName, originalFileName);
                     });
                 } else {
                     return callback('No file attached.');
@@ -250,14 +242,13 @@ function ResourceService() {
             },
 
             // Create resource
-            function(project, resourceType, filePath, fileName, callback) {
+            function(project, resourceType, filePath, fileName, originalFileName, callback) {
                 self._createResourceInstance(req, {
                     resource_type_id: resourceType.id,
                     file_type: resourceData.file_type,
-                    name: resourceData.name,
-                    filename: filePath + '/' + fileName,
-                    source_original_name: fileName,
-                    source_filename: fileName
+                    filename: filePath,
+                    original_name: originalFileName,
+                    name: resourceData.name
                 }, function(err, resource) {
                     if (err) {
                         return callback(err);
