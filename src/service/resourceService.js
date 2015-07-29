@@ -60,7 +60,8 @@ function ResourceService() {
         return resourceDaoService.getResources(pagination, callback);
     };
 
-    this.saveResource = function(req, resourceId, resourceData, callback) {
+    //todo: Not used?
+/*    this.saveResource = function(req, resourceId, resourceData, callback) {
 
         resourceDaoService.getResource(resourceId, function (err, resource) {
             if (err) {
@@ -72,9 +73,37 @@ function ResourceService() {
                 return callback(error);
             });
         });
+    };*/
+
+    this.createResource = function(req, cb) {
+        var form = new formidable.IncomingForm();
+        form.parse(req, function(err, fields, files) {
+            if (err) {
+                return cb(err);
+            }
+
+            var resourceData = {
+                projectId: req.params.projectId,
+                resource_type_id: fields.resource_type_id,
+                file_type: fields.file_type,
+                name: fields.name
+            };
+
+            if (fields.url && fields.url != '') {
+
+                return self._createResourceFromUrl(req, resourceData, fields.url, cb);
+            }
+
+            return self._createResourceFromUpload(req, resourceData, files.resource_file, cb);
+        });
+
+        form.on('error', function(err) {
+
+            return cb(err);
+        });
     };
 
-    this.createResourceFromUrl = function(req, resourceData, url, cb) {
+    this._createResourceFromUrl = function(req, resourceData, url, cb) {
         async.waterfall([
             function(callback) {
                 projectService.getProject(req, resourceData.projectId, function(err, project) {
@@ -156,54 +185,16 @@ function ResourceService() {
         ], cb);
     };
 
-    this._createResourceInstance = function(req, resourceData, cb) {
-        Resource.create(resourceData).then(function(resource) {
-            return cb(null, resource);
-        }).catch(function(error) {
-            return cb(error.message);
-        });
-    };
 
-    this.createResource = function(req, cb) {
-        var form = new formidable.IncomingForm();
-        form.parse(req, function(err, fields, files) {
-            if (err) {
-                return cb(err);
-            }
-
-            var resourceData = {
-                projectId: req.params.projectId,
-                resource_type_id: fields.resource_type_id,
-                file_type: fields.file_type,
-                name: fields.name
-            };
-
-            if (fields.url && fields.url != '') {
-
-                return self.createResourceFromUrl(req, resourceData, fields.url, cb);
-            }
-
-            return self.createResourceFromUpload(req, resourceData, files.resource_file, cb);
-        });
-
-        form.on('error', function(err) {
-
-            return cb(err);
-        });
-    };
-
-    this.createResourceFromUpload = function(req, resourceData, resourceFile, cb) {
+    this._createResourceFromUpload = function(req, resourceData, resourceFile, cb) {
 
         async.waterfall([
-            // Get project
-            function(callback) {
+            function getProject(callback) {
                 projectService.getProject(req, resourceData.projectId, function(err, project) {
                     return callback(null, project);
                 });
             },
-
-            // Get resource type
-            function(project, callback) {
+            function getResourceType(project, callback) {
                 self.getResourceType(req, resourceData.resource_type_id, function(err, rType) {
                     if (err) {
                         return callback(err);
@@ -211,9 +202,7 @@ function ResourceService() {
                     return callback(null, project, rType);
                 });
             },
-
-            // Rename files
-            function(project, resourceType, callback) {
+            function renameFiles(project, resourceType, callback) {
                 if (resourceFile) {
 
                     var hash = uniqid(),
@@ -275,6 +264,13 @@ function ResourceService() {
         });
     };
 
+    this._createResourceInstance = function(req, resourceData, cb) {
+        Resource.create(resourceData).then(function(resource) {
+            return cb(null, resource);
+        }).catch(function(error) {
+            return cb(error.message);
+        });
+    };
 }
 
 module.exports = new ResourceService();

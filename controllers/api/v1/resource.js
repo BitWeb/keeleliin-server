@@ -34,7 +34,7 @@ router.get('/download/:resourceId', function(req, res) {
 });
 
 
-router.post('/', function(req, res) {
+/*router.post('/', function(req, res) {
 
     resourceService.createResourceFromUpload(req, function(error, resource) {
         if (error) {
@@ -42,7 +42,8 @@ router.post('/', function(req, res) {
         }
         return res.send(resource);
     });
-});
+});*/
+
 
 router.get('/projectId/:projectId', function(req, res) {
 
