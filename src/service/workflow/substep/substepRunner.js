@@ -204,7 +204,7 @@ function SubStepRunner(){
                         var resource = resources.pop();
                         sourceName = FileUtil.getName(resource.original_name)
                     }
-                    callback(null, name);
+                    callback();
                 });
             },
             function ( callback ){
