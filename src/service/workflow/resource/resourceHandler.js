@@ -50,7 +50,7 @@ function ResourceHandler() {
                     resources,
                     function iterator(resource, itCallback) {
                         logger.debug('Traverse resources iteration');
-                        self._splitResource(resource, inputType, inputResourceType, workflowService, resourceCallback, itCallback);
+                        self._handleResource(resource, inputType, inputResourceType, workflowService, resourceCallback, itCallback);
                     },
                     function done(err) {
                         callback(err);
@@ -60,15 +60,13 @@ function ResourceHandler() {
         ], cb);
     };
 
-    this._splitResource = function (resource, serviceInputType, serviceInputResourceType, workflowService, resourceCallback, cb) {
+    this._handleResource = function (resource, serviceInputType, serviceInputResourceType, workflowService, resourceCallback, cb) {
 
         var resourceType;
+        var pathToSourceFile = config.resources.location + '/' + resource.filename;
 
         async.waterfall([
             function checkIfResourceExcists(callback) {
-
-                var pathToSourceFile = config.resources.location + '/' + resource.filename;
-
                 fs.lstat( pathToSourceFile, function (err, inodeStatus) {
                     var errorMessage;
                     if (err) {
@@ -110,7 +108,7 @@ function ResourceHandler() {
                 }
                 callback();
             },
-            function checkTodoParallel(callback) {
+            function checkAllowedDoParallel(callback) {
                 logger.debug('Check do parallel');
                 if (serviceInputType.do_parallel == false || serviceInputType.size_limit == 0) {
                     logger.debug('Can not do parallel');
@@ -118,6 +116,22 @@ function ResourceHandler() {
                     return cb();
                 }
                 callback();
+            },
+            function checkIfSomethingToSplit(callback){
+                if(serviceInputType.size_unit == ServiceInputType.sizeUnits.BYTE){
+                    fs.stat(pathToSourceFile, function (err, stats) {
+                        if(stats.size > serviceInputType.size_limit){
+                            return callback();
+                        } else {
+                            logger.debug('Can not do parallel. Smaller than limit');
+                            resourceCallback(null, resource);
+                            return cb();
+                        }
+                    });
+                } else {
+                    //Can't tell
+                    return callback();
+                }
             },
             function doSplit(callback) {
                 logger.debug('Do parallel');

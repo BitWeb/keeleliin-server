@@ -7,10 +7,11 @@ var async = require('async');
 var fs = require('fs');
 var Resource = require(__base + 'src/service/dao/sql').Resource;
 var WorkflowServiceSubstep = require(__base + 'src/service/dao/sql').WorkflowServiceSubstep;
-var resourceDaoService = require(__base + 'src/service/dao/resourceDaoService');
 var apiService = require('./../service/apiService');
 var substepServiceDtoMapper = require('./substepServiceDtoMapper');
 var config = require(__base + 'config');
+var FileUtil = require('./../../../util/fileUtil');
+
 
 function SubStepRunner(){
 
@@ -25,8 +26,8 @@ function SubStepRunner(){
                 substep.save().then(function (substep){
                     callback(null, substep);
                 }).catch(function (err) {
-                    logger.error('Save step error');
-                    logger.error(err);
+                    logger.error('Save step error', err);
+                    callback(err.message);
                 });
             },
             function getDto(substep, callback) {
@@ -52,7 +53,6 @@ function SubStepRunner(){
             logger.debug(response);
             self.handleResponse(substep, dto, response, cb);
         });
-
     };
 
     this.handleResponse = function (substep, dto, response, cb){
@@ -60,9 +60,7 @@ function SubStepRunner(){
         if(!response || !response.response){
             logger.error('TODO:: No response');
             substep.log = 'No service response';
-            self._updateSubstepFinishStatus(substep, WorkflowServiceSubstep.statusCodes.ERROR, cb);
-
-            return;
+            return self._updateSubstepFinishStatus(substep, WorkflowServiceSubstep.statusCodes.ERROR, cb);
         }
 
         substep.service_session = response.response.serviceId;
@@ -162,17 +160,23 @@ function SubStepRunner(){
     };
 
     this.addSubstepOutputResource = function (substep, outputPath, fileData, resourceType, cb) {
-        var data = {
-            filename: outputPath,
-            file_type: Resource.fileTypes.FILE,
-            resource_type_id: resourceType.id,
-            original_name: fileData.fileName,
-            name: self._normalizeFileName(fileData.fileName),
-            content_type: fileData.contentType
-        };
 
         async.waterfall([
-            function createResource(callback) {
+            function (callback) {
+                self.getOutputResourceFilename(substep, fileData, resourceType, callback);
+            },
+            function (fileName, callback) {
+                var data = {
+                    filename: outputPath,
+                    file_type: Resource.fileTypes.FILE,
+                    resource_type_id: resourceType.id,
+                    original_name: fileName,
+                    name: fileName,
+                    content_type: fileData.contentType
+                };
+                callback(null, data);
+            },
+            function createResource(data, callback) {
                 Resource.build(data).save().then(function (resource) {
                     callback(null, resource);
                 }).catch(function (err) {
@@ -184,6 +188,27 @@ function SubStepRunner(){
                 substep.addOutputResource(resource).then(function () {
                     callback(null, substep);
                 });
+            }
+        ], cb);
+    };
+
+    this.getOutputResourceFilename = function (substep, fileData, resourceType, cb) {
+
+        var sourceName;
+        var name = FileUtil.normalizeFileName(fileData.fileName);
+
+        async.waterfall([
+            function (callback) {
+                substep.getInputResources().then(function (resources) {
+                    if(resources && resources.length > 0){
+                        var resource = resources.pop();
+                        sourceName = FileUtil.getName(resource.original_name)
+                    }
+                    callback(null, name);
+                });
+            },
+            function ( callback ){
+                callback(null, sourceName + '.' + name);
             }
         ], cb);
     };
@@ -217,12 +242,7 @@ function SubStepRunner(){
         ], cb );
     };
 
-    this._normalizeFileName = function(fileName, replaceStr) {
-        if (replaceStr == undefined) {
-            replaceStr = '_';
-        }
-        return fileName.replace(/[\/\\]/g, replaceStr);
-    }
+
 }
 
 module.exports = new SubStepRunner();

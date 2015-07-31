@@ -5,13 +5,14 @@ var logger = require('log4js').getLogger('resource_creator');
 var config = require(__base + 'config');
 var fs = require('fs');
 var Resource = require(__base + 'src/service/dao/sql').Resource;
+var FileUtil = require(__base + 'src/service/util/fileUtil');
 
-function ResourceCreator(sourceResource, workflowService, globalLineIndex){
+function ResourceCreator(sourceResource, workflowService, resourceIndex){
     var self = this;
 
     this.sourceResource = sourceResource;
     this.workflowService = workflowService;
-    this.globalLineIndex = globalLineIndex;
+    this.resourceIndex = resourceIndex;
 
     var encoding = 'utf-8';
     var resourceFilename;
@@ -20,7 +21,7 @@ function ResourceCreator(sourceResource, workflowService, globalLineIndex){
     this.write = function (data, cb) {
 
         if(!resourceFilename){
-            self._getNewResourceFilename(self.sourceResource, self.workflowService, self.globalLineIndex, function (err, filename) {
+            self._getNewResourceFilename(self.sourceResource, self.workflowService, self.resourceIndex, function (err, filename) {
                 resourceFilename = filename;
                 writer = fs.createWriteStream( config.resources.location + '/' + resourceFilename);
                 self._writeToFile(data, cb);
@@ -52,8 +53,8 @@ function ResourceCreator(sourceResource, workflowService, globalLineIndex){
             filename: resourceFilename,
             content_type: self.sourceResource.content_type,
             encoding: self.sourceResource.encoding,
-            name: self.sourceResource.name,
-            original_name: self.sourceResource.original_name
+            name: self.getOriginalName(),
+            original_name: self.getOriginalName()
         };
 
         var resource = Resource.build(data);
@@ -84,6 +85,22 @@ function ResourceCreator(sourceResource, workflowService, globalLineIndex){
                 return cb(err, location);
             })
         });
+    };
+
+    this.getOriginalName = function () {
+
+        var sourceName = self.sourceResource.original_name;
+        var extension = FileUtil.getExtension(sourceName);
+
+        var name = FileUtil.getName(sourceName);
+        if(self.resourceIndex){
+            name = name + '_' + self.resourceIndex;
+        }
+        if(extension){
+            name = name + '.' + extension;
+        }
+
+        return name;
     };
 }
 

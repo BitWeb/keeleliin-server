@@ -219,7 +219,7 @@ function Runner() {
                 logger.error(err);
                 workflowService.log = err;
                 self.finishWorkflowService(workflowService, WorkflowService.statusCodes.ERROR, function (err) {
-                    logger.debug('WorkflowService finished with error: ' + err);
+                    logger.error('WorkflowService finished with error: ' + err);
                 });
             }
             cb(); //Do not finish previous service before output is given over.
@@ -332,8 +332,6 @@ function Runner() {
             });
         });
     };
-
-
 
     this._breakFromSubstep = function (subStep) {
 
