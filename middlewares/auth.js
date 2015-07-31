@@ -14,8 +14,7 @@ module.exports = function(req, res, next){
 
     userService.auth(req, function (error, userId) {
         if(error){
-            logger.error('Auth error');
-            logger.error(error);
+            logger.trace('Auth error', error);
             return res.send(401, {errors: 'User not found'});
         }
         return next();

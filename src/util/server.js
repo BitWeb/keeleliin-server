@@ -1,6 +1,4 @@
-/**
- * Created by priit on 18.06.15.
- */
+var logger = require('log4js').getLogger('server_util');
 
 var Server = {
 
@@ -16,17 +14,20 @@ var Server = {
     },
 
     onError: function(error) {
+
+        logger.error('Server error happended: ', error);
+
         if (error.syscall !== 'listen') {
             throw error;
         }
         // handle specific listen errors with friendly messages
         switch (error.code) {
             case 'EACCES':
-                console.error('Port requires elevated privileges');
+                logger.error('Port requires elevated privileges');
                 process.exit(1);
                 break;
             case 'EADDRINUSE':
-                console.error('Port is already in use');
+                logger.error('Port is already in use');
                 process.exit(1);
                 break;
             default:

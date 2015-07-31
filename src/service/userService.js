@@ -9,43 +9,37 @@ function UserService() {
 
     var self = this;
 
-    this.getAuthUrl = function (request, redirectUrl, callback) {
+    this.getAuthUrl = function (request, redirectUrl, cb) {
 
         var postData = {
             state: request.redisSession.id,
             redirect_url: redirectUrl
         };
 
-        return userDaoService.getAuthUrl(postData, function (err, url) {
-            if(err){
-                return callback(err);
-            }
+        userDaoService.getAuthUrl(postData, function (err, url) {
+            if(err){ return cb(err); }
 
             request.redisSession.data.authUrl = url;
             request.redisSession.save();
-            callback(err, url);
+            cb(err, url);
         });
     };
 
-    this.auth = function (request, callback) {
+    this.auth = function (request, cb) {
 
         userDaoService.getEntuUser(request.redisSession.data.authUrl, request.redisSession.id, function (err, entuUser) {
-            if(err){
-                logger.error('getUser Error');
-                logger.error(err);
-                return callback(err);
-            }
+            if(err){ return cb(err); }
 
             userDaoService.getUserByEntuId(entuUser.user_id, function (err, user) {
                 if(err){
                     logger.error(err);
-                    return callback(err);
+                    return cb(err);
                 }
 
                 if(user){
                     request.redisSession.data.userId = user.id;
                     request.redisSession.save();
-                    return callback(null, user.id);
+                    return cb(null, user.id);
                 } else {
 
                     var userParams = {
@@ -56,18 +50,18 @@ function UserService() {
 
                     self.createNewUser(userParams, function (err, user) {
                         if(err){
-                            callback(err);
+                            cb(err);
                         }
                         request.redisSession.data.userId = user.id;
                         request.redisSession.save();
-                        return callback(null, user.id);
+                        return cb(null, user.id);
                     });
                 }
             });
         });
     };
 
-    this.createNewUser = function (userParams, callback) {
+    this.createNewUser = function (userParams, cb) {
         userDaoService.create(userParams, function (err, user) {
 
             var project = Project.build({
@@ -77,17 +71,17 @@ function UserService() {
 
             user.addProject( project).then(function () {
                 logger.debug('Vaikimisi project loodud');
-                callback(err, user);
+                cb(err, user);
             });
         });
     };
 
-    this.getCurrentUser = function (request, callback) {
-        return userDaoService.findById(request.redisSession.data.userId, callback);
+    this.getCurrentUser = function (request, cb) {
+        return userDaoService.findById(request.redisSession.data.userId, cb);
     };
 
-    this.logout = function (request, callback) {
-        request.redisSession.delete(callback);
+    this.logout = function (request, cb) {
+        request.redisSession.delete(cb);
     };
 }
 

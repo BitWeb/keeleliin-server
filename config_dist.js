@@ -30,24 +30,43 @@ config.resources = {
 
 config.log4js = {
     appenders: [
-        { type: 'console',
+        {
+            type: 'console',
             layout: {
                 type: 'pattern',
-                pattern: "[%d] %[[%x{pid}] [%5.5p]%] %c - %m",
+                pattern: "[%d] %[[%x{port}-%x{pid}][%5.5p]%] %c - %m",
                 tokens: {
-                    pid: process.pid
+                    pid: process.pid,
+                    port: config.port
                 }
             }
         },
-        { type: 'file',
-            filename: __dirname + 'keeleliin-server.log'
+        {
+            type: 'file',
+            layout: {
+                type: 'pattern',
+                pattern: "[%d] [%x{port}-%x{pid}][%5.5p] %c - %m",
+                tokens: {
+                    pid: process.pid,
+                    port: config.port
+                }
+            },
+            filename: __dirname + '/keeleliin-server.log'
         },
         {
             "type": "logLevelFilter",
+            layout: {
+                type: 'pattern',
+                pattern: "[%d] [%x{port}-%x{pid}][%5.5p] %c - %m",
+                tokens: {
+                    pid: process.pid,
+                    port: config.port
+                }
+            },
             "level": "ERROR",
             "appender": {
                 "type": "smtp",
-                "recipients": "*************",
+                "recipients": "priit@bitweb.ee",
                 "sendInterval": 10, //sec
                 "transport": "SMTP",
                 "SMTP": {
@@ -55,8 +74,8 @@ config.log4js = {
                     "secureConnection": false,
                     "port": 587,
                     "auth": {
-                        "user": "*************",
-                        "pass": "*************"
+                        "user": "***********",
+                        "pass": "***********"
                     },
                     "debug": true
                 }

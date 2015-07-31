@@ -18,8 +18,10 @@ router.get('/', function(req, res, next) {
 });
 
 router.get('/generate', function(req, res, next) {
-    sqlModel.sequelize.sync( { force: true } );
 
+    throw new Error('Can not generate');
+
+    sqlModel.sequelize.sync( { force: true } );
     res.send({
         title: 'Database sync'
     });

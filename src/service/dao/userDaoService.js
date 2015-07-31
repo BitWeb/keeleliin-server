@@ -19,13 +19,11 @@ function UserDaoService() {
 
         return entuDaoService.getUser(authUrl, token, function (error, userResult) {
             if(error){
-                logger.error('getUser Error');
-                logger.error(error);
+                logger.debug('Get user error: ', error);
                 return callbac(error);
             }
             if(userResult.error){
-                logger.error('getUser Error');
-                logger.error(userResult);
+                logger.debug('Get user result error: ', userResult);
                 return callbac(userResult);
             }
 
