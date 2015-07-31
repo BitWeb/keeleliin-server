@@ -1,7 +1,7 @@
 /**
  * Created by taivo on 11.06.15.
  */
-
+var logger = require('log4js').getLogger('resource_controller');
 var express = require('express');
 var router = express.Router();
 var resourceService = require('../../../src/service/resourceService');
@@ -41,7 +41,12 @@ router.get('/download/concat/:resourceIds', function(req, res) {
         if (error) {
             return res.status(404).send({errors: error});
         }
-        fs.createReadStream( concatPath ).pipe(res);
+        var readStream = fs.createReadStream( concatPath );
+        readStream.pipe(res);
+        readStream.on('end', function () {
+            logger.debug('Remove concated resource');
+            fs.unlink(concatPath)
+        });
     });
 });
 
