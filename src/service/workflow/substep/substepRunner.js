@@ -202,7 +202,7 @@ function SubStepRunner(){
                 substep.getInputResources().then(function (resources) {
                     if(resources && resources.length > 0){
                         var resource = resources.pop();
-                        sourceName = FileUtil.getName(resource.original_name)
+                        sourceName = FileUtil.getSourceName(resource.original_name);
                     }
                     callback();
                 });

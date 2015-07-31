@@ -23,6 +23,15 @@ var FileUtil = {
         return filename;
     },
 
+    getSourceName: function( filename ) {
+
+        var dotIndex = filename.indexOf('.');
+        if( dotIndex > -1){
+            return filename.substr(0, dotIndex);
+        }
+        return filename;
+    },
+
     getExtendedName: function(filename, extender){
 
         var extension = FileUtil.getExtension( filename );
