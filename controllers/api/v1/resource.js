@@ -11,6 +11,9 @@ var config = require(__base + 'config');
 router.get('/', function(req, res) {
 
     resourceService.getResources(req, function(error, resources) {
+        if (error) {
+            return res.status(404).send({errors: error});
+        }
         return res.send(resources);
     });
 });
@@ -18,7 +21,7 @@ router.get('/', function(req, res) {
 router.get('/:resourceId', function(req, res) {
     resourceService.getResource(req, req.params.resourceId, function(error, resource) {
         if (error || !resource) {
-            res.status(404).send({errors: 'Resource not found'});
+            return res.status(404).send({errors: 'Resource not found'});
         }
         return res.send(resource);
     });
@@ -27,23 +30,20 @@ router.get('/:resourceId', function(req, res) {
 router.get('/download/:resourceId', function(req, res) {
     resourceService.getResource(req, req.params.resourceId, function(error, resource) {
         if (error || !resource) {
-            res.status(404).send({errors: 'Resource not found'});
+            return res.status(404).send({errors: 'Resource not found'});
         }
         fs.createReadStream(config.resources.location + resource.filename).pipe(res);
     });
 });
 
-
-/*router.post('/', function(req, res) {
-
-    resourceService.createResourceFromUpload(req, function(error, resource) {
+router.get('/download/concat/:resourceIds', function(req, res) {
+    resourceService.getConcatedResourcePath(req, req.params.resourceIds, function(error, concatPath) {
         if (error) {
-            res.send({errors: error});
+            return res.status(404).send({errors: error});
         }
-        return res.send(resource);
+        fs.createReadStream( concatPath ).pipe(res);
     });
-});*/
-
+});
 
 router.get('/projectId/:projectId', function(req, res) {
 

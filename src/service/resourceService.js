@@ -1,7 +1,7 @@
 /**
  * Created by taivo on 11.06.15.
  */
-
+var logger = require('log4js').getLogger('resource_service');
 var fs = require('fs');
 var urlHelper = require('url');
 var resourceDaoService = require('./dao/resourceDaoService');
@@ -14,7 +14,7 @@ var config = require(__base + 'config');
 var formidable = require('formidable');
 var projectService = require(__base + 'src/service/projectService');
 var uniqid = require('uniqid');
-
+var FileUtil = require('../util/fileUtil');
 
 function ResourceService() {
 
@@ -23,7 +23,6 @@ function ResourceService() {
     this.getResource = function(req, resourceId, callback) {
 
         Resource.find({ where: {id: resourceId }}).then(function(resource) {
-
             return callback(null, resource);
         }).catch(function(error) {
 
@@ -271,6 +270,35 @@ function ResourceService() {
             return cb(error.message);
         });
     };
+
+    this.getConcatedResourcePath = function (req, ids, cb) {
+
+        var tmpPath = config.resources.tmp + '/' + ids.replace(',','_');
+        async.eachSeries(ids.split(','),
+            function iterator(id, callback) {
+                self.getResource(req, id, function (err, resource) {
+                    if(!resource){
+                        return callback('Ressurssi ei leitud');
+                    }
+                    var resourcePath = config.resources.location + '/' + resource.filename;
+                    fs.exists(resourcePath, function (excists) {
+                       if(excists){
+                           FileUtil.concat(resourcePath, tmpPath, function (err) {
+                               return callback();
+                           });
+                       } else {
+                           callback('Faili ei leitud');
+                       }
+                    });
+                });
+            },
+            function done(err) {
+                if(err){
+                    logger.error(err);
+                }
+                cb(err, tmpPath);
+            });
+    }
 }
 
 module.exports = new ResourceService();

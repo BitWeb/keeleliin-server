@@ -2,6 +2,7 @@
  * Created by priit on 31.07.15.
  */
 var logger = require('log4js').getLogger('file_util');
+var fs = require('fs');
 
 var FileUtil = {
 
@@ -57,6 +58,32 @@ var FileUtil = {
             replaceStr = '_';
         }
         return fileName.replace(/[\/\\]/g, replaceStr);
+    },
+
+    concat: function(source, target, callback) {
+        var cbCalled = false;
+
+        var rd = fs.createReadStream(source);
+        rd.on("error", function(err) {
+            done(err);
+        });
+
+        var wr = fs.createWriteStream(target, {'flags': 'a'});
+        wr.on("error", function(err) {
+            done(err);
+        });
+        wr.on("close", function(ex) {
+            done();
+        });
+
+        rd.pipe(wr);
+
+        function done(err) {
+            if (!cbCalled) {
+                callback(err);
+                cbCalled = true;
+            }
+        }
     }
 };
 

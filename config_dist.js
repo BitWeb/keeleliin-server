@@ -25,7 +25,8 @@ config.entu = {
 
 config.resources = {
     location: __dirname + '/../keeleliin-files',
-    downloadLocation: __dirname + '/../keeleliin-files/downloads'
+    downloadLocation: __dirname + '/../keeleliin-files/downloads',
+    tmp: '/tmp'
 };
 
 config.log4js = {
