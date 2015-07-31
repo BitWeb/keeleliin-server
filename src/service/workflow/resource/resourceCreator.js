@@ -5,7 +5,7 @@ var logger = require('log4js').getLogger('resource_creator');
 var config = require(__base + 'config');
 var fs = require('fs');
 var Resource = require(__base + 'src/service/dao/sql').Resource;
-var FileUtil = require(__base + 'src/service/util/fileUtil');
+var FileUtil = require(__base + 'src/util/fileUtil');
 
 function ResourceCreator(sourceResource, workflowService, resourceIndex){
     var self = this;
