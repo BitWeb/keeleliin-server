@@ -23,15 +23,33 @@ function WorkflowService() {
         });
     };
 
-    this.getProjectWorkflowsList = function(req, projectId, callback) {
-        logger.debug('Get project workflows');
-        return workflowDaoService.getProjectWorkflowsList(projectId, callback);
-    };
-
     this.getWorkflowServiceParamValues = function(req, workflowServiceId, callback) {
-
         return workflowDaoService.findWorkflowServiceParamValues(workflowServiceId, callback);
     };
+
+    this.getProjectWorkflowsList = function(req, projectId, callback) {
+        logger.debug('Get project workflows list');
+        return workflowDaoService.getProjectWorkflowsList(projectId, function (err, workflows) {
+            var dto = [];
+            for(i in workflows){
+                var item = workflows[i];
+
+                var dtoItem = {
+                    id: item.id,
+                    name: item.name,
+                    status: item.status,
+                    datetimeCreated: item.datetimeCreated,
+                    datetimeStart: item.datetimeStart,
+                    datetimeEnd: item.datetimeEnd,
+                    progress: (item.workflowServices.filter(function(value){return value.status == 'FINISHED';}).length * 100) / item.workflowServices.length
+                };
+                dto.push(dtoItem);
+            }
+            callback(err, dto);
+        });
+    };
+
+
 }
 
 module.exports = new WorkflowService();

@@ -57,7 +57,12 @@ module.exports = function(sequelize, DataTypes) {
             associate: function(models) {
                 WorkflowDefinition.hasMany(models.WorkflowDefinitionService, { as: 'workflowServices' , foreignKey: {name: 'workflow_definition_id', allowNull: true}});
                 WorkflowDefinition.hasMany(models.Workflow, {as: 'workflows', foreignKey: 'workflowDefinitionId'});
-                WorkflowDefinition.belongsToMany(models.Project, {through: 'project_workflow_definition', foreignKey: 'workflow_definition_id', otherKey: 'project_id', as: 'projects'});
+                WorkflowDefinition.belongsToMany(models.Project, {
+                    through: 'project_workflow_definition',
+                    foreignKey: 'workflow_definition_id',
+                    otherKey: 'project_id',
+                    as: 'projects'
+                });
                 WorkflowDefinition.belongsToMany(models.Resource, {
                         through: 'workflow_definition_has_input_resource',
                         foreignKey: 'workflowDefinitionId',

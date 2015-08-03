@@ -7,6 +7,8 @@ var Workflow = require(__base + 'src/service/dao/sql').Workflow;
 var WorkflowServiceModel = require(__base + 'src/service/dao/sql').WorkflowService;
 var WorkflowServiceParamValue = require(__base + 'src/service/dao/sql').WorkflowServiceParamValue;
 var ServiceParam = require(__base + 'src/service/dao/sql').ServiceParam;
+var sequelize = require('sequelize');
+
 
 function WorkflowDaoService() {
 
@@ -21,27 +23,6 @@ function WorkflowDaoService() {
             }
             return cb(null, item);
         }).catch(cb);
-    };
-
-    this.getProjectWorkflowsList = function(projectId, callback) {
-
-        Workflow.findAll({
-            attributes: ['id', 'workflowDefinitionId', 'status', 'datetimeStart', 'datetimeEnd'],
-            include: [
-                {
-                    model: Project,
-                    as: 'project',
-                    where: {id: projectId}
-                },
-                {
-                    model: WorkflowServiceModel,
-                    as: 'workflowServices',
-                    attributes: ['id', 'serviceId', 'status', 'datetimeStart', 'datetimeEnd', 'orderNum']
-                }
-            ]
-        }).then(function(workflows) {
-            return callback(null, workflows);
-        });
     };
 
     this.findWorkflowServiceParamValues = function(workflowServiceId, callback) {
@@ -62,6 +43,33 @@ function WorkflowDaoService() {
         });
     };
 
+    this.getProjectWorkflowsList = function(projectId, callback) {
+
+        Workflow.findAll({
+            attributes: [
+                'id',
+                'name',
+                'status',
+                'datetimeCreated',
+                'datetimeStart',
+                'datetimeEnd'
+            ],
+            where: {projectId: projectId},
+            include: [
+                {
+                    model: WorkflowServiceModel,
+                    as: 'workflowServices',
+                    attributes: ['id', 'status']
+                }
+            ],
+            required: false,
+            raw: false
+        }).then(function(workflows) {
+            return callback(null, workflows);
+        }).catch(function (err) {
+            return callback(err.message);
+        });
+    };
 };
 
 module.exports = new WorkflowDaoService();

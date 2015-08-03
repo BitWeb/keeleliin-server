@@ -52,7 +52,11 @@ module.exports = function(sequelize, DataTypes) {
             associate: function(models) {
                 Project.belongsTo(models.User, {as: 'user', foreignKey: 'userId'});
                 Project.belongsToMany(models.Resource, {through: 'project_has_resource', foreignKey: 'project_id', otherKey: 'resource_id'});
-                Project.belongsToMany(models.WorkflowDefinition, {through: 'project_workflow_definition', foreignKey: 'project_id', otherKey: 'workflow_definition_id'});
+                Project.belongsToMany(models.WorkflowDefinition, {
+                    through: 'project_workflow_definition',
+                    foreignKey: 'project_id',
+                    otherKey: 'workflow_definition_id'
+                });
             }
         }
     });

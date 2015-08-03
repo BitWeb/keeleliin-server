@@ -18,6 +18,16 @@ module.exports = function(sequelize, DataTypes) {
             primaryKey: true,
             autoIncrement: true
         },
+        name: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            primaryKey: false
+        },
+        description: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            primaryKey: false
+        },
         projectId: {
             type: DataTypes.INTEGER,
             allowNull: false,
@@ -40,6 +50,11 @@ module.exports = function(sequelize, DataTypes) {
                 key: 'id'
             },
             field: 'workflow_definition_id'
+        },
+        datetimeCreated: {
+            type: DataTypes.DATE,
+            allowNull: true,
+            field: 'datetime_created'
         },
         datetimeStart: {
             type: DataTypes.DATE,
@@ -80,6 +95,12 @@ module.exports = function(sequelize, DataTypes) {
                         as: 'inputResources'
                     }
                 );
+            }
+        },
+        hooks: {
+            beforeCreate: function(resource, options, fn) {
+                resource.datetimeCreated = new Date();
+                fn(null, resource);
             }
         }
     });
