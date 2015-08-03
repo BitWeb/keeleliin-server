@@ -26,8 +26,8 @@ function WorkflowBuilder(){
 
         logger.debug('Init data: ' +  JSON.stringify(data));
 
-        var projectId = data.project_id;
-        var workflowDefinitionId = data.workflow_definition_id;
+        var projectId = data.projectId;
+        var workflowDefinitionId = data.workflowDefinitionId;
         initResourceIds = data.resources;
 
         async.waterfall([
@@ -56,8 +56,8 @@ function WorkflowBuilder(){
     this.createWorkflow = function (cb) {
 
         var workflowData = {
-            project_id: project.id,
-            workflow_definition_id: workflowDefinition.id
+            projectId: project.id,
+            workflowDefinitionId: workflowDefinition.id
         };
 
         Workflow.build(workflowData).save().then(function (item) {
@@ -129,9 +129,9 @@ function WorkflowBuilder(){
     this.copyDefinitionService = function (definitionService, cb) {
 
         var data = {
-            service_id: definitionService.service_id,
-            workflow_id: workflow.id,
-            order_num: definitionService.order_num
+            serviceId: definitionService.serviceId,
+            workflowId: workflow.id,
+            orderNum: definitionService.orderNum
         };
 
         WorkflowService.build(data).save().then(function (workflowService) {
@@ -163,8 +163,8 @@ function WorkflowBuilder(){
 
         logger.info('Copy definition param value: ' + definitionParamValue.id);
         var data = {
-            workflow_service_id: workflowService.id,
-            service_param_id: definitionParamValue.service_param_id,
+            workflowServiceId: workflowService.id,
+            serviceParamId: definitionParamValue.serviceParamId,
             value: definitionParamValue.value
         };
 

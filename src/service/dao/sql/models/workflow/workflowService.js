@@ -19,44 +19,49 @@ module.exports = function(sequelize, DataTypes) {
             primaryKey: true,
             autoIncrement: true
         },
-        service_id: {
+        serviceId: {
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
                 model: 'service',
                 key: 'id'
-            }
+            },
+            field: 'service_id'
         },
-        workflow_id: {
+        workflowId: {
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
                 model: 'workflow',
                 key: 'id'
-            }
+            },
+            field: 'workflow_id'
         },
         status: {
             type: DataTypes.STRING,
             allowNull: false,
             defaultValue: statusCodes.INIT
         },
-        order_num: {
+        orderNum: {
             type: DataTypes.INTEGER,
             allowNull: false,
-            defaultValue: 0
+            defaultValue: 0,
+            field: 'order_num'
         },
         log: {
             type: DataTypes.STRING,
             allowNull: true,
             defaultValue: ''
         },
-        datetime_start: {
+        datetimeStart: {
             type: DataTypes.DATE,
-            allowNull: true
+            allowNull: true,
+            field: 'datetime_start'
         },
-        datetime_end: {
+        datetimeEnd: {
             type: DataTypes.DATE,
-            allowNull: true
+            allowNull: true,
+            field: 'datetime_end'
         }
     }, {
         tableName: 'workflow_service',
@@ -66,9 +71,9 @@ module.exports = function(sequelize, DataTypes) {
 
         classMethods: {
             associate: function(models) {
-                WorkflowService.belongsTo(models.Service, {as: 'service'});
-                WorkflowService.belongsTo(models.Workflow);
-                WorkflowService.hasMany(models.WorkflowServiceSubstep, {foreignKey: 'workflow_service_id', as: 'subSteps'});
+                WorkflowService.belongsTo(models.Service, {as: 'service', foreignKey: 'serviceId'});
+                WorkflowService.belongsTo(models.Workflow, {as: 'workflow', foreignKey: 'workflowId'});
+                WorkflowService.hasMany(models.WorkflowServiceSubstep, {foreignKey: 'workflowServiceId', as: 'subSteps'});
                 WorkflowService.hasMany(models.WorkflowServiceParamValue, {foreignKey: 'workflow_service_id', as: 'paramValues'});
             }
         }

@@ -9,14 +9,14 @@ function ProjectDaoService() {
 
     this.getUserProjects = function (userId, callback) {
 
-        Project.findAll({where: {user_id: userId}}).then(function (result) {
+        Project.findAll({where: {userId: userId}}).then(function (result) {
             return callback(null, result);
         });
     };
 
     this.getUserProject = function (userId, projectId, callback) {
         Project.find({
-            where: { id: projectId, user_id: userId }
+            where: { id: projectId, userId: userId }
             /*,include: [
                 {model: User, as: 'user'}
             ]*/

@@ -18,16 +18,6 @@ router.get('/:workflowId', function(req, res) {
     });
 });
 
-router.get('/projectId/:projectId', function(req, res) {
-
-    workflowService.getWorkflowsByProjectId(req, req.params.projectId, function(err, workflows) {
-        if (err) {
-            return res.send(err);
-        }
-        return res.send(workflows);
-    });
-});
-
 router.get('/service/:workflowServiceId/params', function(req, res) {
 
     workflowService.getWorkflowServiceParamValues(req, req.params.workflowServiceId, function(err, workflowServiceParamValues) {

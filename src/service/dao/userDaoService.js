@@ -32,7 +32,7 @@ function UserDaoService() {
     };
 
     this.getUserByEntuId = function (id, callback) {
-        User.find({where:{entu_id:id}}).then(function (user) {
+        User.find({where:{entuId:id}}).then(function (user) {
             callback(null, user);
         });
     };

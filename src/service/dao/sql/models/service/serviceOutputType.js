@@ -11,6 +11,15 @@ module.exports = function(sequelize, DataTypes) {
             primaryKey: true,
             autoIncrement: true
         },
+        resourceTypeId: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            references: {
+                model: 'resource_type',
+                key: 'id'
+            },
+            field: 'resource_type_id'
+        },
         key: {
             type: DataTypes.STRING,
             allowNull: false
@@ -24,7 +33,10 @@ module.exports = function(sequelize, DataTypes) {
         classMethods: {
             associate: function(models) {
                 ServiceOutputType.belongsTo(models.Service);
-                ServiceOutputType.belongsTo(models.ResourceType);
+                ServiceOutputType.belongsTo(models.ResourceType, {
+                    foreignKey: 'resourceTypeId',
+                    as: 'resourceType'
+                });
             }
         }
     });

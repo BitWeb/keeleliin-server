@@ -4,6 +4,7 @@
 var express = require('express');
 var router = express.Router();
 var logger = require('log4js').getLogger('project_controller');
+var workflowService = require(__base + 'src/service/workflowService');
 
 var projectService = require('../../../src/service/projectService');
 
@@ -54,5 +55,14 @@ router.delete('/:id', function(req, res) {
     });
 });
 
+router.get('/:projectId/workflows', function(req, res) {
+
+    workflowService.getProjectWorkflowsList(req, req.params.projectId, function(err, workflows) {
+        if (err) {
+            return res.send(err);
+        }
+        return res.send(workflows);
+    });
+});
 
 module.exports = router;

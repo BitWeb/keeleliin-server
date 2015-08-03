@@ -26,6 +26,11 @@ function ResourceHandler() {
             function getService(callback) {
                 logger.debug('Get service');
                 workflowService.getService().then(function (item) {
+                    if(!item){
+                        logger.error(workflowService);
+                        callback('Workflow service has no service.');
+                    }
+                    logger.debug('Got service id: ' + item.id);
                     service = item;
                     callback();
                 }).catch(callback);
@@ -110,7 +115,7 @@ function ResourceHandler() {
             },
             function checkAllowedDoParallel(callback) {
                 logger.debug('Check do parallel');
-                if (serviceInputType.do_parallel == false || serviceInputType.size_limit == 0) {
+                if (serviceInputType.doParallel == false || serviceInputType.sizeLimit == 0) {
                     logger.debug('Can not do parallel');
                     resourceCallback(null, resource);
                     return cb();
@@ -118,9 +123,9 @@ function ResourceHandler() {
                 callback();
             },
             function checkIfSomethingToSplit(callback){
-                if(serviceInputType.size_unit == ServiceInputType.sizeUnits.BYTE){
+                if(serviceInputType.sizeUnit == ServiceInputType.sizeUnits.BYTE){
                     fs.stat(pathToSourceFile, function (err, stats) {
-                        if(stats.size > serviceInputType.size_limit){
+                        if(stats.size > serviceInputType.sizeLimit){
                             return callback();
                         } else {
                             logger.debug('Can not do parallel. Smaller than limit');
@@ -144,14 +149,14 @@ function ResourceHandler() {
 
     this._split = function (resource, resourceType, serviceInputType, workflowService, subResourceCallback, cb) {
 
-        if (resourceType.split_type == ResourceType.splitTypes.NONE) {
+        if (resourceType.splitType == ResourceType.splitTypes.NONE) {
             subResourceCallback(null, resource);
             return cb();
-        } else if (resourceType.split_type == ResourceType.splitTypes.LINE) {
+        } else if (resourceType.splitType == ResourceType.splitTypes.LINE) {
             logger.debug('Start line split for resource id: ' + resource.id);
             self._splitOnLine(resource, serviceInputType, workflowService, subResourceCallback, cb);
         } else {
-            logger.error('Split type split not defined: ' + resourceType.split_type);
+            logger.error('Split type split not defined: ' + resourceType.splitType);
             cb();
         }
     };
@@ -165,7 +170,7 @@ function ResourceHandler() {
         var subResourceIndex = 0;
 
 
-        var limitLeft = serviceInputType.size_limit;
+        var limitLeft = serviceInputType.sizeLimit;
         var resourceCreator = new ResourceCreator(sourceResource, workflowService, globalLineIndex);
 
         lineReader.eachLine(pathToSourceFile, function (line, last, lineReaderCb) {
@@ -180,13 +185,13 @@ function ResourceHandler() {
             globalLineIndex++;
 
             var lineSize;
-            if (serviceInputType.size_unit == ServiceInputType.sizeUnits.PIECE) {
+            if (serviceInputType.sizeUnit == ServiceInputType.sizeUnits.PIECE) {
                 lineSize = 1;
-            } else if (serviceInputType.size_unit == ServiceInputType.sizeUnits.BYTE) {
+            } else if (serviceInputType.sizeUnit == ServiceInputType.sizeUnits.BYTE) {
                 lineSize = Buffer.byteLength(line);
             }
 
-            if (lineSize > serviceInputType.size_limit) {
+            if (lineSize > serviceInputType.sizeLimit) {
                 cb('Line size is greater than input size limit');
                 return lineReaderCb(false);
             }
@@ -199,7 +204,7 @@ function ResourceHandler() {
                     logger.debug('Subresource filled');
                     subResourceCallback(null, resource);
                     resourceCreator = new ResourceCreator(sourceResource, workflowService, globalLineIndex);
-                    limitLeft = serviceInputType.size_limit - lineSize;
+                    limitLeft = serviceInputType.sizeLimit - lineSize;
                     write();
                 });
             } else {

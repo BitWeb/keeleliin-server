@@ -109,7 +109,7 @@ function ServiceService() {
             service.getServiceOutputTypes().then(function(serviceOutputTypes) {
                 var resourceTypeIds = [];
                 serviceOutputTypes.forEach(function(serviceOutputType) {
-                    resourceTypeIds.push(serviceOutputType.resource_type_id);
+                    resourceTypeIds.push(serviceOutputType.resourceTypeId);
                 });
 
                 return self._getServicesByInputResourceTypes(req, resourceTypeIds, serviceId, callback);
@@ -210,7 +210,7 @@ function ServiceService() {
                             key: serviceParam.key,
                             value: serviceParam.value,
                             description: serviceParam.description,
-                            order_num: orderNum
+                            orderNum: orderNum
                         };
 
                         if (serviceModelParam) {
@@ -284,10 +284,10 @@ function ServiceService() {
                     self.getServiceInputType(req, serviceInputTypeData.id, function(err, serviceInputType) {
                         var data = {
                             key: serviceInputTypeData.key,
-                            do_parallel: serviceInputTypeData.do_parallel,
-                            size_limit: serviceInputTypeData.size_limit,
-                            size_unit: serviceInputTypeData.size_unit,
-                            resource_type_id: serviceInputTypeData.resource_type_id
+                            doParallel: serviceInputTypeData.doParallel,
+                            sizeLimit: serviceInputTypeData.sizeLimit,
+                            sizeUnit: serviceInputTypeData.sizeUnit,
+                            resourceTypeId: serviceInputTypeData.resourceTypeId
                         };
 
                         if (serviceInputType) {
@@ -360,7 +360,7 @@ function ServiceService() {
                     self.getServiceOutputType(req, serviceOutputTypeData.id, function(err, serviceOutputType) {
                         var data = {
                             key: serviceOutputTypeData.key,
-                            resource_type_id: serviceOutputTypeData.resource_type_id
+                            resourceTypeId: serviceOutputTypeData.resourceTypeId
                         };
 
                         if (serviceOutputType) {

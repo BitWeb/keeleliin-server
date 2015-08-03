@@ -28,7 +28,7 @@ function WorkflowDefinitionDaoService() {
                 {
                     model: WorkflowDefinitionServiceModel,
                     as: 'workflowServices',
-                    attributes: ['id', 'service_id', 'order_num']
+                    attributes: ['id', 'serviceId', 'orderNum']
                 }
             ],
             where: { id: id }
@@ -46,7 +46,7 @@ function WorkflowDefinitionDaoService() {
                 {
                     model: WorkflowDefinitionServiceModel,
                     as: 'workflowServices',
-                    attributes: ['id', 'service_id', 'order_num']
+                    attributes: ['id', 'serviceId', 'orderNum']
                 }
             ]
         }).then(function(workflowDefinitions) {
@@ -62,11 +62,11 @@ function WorkflowDefinitionDaoService() {
                 {
                     model: ServiceModelParam,
                     as: 'serviceParam',
-                    attributes: ['id', 'type', 'key', 'value', 'order_num', 'is_editable', 'description']
+                    attributes: ['id', 'type', 'key', 'value', 'orderNum', 'isEditable', 'description']
                 }
             ],
             where: {
-                workflow_definition_service_id: workflowDefinitionServiceId
+                workflowDefinitionServiceId: workflowDefinitionServiceId
             }
         }).then(function(workflowDefinitionServiceModels) {
             return callback(null, workflowDefinitionServiceModels);
@@ -84,7 +84,7 @@ function WorkflowDefinitionDaoService() {
                         {
                             model: ServiceModelParam,
                             as: 'service_param',
-                            attributes: ['id', 'type', 'key', 'value', 'order_num', 'is_editable', 'description']
+                            attributes: ['id', 'type', 'key', 'value', 'orderNum', 'isEditable', 'description']
                         }
                     ]
                 }
@@ -94,7 +94,7 @@ function WorkflowDefinitionDaoService() {
             },
             order: [
                 /* Ordering workflow service model parameters via param value order num */
-                [{model: WorkflowDefinitionServiceParamValue, as: 'paramValues'}, {model: ServiceModelParam, as: 'service_param'}, 'order_num', 'ASC']
+                [{model: WorkflowDefinitionServiceParamValue, as: 'paramValues'}, {model: ServiceModelParam, as: 'serviceParam'}, 'orderNum', 'ASC']
             ]
         }).then(function(workflowDefinitionServiceModel) {
             if (!workflowDefinitionServiceModel) {

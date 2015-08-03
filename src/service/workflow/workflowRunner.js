@@ -53,7 +53,7 @@ function Runner() {
                 {
                     model: Resource,
                     as: 'inputResources',
-                    attributes: ['id', 'name', 'file_type', 'date_created'],
+                    attributes: ['id', 'name', 'fileType', 'dateCreated'],
                     required: false
                 }, {
                     model: WorkflowService,
@@ -71,14 +71,14 @@ function Runner() {
                                     model: Resource,
                                     as: 'inputResources',
                                     where: {},
-                                    attributes: ['id', 'name', 'file_type', 'date_created'],
+                                    attributes: ['id', 'name', 'fileType', 'dateCreated'],
                                     required: false
                                 },
                                 {
                                     model: Resource,
                                     as: 'outputResources',
                                     where: {},
-                                    attributes: ['id', 'name', 'file_type', 'date_created'],
+                                    attributes: ['id', 'name', 'fileType', 'dateCreated'],
                                     required: false
                                 }
                             ]
@@ -117,7 +117,7 @@ function Runner() {
     this._startWorkflow = function (cb) {
 
         workflow.status = Workflow.statusCodes.RUNNING;
-        workflow.datetime_start = new Date();
+        workflow.datetimeStart = new Date();
 
         workflow.save().then(function () {
             logger.debug('Return to user');
@@ -160,7 +160,7 @@ function Runner() {
             function isFirst(callback) {
                 if (fromSubStep == null) {
                     var workflowService = workflowServices[0];
-                    workflowService.order_num = 0;
+                    workflowService.orderNum = 0;
                     return self._handleWorkflowService(workflowService, null, cb);
                 } else {
                     return callback();
@@ -173,11 +173,11 @@ function Runner() {
             },
             function getNextWorkflowService(previousWorkflowService, callback) {
 
-                var nextOrderNum = previousWorkflowService.order_num + 1;
+                var nextOrderNum = previousWorkflowService.orderNum + 1;
                 var workflowService = workflowServices[nextOrderNum];
 
                 if (workflowService) {
-                    workflowService.order_num = nextOrderNum;
+                    workflowService.orderNum = nextOrderNum;
                     return self._handleWorkflowService(workflowService, fromSubStep, cb);
                 }
                 cb();
@@ -265,7 +265,7 @@ function Runner() {
 
         if (workflowService.status == WorkflowService.statusCodes.INIT) {
             workflowService.status = WorkflowService.statusCodes.RUNNING;
-            workflowService.datetime_start = new Date();
+            workflowService.datetimeStart = new Date();
 
             return workflowService.save().then(function () {
                 cb(null);
@@ -284,14 +284,14 @@ function Runner() {
     this._makeWorkflowServiceSubStep = function (resource, workflowService, previousStep, cb) {
 
         var subStepData = {
-            workflow_service_id: workflowService.id,
-            prev_substep_id: null,
+            workflowServiceId: workflowService.id,
+            prevSubstepId: null,
             status: 'INIT',
             index: 0
         };
 
         if (previousStep) {
-            subStepData.prev_substep_id = previousStep.id
+            subStepData.prevSubstepId = previousStep.id
         }
 
         WorkflowServiceSubstep.build(subStepData).save().then(function (subStep) {
@@ -356,7 +356,7 @@ function Runner() {
 
     this.tryToFinishWorkflowService = function (workflowService, cb) {
 
-        logger.debug('Order num:' + workflowService.order_num + ' ID:' + workflowService.id);
+        logger.debug('Order num:' + workflowService.orderNum + ' ID:' + workflowService.id);
 
         async.waterfall([
             function isSomethingInProcess(callback) {
@@ -372,12 +372,12 @@ function Runner() {
 
                 WorkflowService.count({
                     where: {
-                        workflow_id: workflowService.workflow_id,
+                        workflowId: workflowService.workflowid,
                         status: {
                             ne: WorkflowService.statusCodes.FINISHED
                         },
-                        order_num: {
-                            lt: workflowService.order_num
+                        orderNum: {
+                            lt: workflowService.orderNum
                         }
                     }
                 }).then(function (notClosedCount) {
@@ -404,9 +404,9 @@ function Runner() {
                         as: 'workflowService',
                         required: true,
                         where: {
-                            workflow_id: workflowService.workflow_id,
-                            order_num: {
-                                lte: workflowService.order_num
+                            workflowId: workflowService.workflowId,
+                            orderNum: {
+                                lte: workflowService.orderNum
                             }
                         }
                     }]
@@ -439,7 +439,7 @@ function Runner() {
 
         if (workflowService.status != WorkflowService.statusCodes.ERROR) {
             workflowService.status = status;
-            workflowService.datetime_end = new Date();
+            workflowService.datetimeEnd = new Date();
         }
 
         workflowService.save().then(function () {
@@ -462,7 +462,7 @@ function Runner() {
             function areThereAnyErrorsBefore(callback) {
                 WorkflowService.count({
                     where: {
-                        workflow_id: workflow.id,
+                        workflowId: workflow.id,
                         status: WorkflowService.statusCodes.ERROR
                     }
                 }).then(function (errorsCount) {
@@ -476,7 +476,7 @@ function Runner() {
             function areThereAnyNotFinishedServices(callback) {
                 WorkflowService.count({
                     where: {
-                        workflow_id: workflow.id,
+                        workflowId: workflow.id,
                         status: {
                             in: [WorkflowService.statusCodes.INIT, WorkflowService.statusCodes.RUNNING]
                         }
@@ -504,7 +504,7 @@ function Runner() {
         logger.debug('Set workflow status: ' + status);
 
         workflow.status = status;
-        workflow.datetime_end = new Date();
+        workflow.datetimeEnd = new Date();
         workflow.save().then(function () {
             logger.info('Workflow id:' + workflow.id + ' finished with status: ' + workflow.status);
             cb(null, workflow);

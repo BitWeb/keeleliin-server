@@ -18,26 +18,38 @@ module.exports = function(sequelize, DataTypes) {
             primaryKey: true,
             autoIncrement: true
         },
-        project_id: {
+        projectId: {
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
                 model: 'project',
                 key: 'id'
-            }
+            },
+            field: 'project_id'
         },
         status: {
             type: DataTypes.STRING,
             allowNull: false,
             defaultValue: statusCodes.INIT
         },
-        datetime_start: {
-            type: DataTypes.DATE,
-            allowNull: true
+        workflowDefinitionId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: 'workflow_definition',
+                key: 'id'
+            },
+            field: 'workflow_definition_id'
         },
-        datetime_end: {
+        datetimeStart: {
             type: DataTypes.DATE,
-            allowNull: true
+            allowNull: true,
+            field: 'datetime_start'
+        },
+        datetimeEnd: {
+            type: DataTypes.DATE,
+            allowNull: true,
+            field: 'datetime_end'
         }
     }, {
         tableName: 'workflow',
@@ -47,9 +59,21 @@ module.exports = function(sequelize, DataTypes) {
 
         classMethods: {
             associate: function(models) {
-                Workflow.hasMany(models.WorkflowService, {as: 'workflowServices'});
-                Workflow.belongsTo(models.WorkflowDefinition);
-                Workflow.belongsTo(models.Project, { as: 'project' });
+                Workflow.belongsTo(models.WorkflowDefinition, {
+                        foreignKey:'workflowDefinitionId',
+                        as: 'workflowDefinition'
+                    }
+                );
+                Workflow.belongsTo(models.Project, {
+                        foreignKey:'projectId',
+                        as: 'project'
+                    }
+                );
+
+                Workflow.hasMany(models.WorkflowService, {
+                    foreignKey:'workflowId',
+                    as: 'workflowServices'
+                });
                 Workflow.belongsToMany(models.Resource, {
                         through: 'workflow_has_input_resource',
                         foreignKey: 'workflow_id',

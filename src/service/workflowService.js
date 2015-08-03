@@ -2,7 +2,7 @@
  * Created by taivo on 12.06.15.
  */
 
-
+var logger = require('log4js').getLogger('workflow_service');
 var resourceService = require(__base + 'src/service/resourceService');
 var workflowDaoService = require(__base + 'src/service/dao/workflowDaoService');
 var workflowDefinitionService = require(__base + 'src/service/workflowDefinitionService');
@@ -23,9 +23,9 @@ function WorkflowService() {
         });
     };
 
-    this.getWorkflowsByProjectId = function(req, projectId, callback) {
-
-        return workflowDaoService.findWorkflowsByProjectId(projectId, callback);
+    this.getProjectWorkflowsList = function(req, projectId, callback) {
+        logger.debug('Get project workflows');
+        return workflowDaoService.getProjectWorkflowsList(projectId, callback);
     };
 
     this.getWorkflowServiceParamValues = function(req, workflowServiceId, callback) {

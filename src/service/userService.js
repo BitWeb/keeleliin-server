@@ -43,7 +43,7 @@ function UserService() {
                 } else {
 
                     var userParams = {
-                        entu_id: entuUser.user_id,
+                        entuId: entuUser.userId,
                         email: entuUser.email,
                         name: entuUser.name
                     };

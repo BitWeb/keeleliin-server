@@ -12,21 +12,23 @@ module.exports = function(sequelize, DataTypes) {
             primaryKey: true,
             autoIncrement: true
         },
-        workflow_service_id: {
+        workflowServiceId: {
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
                 model: 'workflow_service',
                 key: 'id'
-            }
+            },
+            field: 'workflow_service_id'
         },
-        service_param_id: {
+        serviceParamId: {
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
                 model: 'service_param',
                 key: 'id'
-            }
+            },
+            field: 'service_param_id'
         },
         value: {
             type: DataTypes.STRING,

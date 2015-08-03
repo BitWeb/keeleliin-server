@@ -49,7 +49,7 @@ function WorkflowDefinitionService() {
     };
 
     this.createWorkflowDefinition = function(req, projectId, workflowDefinitionData, cb) {
-        workflowDefinitionData.project_id = projectId;
+        workflowDefinitionData.projectId = projectId;
         //workflowDefinitionData.user_id = 1;
 
         async.waterfall([
@@ -91,8 +91,8 @@ function WorkflowDefinitionService() {
                         }
 
                         self._createWorkflowDefinitionServiceModelInstance(req, {
-                            service_id: service.id,
-                            order_num: orderNum
+                            serviceId: service.id,
+                            orderNum: orderNum
                         }, function(err, workflowDefinitionServiceModel) {
                             if (err) {
                                 return innerCallback(err);
@@ -107,7 +107,7 @@ function WorkflowDefinitionService() {
 
                                 async.eachSeries(workflowDefinitionData.workflowDefinitionServiceParam[idx], function(serviceParamData, innerInnerCallback) {
                                     self._createWorkflowDefinitionServiceParamValueInstance(req, {
-                                        service_param_id: serviceParamData.serviceParamId,
+                                        serviceParamId: serviceParamData.serviceParamId,
                                         value: serviceParamData.value
                                     }, function(err, workflowDefinitionServiceParamValue) {
                                         if (err) {
@@ -195,8 +195,8 @@ function WorkflowDefinitionService() {
                                 }
 
                                 self._createWorkflowDefinitionServiceModelInstance(req, {
-                                    service_id: service.id,
-                                    order_num: orderNum
+                                    serviceId: service.id,
+                                    orderNum: orderNum
                                 }, function(err, workflowDefinitionServiceModel) {
                                     if (err) {
                                         return innerCallback(err);
@@ -211,7 +211,7 @@ function WorkflowDefinitionService() {
 
                                         async.eachSeries(workflowDefinitionData.workflowDefinitionServiceParam[idx], function(serviceParamData, innerInnerCallback) {
                                             self._createWorkflowDefinitionServiceParamValueInstance(req, {
-                                                service_param_id: serviceParamData.serviceParamId,
+                                                serviceParamId: serviceParamData.serviceParamId,
                                                 value: serviceParamData.value
                                             }, function(err, workflowDefinitionServiceParamValue) {
                                                 if (err) {
@@ -241,7 +241,7 @@ function WorkflowDefinitionService() {
                             addedIds.push(workflowDefinitionServiceModel.id);
 
                             self._saveWorkflowDefinitionServiceModelInstance(req, workflowDefinitionServiceModel.id, {
-                                order_num: orderNum
+                                orderNum: orderNum
                             }, function(err, workflowDefinitionServiceModel) {
                                 if (err) {
                                     return innerCallback(err);
@@ -305,19 +305,19 @@ function WorkflowDefinitionService() {
                 return callback(err);
             }
 
-            serviceService.getService(req, workflowDefinitionServiceData.service_id, function(error, serviceModel) {
+            serviceService.getService(req, workflowDefinitionServiceData.serviceId, function(error, serviceModel) {
                 if (error) {
                     return callback(error);
                 }
                 var workflowDefinitionServiceModel = WorkflowDefinitionServiceModel.build({
-                    service_id: serviceModel.id
+                    serviceId: serviceModel.id
                 }).save().then(function(workflowDefinitionServiceModel) {
 
                     serviceModel.getServiceParams().then(function(serviceParams) {
 
                         serviceParams.forEach(function(serviceParam) {
                             var workflowDefinitionServiceParamValue = WorkflowDefinitionServiceParamValue.build({
-                                service_param_id: serviceParam.id
+                                serviceParamId: serviceParam.id
                             });
                             workflowDefinitionServiceModel.addParamValue(workflowDefinitionServiceParamValue);
                         });
@@ -360,7 +360,7 @@ function WorkflowDefinitionService() {
             ids = idsString.split(',');
         }
         for (var i = 0; i < ids.length; i++) {
-            WorkflowDefinitionServiceModel.update({order_num: (i+1)}, { where: { id: ids[i]} }).catch(function(error) {
+            WorkflowDefinitionServiceModel.update({orderNum: (i+1)}, { where: { id: ids[i]} }).catch(function(error) {
                 return callback(error);
             });
         }

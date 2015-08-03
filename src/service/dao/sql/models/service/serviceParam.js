@@ -32,15 +32,17 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.STRING,
             allowNull: true
         },
-        order_num: {
+        orderNum: {
             type: DataTypes.INTEGER,
             allowNull: false,
-            defaultValue: 0
+            defaultValue: 0,
+            field: 'order_num'
         },
-        is_editable: {
+        isEditable: {
             type: DataTypes.BOOLEAN,
             allowNull: false,
-            defaultValue: false
+            defaultValue: false,
+            field: 'is_editable'
         },
         description: {
             type: DataTypes.TEXT,

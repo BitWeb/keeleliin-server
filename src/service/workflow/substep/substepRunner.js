@@ -22,8 +22,8 @@ function SubStepRunner(){
         async.waterfall([
             function setRunning(callback) {
                 substep.status = 'RUNNING';
-                substep.datetime_start = new Date();
-                substep.save().then(function (substep){
+                substep.datetimeStart = new Date();
+                substep.save().then(function (){
                     callback(null, substep);
                 }).catch(function (err) {
                     logger.error('Save step error', err);
@@ -102,7 +102,7 @@ function SubStepRunner(){
         async.waterfall([
             function getWorkflowId(wfCallback) {
                 substep.getWorkflowService().then(function (workflowService) {
-                    wfCallback(null, workflowService.workflow_id);
+                    wfCallback(null, workflowService.workflowId);
                 }).catch(wfCallback);
             },
             function loadOutputResources(workflowId, wfCallback) {
@@ -138,7 +138,7 @@ function SubStepRunner(){
 
     this._updateSubstepFinishStatus = function (substep, status, cb) {
         substep.status = status;
-        substep.datetime_end = new Date();
+        substep.datetimeEnd = new Date();
         substep.save().then(function (substep) {
             cb(null, substep);
         }).catch(cb);
@@ -168,11 +168,11 @@ function SubStepRunner(){
             function (fileName, callback) {
                 var data = {
                     filename: outputPath,
-                    file_type: Resource.fileTypes.FILE,
-                    resource_type_id: resourceType.id,
-                    original_name: fileName,
+                    fileType: Resource.fileTypes.FILE,
+                    resourceTypeId: resourceType.id,
+                    originalName: fileName,
                     name: fileName,
-                    content_type: fileData.contentType
+                    contentType: fileData.contentType
                 };
                 callback(null, data);
             },
@@ -202,7 +202,7 @@ function SubStepRunner(){
                 substep.getInputResources().then(function (resources) {
                     if(resources && resources.length > 0){
                         var resource = resources.pop();
-                        sourceName = FileUtil.getSourceName(resource.original_name);
+                        sourceName = FileUtil.getSourceName(resource.originalName);
                     }
                     callback();
                 });

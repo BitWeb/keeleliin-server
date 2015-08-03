@@ -11,13 +11,14 @@ module.exports = function(sequelize, DataTypes) {
             primaryKey: true,
             autoIncrement: true
         },
-        project_id: {
+        projectId: {
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
                 model: 'project',
                 key: 'id'
-            }
+            },
+            field: 'project_id'
         },
         //user_id: {
         //    type: DataTypes.INTEGER,
@@ -38,11 +39,13 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: false,
             primaryKey: false
         },
-        date_created: {
-            type: DataTypes.DATE
+        dateCreated: {
+            type: DataTypes.DATE,
+            field: 'date_created'
         },
-        date_updated: {
-            type: DataTypes.DATE
+        dateUpdated: {
+            type: DataTypes.DATE,
+            field: 'date_updated'
         }
     }, {
         tableName: 'workflow_definition',
@@ -53,11 +56,11 @@ module.exports = function(sequelize, DataTypes) {
         classMethods: {
             associate: function(models) {
                 WorkflowDefinition.hasMany(models.WorkflowDefinitionService, { as: 'workflowServices' , foreignKey: {name: 'workflow_definition_id', allowNull: true}});
-                WorkflowDefinition.hasMany(models.Workflow);
+                WorkflowDefinition.hasMany(models.Workflow, {as: 'workflows', foreignKey: 'workflowDefinitionId'});
                 WorkflowDefinition.belongsToMany(models.Project, {through: 'project_workflow_definition', foreignKey: 'workflow_definition_id', otherKey: 'project_id', as: 'projects'});
                 WorkflowDefinition.belongsToMany(models.Resource, {
                         through: 'workflow_definition_has_input_resource',
-                        foreignKey: 'workflow_definition_id',
+                        foreignKey: 'workflowDefinitionId',
                         as: 'inputResources'
                     }
                 );

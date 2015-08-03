@@ -23,10 +23,10 @@ function WorkflowDaoService() {
         }).catch(cb);
     };
 
-    this.findWorkflowsByProjectId = function(projectId, callback) {
+    this.getProjectWorkflowsList = function(projectId, callback) {
 
         Workflow.findAll({
-            attributes: ['id', 'workflow_definition_id', 'input_resource_id', 'status', 'datetime_start', 'datetime_end'],
+            attributes: ['id', 'workflowDefinitionId', 'status', 'datetimeStart', 'datetimeEnd'],
             include: [
                 {
                     model: Project,
@@ -35,8 +35,8 @@ function WorkflowDaoService() {
                 },
                 {
                     model: WorkflowServiceModel,
-                    as: 'workflow_services',
-                    attributes: ['id', 'service_id', 'workflow_definition_service_id', 'output_resource_id', 'status', 'datetime_start', 'datetime_end', 'order_num']
+                    as: 'workflowServices',
+                    attributes: ['id', 'serviceId', 'status', 'datetimeStart', 'datetimeEnd', 'orderNum']
                 }
             ]
         }).then(function(workflows) {
@@ -51,11 +51,11 @@ function WorkflowDaoService() {
                 {
                     model: ServiceParam,
                     as: 'service_param',
-                    attributes: ['id', 'type', 'key', 'value', 'order_num', 'is_editable', 'description']
+                    attributes: ['id', 'type', 'key', 'value', 'orderNum', 'isEditable', 'description']
                 }
             ],
             where: {
-                workflow_service_id: workflowServiceId
+                workflowServiceId: workflowServiceId
             }
         }).then(function(workflowDefinitionServiceModels) {
             return callback(null, workflowDefinitionServiceModels);

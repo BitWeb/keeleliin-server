@@ -17,49 +17,55 @@ module.exports = function(sequelize, DataTypes) {
             primaryKey: true,
             autoIncrement: true
         },
-        parent_folder_id: {
+        parentFolderId: {
             type: DataTypes.INTEGER,
             allowNull: true,
             references: {
                 model: 'resource',
                 key: 'id'
-            }
+            },
+            field: 'parent_folder_id'
         },
-        file_type: {
+        fileType: {
             type: DataTypes.STRING,
             defaultValue: fileTypes.FILE,
-            allowNull: false
+            allowNull: false,
+            field: 'file_type'
         },
-        resource_type_id: {
+        resourceTypeId: {
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
                 model: 'resource_type',
                 key: 'id'
-            }
+            },
+            field: 'resource_type_id'
         },
         filename: {
             type: DataTypes.STRING,
             allowNull: true,
             primaryKey: false
         },
-        original_name: {
+        originalName: {
             type: DataTypes.STRING,
             allowNull: false,
-            primaryKey: false
+            primaryKey: false,
+            field: 'original_name'
         },
         name: {
             type: DataTypes.STRING,
             allowNull: false,
             primaryKey: false
         },
-        date_created: {
-            type: DataTypes.DATE
+        dateCreated: {
+            type: DataTypes.DATE,
+            field: 'date_created'
         },
-        corpora_name: {
+        corporaName: {
             type: DataTypes.STRING,
             allowNull: true,
-            primaryKey: false
+            primaryKey: false,
+            field: 'corpora_name'
         },
         description: {
             type: DataTypes.TEXT,
@@ -71,10 +77,11 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: true,
             primaryKey: false
         },
-        content_type: {
+        contentType: {
             type: DataTypes.STRING,
             allowNull: true,
-            primaryKey: false
+            primaryKey: false,
+            field: 'content_type'
         },
         encoding: {
             type: DataTypes.STRING,
@@ -86,8 +93,9 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: true,
             primaryKey: false
         },
-        date_updated: {
-            type: DataTypes.DATE
+        dateUpdated: {
+            type: DataTypes.DATE,
+            field: 'date_updated'
         }
     }, {
         tableName: 'resource',
@@ -98,7 +106,7 @@ module.exports = function(sequelize, DataTypes) {
         classMethods: {
             associate: function(models) {
                 Resource.belongsTo(models.ResourceType, {
-                    foreignKey: 'resource_type_id',
+                    foreignKey: 'resourceTypeId',
                     as: 'resourceType'
                 });
                 Resource.belongsToMany(models.Project, {
@@ -108,11 +116,11 @@ module.exports = function(sequelize, DataTypes) {
                     as: 'projects'
                 });
                 Resource.hasMany(models.Resource, {
-                    foreignKey: 'parent_folder_id',
+                    foreignKey: 'parentFolderId',
                     as: 'resourceFiles'
                 });
                 Resource.belongsTo(models.Resource, {
-                    foreignKey: 'parent_folder_id',
+                    foreignKey: 'parentFolderId',
                     as: 'parentFolder' });
                 Resource.belongsToMany(models.WorkflowDefinition, {
                     through: 'workflow_definition_has_input_resource',
@@ -134,7 +142,8 @@ module.exports = function(sequelize, DataTypes) {
                 Resource.belongsToMany(models.WorkflowServiceSubstep, {
                         through: 'workflow_service_substep_has_output_resource',
                         foreignKey: 'resource_id',
-                        otherKey: 'workflow_service_substep_id'}
+                        otherKey: 'workflow_service_substep_id'
+                    }
                 );
             }
         },

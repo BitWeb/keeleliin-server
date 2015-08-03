@@ -21,9 +21,10 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.STRING,
             allowNull: false
         },
-        split_type: {
+        splitType: {
             type: DataTypes.STRING,
-            allowNull: true
+            allowNull: true,
+            field: 'split_type'
         }
     }, {
         tableName: 'resource_type',

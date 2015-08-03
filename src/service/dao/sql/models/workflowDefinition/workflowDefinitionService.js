@@ -12,18 +12,20 @@ module.exports = function(sequelize, DataTypes) {
             primaryKey: true,
             autoIncrement: true
         },
-        service_id: {
+        serviceId: {
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
                 model: 'service',
                 key: 'id'
-            }
+            },
+            field: 'service_id'
         },
-        order_num: {
+        orderNum: {
             type: DataTypes.INTEGER,
             allowNull: false,
-            defaultValue: 0
+            defaultValue: 0,
+            field: 'order_num'
         }
     }, {
         tableName: 'workflow_definition_service',

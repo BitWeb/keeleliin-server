@@ -49,12 +49,12 @@ function ResourceCreator(sourceResource, workflowService, resourceIndex){
     this._getNewResource = function( cb ){
 
         var data = {
-            resource_type_id: self.sourceResource.resource_type_id,
+            resourceTypeId: self.sourceResource.resourceTypeId,
             filename: resourceFilename,
-            content_type: self.sourceResource.content_type,
+            contentType: self.sourceResource.contentType,
             encoding: self.sourceResource.encoding,
             name: self.getOriginalName(),
-            original_name: self.getOriginalName()
+            originalName: self.getOriginalName()
         };
 
         var resource = Resource.build(data);
@@ -76,7 +76,7 @@ function ResourceCreator(sourceResource, workflowService, resourceIndex){
 
     this._getWorkflowFolder = function (workflowService, cb) {
         var rootLocation = config.resources.location;
-        var location = '/workflow_' + self.workflowService.workflow_id;
+        var location = '/workflow_' + self.workflowService.workflowId;
         fs.exists(rootLocation + location, function (exists) {
             if(exists){
                 return cb(null, location);
@@ -89,7 +89,7 @@ function ResourceCreator(sourceResource, workflowService, resourceIndex){
 
     this.getOriginalName = function () {
 
-        var sourceName = self.sourceResource.original_name;
+        var sourceName = self.sourceResource.originalName;
         var extension = FileUtil.getExtension(sourceName);
 
         var name = FileUtil.getName(sourceName);

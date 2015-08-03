@@ -1,7 +1,7 @@
 /**
  * Created by priit on 1.07.15.
  */
-var logger = require('log4js').getLogger('substep_mapper');
+var logger = require('log4js').getLogger('substep_service_dto_mapper');
 var async = require('async');
 
 function SubstepServiceDtoMapper(){
@@ -16,6 +16,9 @@ function SubstepServiceDtoMapper(){
         async.waterfall([
             function getWorkflowService(callback) {
                 workflowSubstep.getWorkflowService().then(function (item) {
+                    if(!item){
+                        return callback('Workflow service not found');
+                    }
                     workflowService = item;
                     callback();
                 }).catch(function (err) {
@@ -38,10 +41,13 @@ function SubstepServiceDtoMapper(){
                 self._setInputResources(dto, workflowSubstep, service, callback);
             }
         ], function (err, dto) {
-
+            if(err){
+                logger.error(err);
+               cb( err );
+            }
             logger.debug('Made dto: ' + JSON.stringify(dto));
 
-            cb(err, dto);
+            cb(null, dto);
         });
     };
 
@@ -49,7 +55,7 @@ function SubstepServiceDtoMapper(){
         dto.url = service.url;
 
         dto.params = {
-            is_async: 1 // Default value. Can be overwritten
+            isAsync: 1 // Default value. Can be overwritten
         };
 
         workflowService.getParamValues().then(function (paramValues) {
@@ -73,6 +79,7 @@ function SubstepServiceDtoMapper(){
         async.waterfall([
             function getInputResources(callback) {
                 workflowSubstep.getInputResources().then(function (data) {
+                    logger.debug('Substep ' + workflowSubstep.id + ' input resources count ' + data.length );
                     resources = data;
                     callback();
                 });
@@ -92,7 +99,10 @@ function SubstepServiceDtoMapper(){
                         var inputype = inputTypes[i];
                         for(j in resources){
                             var resource = resources[j];
-                            if(inputype.resource_type_id == resource.resource_type_id){
+
+                            logger.debug(' Compare: ' + inputype.resourceTypeId + ' == ' + resource.resourceTypeId );
+
+                            if(inputype.resourceTypeId == resource.resourceTypeId){
                                 logger.debug('Suitable input resource found: ' + resource.id);
                                 logger.debug('Key: ' + inputype.key + ' Filename: ' + resource.filename);
                                 dto.files[inputype.key] = resource.filename;

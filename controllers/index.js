@@ -6,6 +6,7 @@ var express = require('express');
 var router = express.Router();
 var config = require(__base + 'config');
 var sqlModel = require(__base + 'src/service/dao/sql');
+var WorkflowServiceSubstep = require(__base + 'src/service/dao/sql').WorkflowServiceSubstep;
 
 router.use('/api/v1/', require(__base + 'controllers/api/v1/index'));
 
@@ -19,7 +20,7 @@ router.get('/', function(req, res, next) {
 
 router.get('/generate', function(req, res, next) {
 
-    throw new Error('Can not generate');
+//    throw new Error('Can not generate');
 
     sqlModel.sequelize.sync( { force: true } );
     res.send({
@@ -28,13 +29,43 @@ router.get('/generate', function(req, res, next) {
 });
 
 router.get('/test', function(req, res, next) {
+
+
+
+
+    WorkflowServiceSubstep.find({
+        where:{id: 1}
+    }).then(function(workflowSubstep) {
+
+        logger.trace(workflowSubstep);
+
+        workflowSubstep.getWorkflowService().then(function (item) {
+
+            if(!item){
+                return logger.error(' getWorkflowService not found ');
+            }
+            return logger.error(' getWorkflowService found ');
+        }).catch(function (err) {
+            return logger.error('Some error', err);
+        });
+
+    }).catch(function (err) {
+        return logger.error('Some error', err);
+    });
+
+
+res.send('asd');
+    return;
+
+
+
     var WorkflowBuilder = require('./../src/service/workflow/workflowBuilder');
     var Runner = require('./../src/service/workflow/workflowRunner');
     ////////////
     var workflowRunner;
     var initData = {
-        "project_id": 1,
-        "workflow_definition_id": 1,
+        "projectId": 1,
+        "workflowDefinitionId": 1,
         "resources": [85]
     };
 

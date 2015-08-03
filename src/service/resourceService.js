@@ -83,8 +83,8 @@ function ResourceService() {
 
             var resourceData = {
                 projectId: req.params.projectId,
-                resource_type_id: fields.resource_type_id,
-                file_type: fields.file_type,
+                resourceTypeId: fields.resourceTypeId,
+                fileType: fields.fileType,
                 name: fields.name
             };
 
@@ -93,7 +93,7 @@ function ResourceService() {
                 return self._createResourceFromUrl(req, resourceData, fields.url, cb);
             }
 
-            return self._createResourceFromUpload(req, resourceData, files.resource_file, cb);
+            return self._createResourceFromUpload(req, resourceData, files.resourceFile, cb);
         });
 
         form.on('error', function(err) {
@@ -111,7 +111,7 @@ function ResourceService() {
             },
 
             function(project, callback) {
-                self.getResourceType(req, resourceData.resource_type_id, function(err, resourceType) {
+                self.getResourceType(req, resourceData.resourceTypeId, function(err, resourceType) {
                     if (err) {
                         return callback(err);
                     }
@@ -160,9 +160,9 @@ function ResourceService() {
             function(project, resourceType, filePath, fileName, originalFileName, callback) {
                 self._createResourceInstance(req, {
                     filename: filePath,
-                    file_type: Resource.fileTypes.FILE,
-                    resource_type_id: resourceType.id,
-                    original_name: originalFileName,
+                    fileType: Resource.fileTypes.FILE,
+                    resourceTypeId: resourceType.id,
+                    originalName: originalFileName,
                     name: fileName
                 }, function(err, resource) {
                     if (err) {
@@ -194,7 +194,7 @@ function ResourceService() {
                 });
             },
             function getResourceType(project, callback) {
-                self.getResourceType(req, resourceData.resource_type_id, function(err, rType) {
+                self.getResourceType(req, resourceData.resourceTypeId, function(err, rType) {
                     if (err) {
                         return callback(err);
                     }
@@ -232,10 +232,10 @@ function ResourceService() {
             // Create resource
             function(project, resourceType, filePath, fileName, originalFileName, callback) {
                 self._createResourceInstance(req, {
-                    resource_type_id: resourceType.id,
-                    file_type: resourceData.file_type,
+                    resourceTypeId: resourceType.id,
+                    fileType: resourceData.fileType,
                     filename: filePath,
-                    original_name: originalFileName,
+                    originalName: originalFileName,
                     name: resourceData.name
                 }, function(err, resource) {
                     if (err) {

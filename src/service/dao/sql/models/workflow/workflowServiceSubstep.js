@@ -16,22 +16,24 @@ module.exports = function(sequelize, DataTypes) {
             primaryKey: true,
             autoIncrement: true
         },
-        workflow_service_id: {
+        workflowServiceId: {
             type: DataTypes.INTEGER,
             foreignKey: true,
             allowNull: false,
             references: {
                 model: 'workflow_service',
                 key: 'id'
-            }
+            },
+            field: 'workflow_service_id'
         },
-        prev_substep_id: {
+        prevSubstepId: {
             type: DataTypes.INTEGER,
             allowNull: true,
             references: {
                 model: 'workflow_service_substep',
                 key: 'id'
-            }
+            },
+            field: 'prev_substep_id'
         },
         status: {
             type: DataTypes.STRING,
@@ -43,23 +45,26 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: false,
             defaultValue: 0
         },
-        service_session: {
+        serviceSession: {
             type: DataTypes.STRING,
             allowNull: true,
-            defaultValue: ''
+            defaultValue: '',
+            field: 'service_session'
         },
         log: {
             type: DataTypes.STRING,
             allowNull: true,
             defaultValue: ''
         },
-        datetime_start: {
+        datetimeStart: {
             type: DataTypes.DATE,
-            allowNull: true
+            allowNull: true,
+            field: 'datetime_start'
         },
-        datetime_end: {
+        datetimeEnd: {
             type: DataTypes.DATE,
-            allowNull: true
+            allowNull: true,
+            field: 'datetime_end'
         }
     }, {
         tableName: 'workflow_service_substep',
@@ -70,10 +75,13 @@ module.exports = function(sequelize, DataTypes) {
         classMethods: {
             associate: function(models) {
                 WorkflowServiceSubstep.belongsTo(models.WorkflowService, {
-                        foreignKey: 'workflow_service_id',
+                        foreignKey: 'workflowServiceId',
                         as: 'workflowService'}
                 );
-                WorkflowServiceSubstep.belongsTo(models.WorkflowServiceSubstep);
+                WorkflowServiceSubstep.belongsTo(models.WorkflowServiceSubstep, {
+                    foreignKey: 'prevSubstepId',
+                    as: 'prevSubstep'
+                });
                 WorkflowServiceSubstep.belongsToMany(models.Resource, {
                         through: 'workflow_service_substep_has_input_resource',
                         foreignKey: 'workflow_service_substep_id',

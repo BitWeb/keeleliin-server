@@ -20,13 +20,14 @@ module.exports = function(sequelize, DataTypes) {
         //        key: 'id'
         //    }
         //},
-        service_param_id: {
+        serviceParamId: {
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
                 model: 'service_param',
                 key: 'id'
-            }
+            },
+            field: 'service_param_id'
         },
         value: {
             type: DataTypes.STRING,

@@ -41,7 +41,7 @@ function ServiceDaoService() {
                 {
                     model: ServiceModelParam,
                     as: 'serviceParams',
-                    order: ['order_num', 'ASC']
+                    order: ['orderNum', 'ASC']
                 },
                 {
                     model: ServiceInputType,
@@ -59,23 +59,19 @@ function ServiceDaoService() {
         });
     };
 
-    this.findServicesByIds = function(ids, callback) {
-
-    },
-
     this.findServicesByInputResourceTypes = function(resourceTypeIds, excludeServiceId, callback) {
         ServiceModel.findAll({
             include: [
                 {
                     model: ServiceModelParam,
                     as: 'serviceParams',
-                    order: ['order_num', 'ASC']
+                    order: ['orderNum', 'ASC']
                 },
                 {
                     model: ServiceInputType,
                     as: 'serviceInputTypes',
                     where: {
-                        resource_type_id: resourceTypeIds
+                        resourceTypeId: resourceTypeIds
                     }
                 }
             ],

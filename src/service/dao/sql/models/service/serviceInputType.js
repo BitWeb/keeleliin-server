@@ -20,20 +20,32 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.STRING,
             allowNull: false
         },
-        do_parallel: {
+        resourceTypeId: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            references: {
+                model: 'resource_type',
+                key: 'id'
+            },
+            field: 'resource_type_id'
+        },
+        doParallel: {
             type: DataTypes.BOOLEAN,
             allowNull: false,
-            defaultValue: false
+            defaultValue: false,
+            field:'do_parallel'
         },
-        size_limit: {
+        sizeLimit: {
             type: DataTypes.INTEGER,
             allowNull: false,
-            defaultValue: 0
+            defaultValue: 0,
+            field:'size_limit'
         },
-        size_unit: {
+        sizeUnit: {
             type: DataTypes.STRING,
             allowNull: false,
-            defaultValue: sizeUnits.BYTE
+            defaultValue: sizeUnits.BYTE,
+            field: 'size_unit'
         }
     }, {
         tableName: 'service_input_type',
@@ -44,7 +56,10 @@ module.exports = function(sequelize, DataTypes) {
         classMethods: {
             associate: function(models) {
                 ServiceInputType.belongsTo(models.Service, {as: 'service'});
-                ServiceInputType.belongsTo(models.ResourceType, {as: 'resourceType'});
+                ServiceInputType.belongsTo(models.ResourceType, {
+                    foreignKey: 'resourceTypeId',
+                    as: 'resourceType'
+                });
             }
         }
     });
