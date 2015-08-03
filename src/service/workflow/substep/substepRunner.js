@@ -89,7 +89,7 @@ function SubStepRunner(){
         logger.debug(response);
 
         setTimeout(function () {
-            apiService.recheckRequest(dto, response.response.serviceId, function (error, response) {
+            apiService.recheckRequest(dto, response.response.sessionId, function (error, response) {
                 if(error){return cb(error)}
                 self.handleResponse(substep, dto, response, cb);
             })
@@ -113,7 +113,7 @@ function SubStepRunner(){
                            if(err) return callback(null, substep); //SKIP if not used
 
                             var outputPath = self.getOutputResourcePath(substep, fileData, workflowId);
-                            var requestSessionId = response.response.serviceId;
+                            var requestSessionId = response.response.sessionId;
                             apiService.loadRequestResponse(dto, requestSessionId, fileData, outputPath, function (err) {
                                 self.addSubstepOutputResource(substep, outputPath, fileData, resourceType, function (err, updatedSubstep) {
                                     substep = updatedSubstep;

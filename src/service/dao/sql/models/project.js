@@ -21,9 +21,6 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: true,
             primaryKey: false
         },
-        //created_at
-        //updated_at
-
         userId: {
             type: DataTypes.INTEGER,
             allowNull: false,
@@ -32,10 +29,22 @@ module.exports = function(sequelize, DataTypes) {
                 key: 'id'
             },
             field: 'user_id'
+        },
+        createdAt: {
+            type: DataTypes.DATE,
+            field: 'created_at'
+        },
+        updatedAt: {
+            type: DataTypes.DATE,
+            field: 'updated_at'
+        },
+        deletedAt: {
+            type: DataTypes.DATE,
+            field: 'deleted_at'
         }
     }, {
         tableName: 'project',
-        timestamps: false,
+        timestamps: true,
         paranoid: true,
         underscored: true,
 
