@@ -9,7 +9,8 @@ module.exports = function(sequelize, DataTypes) {
         INIT: 'INIT',
         RUNNING: 'RUNNING',
         FINISHED: 'FINISHED',
-        ERROR: 'ERROR'
+        ERROR: 'ERROR',
+        CANCELLED: 'CANCELLED'
     };
 
     var Workflow = sequelize.define("Workflow", {

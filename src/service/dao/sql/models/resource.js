@@ -57,10 +57,6 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: false,
             primaryKey: false
         },
-        dateCreated: {
-            type: DataTypes.DATE,
-            field: 'date_created'
-        },
         corporaName: {
             type: DataTypes.STRING,
             allowNull: true,
@@ -93,9 +89,13 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: true,
             primaryKey: false
         },
-        dateUpdated: {
+        createdAt: {
             type: DataTypes.DATE,
-            field: 'date_updated'
+            field: 'created_at'
+        },
+        updatedAt: {
+            type: DataTypes.DATE,
+            field: 'updatedAt'
         }
     }, {
         tableName: 'resource',
@@ -150,11 +150,11 @@ module.exports = function(sequelize, DataTypes) {
 
         hooks: {
             beforeCreate: function(resource, options, fn) {
-                resource.date_created = new Date();
+                resource.createdAt = new Date();
                 fn(null, resource);
             },
             beforeUpdate: function(resource, options, fn) {
-                resource.date_updated = new Date();
+                resource.updatedAt = new Date();
                 fn(null, resource);
             }
         }

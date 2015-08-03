@@ -10,10 +10,15 @@ var WorkflowBuilder = require('./../../../src/service/workflow/workflowBuilder')
 var WorkflowRunner = require('./../../../src/service/workflow/workflowRunner');
 
 router.get('/:workflowId', function(req, res) {
-    workflowService.getWorkflow(req, req.params.workflowId, function(err, workflow) {
-        if (err) {
-            return res.send(err);
-        }
+    workflowService.getWorkflowOverview(req, req.params.workflowId, function(err, workflow) {
+        if (err) return res.status(403).send({errors: err});
+        return res.send(workflow);
+    });
+});
+
+router.put('/:workflowId/cancel', function(req, res) {
+    workflowService.setWorkflowStatusCanceled(req, req.params.workflowId, function(err, workflow) {
+        if (err) return res.status(403).send({errors: err});
         return res.send(workflow);
     });
 });
@@ -21,9 +26,8 @@ router.get('/:workflowId', function(req, res) {
 router.get('/service/:workflowServiceId/params', function(req, res) {
 
     workflowService.getWorkflowServiceParamValues(req, req.params.workflowServiceId, function(err, workflowServiceParamValues) {
-        if (err) {
-            return res.send(err);
-        }
+        if (err) return res.status(403).send({errors: err});
+
         return res.send(workflowServiceParamValues);
     });
 });
@@ -32,7 +36,7 @@ router.post('/', function(req, res) {
 
     var workflowBuilder = new WorkflowBuilder();
     workflowBuilder.create( req.body, function (err, workflow) {
-        if(err) return res.send({errors: err});
+        if(err) return res.status(403).send({errors: err});
         res.send( workflow );
     });
 });
@@ -40,18 +44,9 @@ router.post('/', function(req, res) {
 router.get('/run/:workflowId', function(req, res) {
     var workflowRunner = new WorkflowRunner();
     workflowRunner.run(req.params.workflowId, function(err, data){
-        if(err) return res.status(400).send({errors: err});
+        if(err) return res.status(403).send({errors: err});
         res.send(data);
     });
 });
-
-router.get('/check/:workflowId', function(req, res) {
-    var workflowRunner = new WorkflowRunner();
-    workflowRunner.check(req.params.workflowId, function(err, data){
-        if(err) return res.status(400).send({errors: err});
-        res.send(data);
-    });
-});
-
 
 module.exports = router;

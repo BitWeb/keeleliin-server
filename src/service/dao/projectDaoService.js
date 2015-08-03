@@ -7,19 +7,43 @@ var User = require(__base + 'src/service/dao/sql').User;
 
 function ProjectDaoService() {
 
-    this.getUserProjects = function (userId, callback) {
+    this.getUserProjectsList = function (userId, callback) {
 
-        Project.findAll({where: {userId: userId}}).then(function (result) {
+        Project.findAll({
+            attributes: [
+                'id',
+                'name',
+                'description',
+                'createdAt'
+            ],
+            where: {
+                userId: userId
+            }
+        }).then(function (result) {
             return callback(null, result);
         });
     };
 
     this.getUserProject = function (userId, projectId, callback) {
         Project.find({
-            where: { id: projectId, userId: userId }
-            /*,include: [
-                {model: User, as: 'user'}
-            ]*/
+            attributes: [
+                'id',
+                'name',
+                'description',
+                'createdAt',
+                'updatedAt'
+            ],
+            where: {
+                id: projectId, userId: userId
+            },
+            include: [{
+                model:User,
+                as: 'user',
+                attributes: [
+                    'id',
+                    'name'
+                ]
+            }]
         }).then(function (result) {
             if(!result){
                 return callback('Projekti ei leitud');

@@ -17,10 +17,12 @@ function ProjectService(){
         });
     };
 
-    this.getCurrentUserProjects = function (req, callback) {
+    this.getCurrentUserProjectsList = function (req, callback) {
 
         var userId = req.redisSession.data.userId;
-        return projectDaoService.getUserProjects( userId, callback);
+
+
+        return projectDaoService.getUserProjectsList( userId, callback);
     };
 
     this.getCurrentUserProject = function (req, projectId, callback) {

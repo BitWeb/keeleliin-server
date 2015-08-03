@@ -7,6 +7,7 @@ var async = require('async');
 var fs = require('fs');
 var Resource = require(__base + 'src/service/dao/sql').Resource;
 var WorkflowServiceSubstep = require(__base + 'src/service/dao/sql').WorkflowServiceSubstep;
+var Workflow = require(__base + 'src/service/dao/sql').Workflow;
 var apiService = require('./../service/apiService');
 var substepServiceDtoMapper = require('./substepServiceDtoMapper');
 var config = require(__base + 'config');
@@ -40,7 +41,7 @@ function SubStepRunner(){
             if(err){
                 logger.error(err);
                 substep.log = err;
-                return self._updateSubstepFinishStatus(substep, WorkflowServiceSubstep.statusCodes.ERROR, cb);
+                return self._updateSubstepFinishStatus(substep, Workflow.statusCodes.ERROR, cb);
             }
 
             cb(null, substep);
@@ -60,7 +61,7 @@ function SubStepRunner(){
         if(!response || !response.response){
             logger.error('TODO:: No response');
             substep.log = 'No service response';
-            return self._updateSubstepFinishStatus(substep, WorkflowServiceSubstep.statusCodes.ERROR, cb);
+            return self._updateSubstepFinishStatus(substep, Workflow.statusCodes.ERROR, cb);
         }
 
         substep.service_session = response.response.serviceId;
@@ -75,11 +76,11 @@ function SubStepRunner(){
             logger.info('Message ERROR');
             logger.error(response.response);
             substep.log = 'Got service error: ' + JSON.stringify(response.response.errors);
-            self._updateSubstepFinishStatus(substep, WorkflowServiceSubstep.statusCodes.ERROR, cb);
+            self._updateSubstepFinishStatus(substep, Workflow.statusCodes.ERROR, cb);
         } else {
             logger.error('TODO:: Not OK');
             substep.log = 'No service response message not mapped: ' + response.response.message;
-            self._updateSubstepFinishStatus(substep, WorkflowServiceSubstep.statusCodes.ERROR, cb);
+            self._updateSubstepFinishStatus(substep, Workflow.statusCodes.ERROR, cb);
         }
     };
 
@@ -128,7 +129,7 @@ function SubStepRunner(){
                 });
             },
             function setFinishStatus(substep, wfCallback) {
-                self._updateSubstepFinishStatus(substep, WorkflowServiceSubstep.statusCodes.FINISHED, wfCallback);
+                self._updateSubstepFinishStatus(substep, Workflow.statusCodes.FINISHED, wfCallback);
             }
         ], function (err, data) {
             logger.debug('Finished: ' + substep.id);

@@ -24,7 +24,7 @@ module.exports = function(sequelize, DataTypes) {
         }
     }, {
         tableName: 'service',
-        timestamps: false,
+        timestamps: true,
         paranoid: true,
         underscored: true,
 
@@ -33,8 +33,8 @@ module.exports = function(sequelize, DataTypes) {
                 Service.hasMany(models.ServiceParam, { foreignKey: 'service_id', as: 'serviceParams' });
                 Service.hasMany(models.ServiceInputType, { foreignKey: 'service_id', as: 'serviceInputTypes' });
                 Service.hasMany(models.ServiceOutputType, { foreignKey: 'service_id', as: 'serviceOutputTypes' });
-                Service.belongsToMany(Service, {through: 'service_has_parent_service', as: 'ChildServices', foreignKey: 'service_parent_id'});
-                Service.belongsToMany(Service, {through: 'service_has_parent_service', as: 'ParentServices', foreignKey: 'service_sibling_id'});
+                Service.belongsToMany(Service, {through: 'service_has_parent_service', as: 'childServices', foreignKey: 'service_parent_id'});
+                Service.belongsToMany(Service, {through: 'service_has_parent_service', as: 'parentServices', foreignKey: 'service_sibling_id'});
             }
         }
     });

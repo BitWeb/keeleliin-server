@@ -42,61 +42,6 @@ function Runner() {
         });
     };
 
-    this.check = function (workflowId, cb) {
-
-        Workflow.find({
-            as: 'workflow',
-            where: {
-                id: workflowId
-            },
-            include: [
-                {
-                    model: Resource,
-                    as: 'inputResources',
-                    attributes: ['id', 'name', 'fileType', 'dateCreated'],
-                    required: false
-                }, {
-                    model: WorkflowService,
-                    as: 'workflowServices',
-                    where: {},
-                    required: false,
-                    include: [
-                        {
-                            model: WorkflowServiceSubstep,
-                            as: 'subSteps',
-                            where: {},
-                            required: false,
-                            include: [
-                                {
-                                    model: Resource,
-                                    as: 'inputResources',
-                                    where: {},
-                                    attributes: ['id', 'name', 'fileType', 'dateCreated'],
-                                    required: false
-                                },
-                                {
-                                    model: Resource,
-                                    as: 'outputResources',
-                                    where: {},
-                                    attributes: ['id', 'name', 'fileType', 'dateCreated'],
-                                    required: false
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ]
-        }).then(function (item) {
-            if (!item) {
-                return cb('Töövoogu ei leitud');
-            }
-            cb(null, item)
-        }).catch(function (err) {
-            logger.error(err);
-            cb(err);
-        });
-    };
-
     this._getWorkflow = function (id, cb) {
         workflowDaoService.getWorkflow(id, function (err, item) {
             if (err) {
@@ -147,6 +92,7 @@ function Runner() {
             } );
         }).catch(function (err) {
             self.finishWorkflow(Workflow.statusCodes.ERROR, function (err, item) {
+
             });
         });
     };
@@ -154,7 +100,6 @@ function Runner() {
     this._continueFromSubStep = function (fromSubStep, cb) {
 
         logger.debug('Continue from substep id: ' + (fromSubStep != undefined ? fromSubStep.id: null));
-
 
         async.waterfall([
             function isFirst(callback) {
@@ -218,7 +163,7 @@ function Runner() {
             if (err) {
                 logger.error(err);
                 workflowService.log = err;
-                self.finishWorkflowService(workflowService, WorkflowService.statusCodes.ERROR, function (err) {
+                self.finishWorkflowService(workflowService, Workflow.statusCodes.ERROR, function (err) {
                     logger.error('WorkflowService finished with error: ' + err);
                 });
             }
@@ -263,17 +208,17 @@ function Runner() {
 
     this.startWorkflowService = function (workflowService, cb) {
 
-        if (workflowService.status == WorkflowService.statusCodes.INIT) {
-            workflowService.status = WorkflowService.statusCodes.RUNNING;
+        if (workflowService.status == Workflow.statusCodes.INIT) {
+            workflowService.status = Workflow.statusCodes.RUNNING;
             workflowService.datetimeStart = new Date();
 
             return workflowService.save().then(function () {
                 cb(null);
             }).catch(cb);
 
-        } else if (workflowService.status == WorkflowService.statusCodes.ERROR) {
+        } else if (workflowService.status == Workflow.statusCodes.ERROR) {
             return cb('Töövoos on tekkinud viga');
-        } else if (workflowService.status == WorkflowService.statusCodes.RUNNING) {
+        } else if (workflowService.status == Workflow.statusCodes.RUNNING) {
             logger.debug('Workflow already started');
             cb(null);
         } else {
@@ -309,31 +254,65 @@ function Runner() {
 
     this._runSubStep = function (subStep, workflowService) {
 
-        substepRunner.run(subStep, function (err, subStep) {
-            logger.info('Substep is finished running: ' + subStep.id + ' status: ' + subStep.status);
+        async.waterfall([
+            function (callback) {
+                substepRunner.run(subStep, function (err, subStep) {
+                    logger.info('Substep is finished running: ' + subStep.id + ' status: ' + subStep.status);
+                    statusHolder.updateSubStepsToRunCount(workflowService, -1);
 
-            statusHolder.updateSubStepsToRunCount(workflowService, -1);
-            if (err || subStep.status != WorkflowServiceSubstep.statusCodes.FINISHED) {
-                logger.debug('Break substep: ' + subStep.id);
-                return self._breakFromSubstep(subStep);
-            }
-
-            logger.debug('Continue substep: ' + subStep.id);
-
-            return self._continueFromSubStep(subStep, function (err) {
-                self.tryToFinishWorkflowService(workflowService, function (err, success) {
-                    logger.info('Tried to close id: ' + workflowService.id + ' Success: ' + success);
-                    if(success == true){
-                        self.tryToFinishWorkflow(function () {
-                            logger.debug('Tried to finish workflow id: ' + workflow.id + ' Status: ' + workflow.status);
-                        });
-                    }
+                    self.checkForContinue(err, subStep, function (err) {
+                        callback(err, subStep);
+                    });
                 });
-            });
+            },
+            function (substep, callback) {
+                logger.debug('Continue from substep: ' + subStep.id);
+                return self._continueFromSubStep(subStep, function (err) {
+                    self.tryToFinishWorkflowService(workflowService, function (err, success) {
+                        logger.info('Tried to close id: ' + workflowService.id + ' Success: ' + success);
+                        if(success == true){
+                            self.tryToFinishWorkflow(function () {
+                                logger.debug('Tried to finish workflow id: ' + workflow.id + ' Status: ' + workflow.status);
+                            });
+                        }
+                    });
+                });
+            }
+        ], function (err) {
+            if(err){
+                logger.trace(err);
+            }
         });
     };
 
-    this._breakFromSubstep = function (subStep) {
+    this.checkForContinue = function (err, subStep, cb) {
+
+        async.waterfall([
+            function reloadWorkflow(callback) {
+                workflow.reload().then(function () {
+                    callback();
+                }).catch(function (err) {
+                    callback(err.message);
+                });
+            },
+            function checkStatuses(callback) {
+
+                if(workflow.status == Workflow.statusCodes.CANCELLED){
+                    self._breakFromSubstep(subStep, Workflow.statusCodes.CANCELLED);
+                    return callback('Töövoog on katkestatud');
+                }
+
+                if (err || subStep.status != Workflow.statusCodes.FINISHED) {
+                    logger.debug('Break substep: ' + subStep.id);
+                    self._breakFromSubstep(subStep, subStep.status);
+                    return callback('Töövoog sammus tekkis viga');
+                }
+                callback();
+            }
+        ], cb);
+    };
+
+    this._breakFromSubstep = function (subStep, statusCode) {
 
         async.waterfall([
             function (callback) {
@@ -342,7 +321,7 @@ function Runner() {
                 });
             },
             function (workflowService, callback) {
-                self.finishWorkflowService(workflowService, WorkflowService.statusCodes.ERROR, function (err) {
+                self.finishWorkflowService(workflowService, statusCode, function (err) {
                     callback(err);
                 });
             }
@@ -374,7 +353,7 @@ function Runner() {
                     where: {
                         workflowId: workflowService.workflowid,
                         status: {
-                            ne: WorkflowService.statusCodes.FINISHED
+                            ne: Workflow.statusCodes.FINISHED
                         },
                         orderNum: {
                             lt: workflowService.orderNum
@@ -396,7 +375,7 @@ function Runner() {
                 WorkflowServiceSubstep.count({
                     where: {
                         status: {
-                            ne: WorkflowServiceSubstep.statusCodes.FINISHED
+                            ne: Workflow.statusCodes.FINISHED
                         }
                     },
                     include: [{
@@ -427,24 +406,24 @@ function Runner() {
 
             if (err) {
                 workflowService.log = err;
-                return self.finishWorkflowService(workflowService, WorkflowService.statusCodes.ERROR, cb);
+                return self.finishWorkflowService(workflowService, Workflow.statusCodes.ERROR, cb);
             }
 
-            self.finishWorkflowService(workflowService, WorkflowService.statusCodes.FINISHED, cb);
+            self.finishWorkflowService(workflowService, Workflow.statusCodes.FINISHED, cb);
         });
     };
 
     this.finishWorkflowService = function (workflowService, status, cb) {
         logger.info('Set service status ' + status);
 
-        if (workflowService.status != WorkflowService.statusCodes.ERROR) {
+        if (workflowService.status != Workflow.statusCodes.ERROR) {
             workflowService.status = status;
             workflowService.datetimeEnd = new Date();
         }
 
         workflowService.save().then(function () {
 
-            if (workflowService.status == WorkflowService.statusCodes.ERROR) {
+            if (workflowService.status == Workflow.statusCodes.ERROR) {
                 self.finishWorkflow(Workflow.statusCodes.ERROR, function (err) {
                     cb(null, true);
                 });
@@ -463,7 +442,7 @@ function Runner() {
                 WorkflowService.count({
                     where: {
                         workflowId: workflow.id,
-                        status: WorkflowService.statusCodes.ERROR
+                        status: Workflow.statusCodes.ERROR
                     }
                 }).then(function (errorsCount) {
                     logger.debug('Services with errors: ' + errorsCount);
@@ -478,7 +457,7 @@ function Runner() {
                     where: {
                         workflowId: workflow.id,
                         status: {
-                            in: [WorkflowService.statusCodes.INIT, WorkflowService.statusCodes.RUNNING]
+                            in: [Workflow.statusCodes.INIT, Workflow.statusCodes.RUNNING]
                         }
                     }
                 }).then(function (notFinishedCount) {

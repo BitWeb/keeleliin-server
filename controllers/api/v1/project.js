@@ -10,7 +10,7 @@ var projectService = require('../../../src/service/projectService');
 
 router.get('/', function(req, res) {
 
-    projectService.getCurrentUserProjects(req, function (err, projects) {
+    projectService.getCurrentUserProjectsList(req, function (err, projects) {
         return res.send(projects);
     });
 });

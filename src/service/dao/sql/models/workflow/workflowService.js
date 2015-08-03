@@ -6,13 +6,6 @@
 
 module.exports = function(sequelize, DataTypes) {
 
-    var statusCodes = {
-        INIT: 'INIT',
-        RUNNING: 'RUNNING',
-        ERROR: 'ERROR',
-        FINISHED: 'FINISHED'
-    };
-
     var WorkflowService = sequelize.define("WorkflowService", {
         id: {
             type: DataTypes.INTEGER,
@@ -40,7 +33,7 @@ module.exports = function(sequelize, DataTypes) {
         status: {
             type: DataTypes.STRING,
             allowNull: false,
-            defaultValue: statusCodes.INIT
+            defaultValue: 'INIT'
         },
         orderNum: {
             type: DataTypes.INTEGER,
@@ -78,9 +71,6 @@ module.exports = function(sequelize, DataTypes) {
             }
         }
     });
-
-    WorkflowService.statusCodes = statusCodes;
-
 
     return WorkflowService;
 };
