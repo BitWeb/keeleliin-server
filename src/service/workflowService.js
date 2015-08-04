@@ -21,60 +21,43 @@ function WorkflowService() {
 
     this.getWorkflowOverview = function(req, workflowId, cb) {
 
-        Workflow.find({
-            as: 'workflow',
-            attributes: [
-                'id',
-                'name',
-                'description',
-                'status',
-                'datetimeCreated',
-                'datetimeStart',
-                'datetimeEnd'
-            ],
-            where: {
-                id: workflowId
-            },
-            include: [
-                {
-                    model: Resource,
-                    as: 'inputResources',
+
+        async.waterfall([
+            function overviewQuery(callback) {
+
+                Workflow.find({
+                    as: 'workflow',
                     attributes: [
                         'id',
                         'name',
-                        'fileType',
-                        'createdAt'
-                    ],
-                    required: false
-                }, {
-                    model: WorkflowServiceModel,
-                    as: 'workflowServices',
-                    attributes: [
-                        'id',
+                        'description',
                         'status',
-                        'orderNum',
-                        'log',
+                        'datetimeCreated',
                         'datetimeStart',
                         'datetimeEnd'
                     ],
-                    where: {},
-                    required: false,
+                    where: {
+                        id: workflowId
+                    },
                     include: [
                         {
-                            model: ServiceModel,
-                            as: 'service',
+                            model: Resource,
+                            as: 'inputResources',
                             attributes: [
                                 'id',
-                                'name'
+                                'name',
+                                'fileType',
+                                'createdAt'
                             ],
                             required: false
-                        },
-                        {
-                            model: WorkflowServiceSubstep,
-                            as: 'subSteps',
+                        }, {
+                            model: WorkflowServiceModel,
+                            as: 'workflowServices',
                             attributes: [
                                 'id',
                                 'status',
+                                'orderNum',
+                                'log',
                                 'datetimeStart',
                                 'datetimeEnd'
                             ],
@@ -82,44 +65,72 @@ function WorkflowService() {
                             required: false,
                             include: [
                                 {
-                                    model: Resource,
-                                    as: 'inputResources',
-                                    where: {},
+                                    model: ServiceModel,
+                                    as: 'service',
                                     attributes: [
                                         'id',
-                                        'name',
-                                        'fileType',
-                                        'createdAt'],
+                                        'name'
+                                    ],
                                     required: false
                                 },
                                 {
-                                    model: Resource,
-                                    as: 'outputResources',
-                                    where: {},
+                                    model: WorkflowServiceSubstep,
+                                    as: 'subSteps',
                                     attributes: [
                                         'id',
-                                        'name',
-                                        'fileType',
-                                        'createdAt'
+                                        'status',
+                                        'log',
+                                        'datetimeStart',
+                                        'datetimeEnd'
                                     ],
-                                    required: false
+                                    where: {},
+                                    required: false,
+                                    include: [
+                                        {
+                                            model: Resource,
+                                            as: 'inputResources',
+                                            where: {},
+                                            attributes: [
+                                                'id',
+                                                'name',
+                                                'fileType',
+                                                'createdAt'],
+                                            required: false
+                                        },
+                                        {
+                                            model: Resource,
+                                            as: 'outputResources',
+                                            where: {},
+                                            attributes: [
+                                                'id',
+                                                'name',
+                                                'fileType',
+                                                'createdAt'
+                                            ],
+                                            required: false
+                                        }
+                                    ]
                                 }
                             ]
                         }
                     ]
-                }
-            ]
-        }).then(function (item) {
-            if (!item) {
-                return cb('Töövoogu ei leitud');
+                }).then(function (item) {
+                    if (!item) {
+                        return callback('Töövoogu ei leitud');
+                    }
+                    return callback(null, item);
+                }).catch(function (err) {
+                    logger.error(err);
+                    callback(err);
+                });
+            },
+            function sortServices(overview, callback) {
+
+                overview.workflowServices = ArrayUtils.sort(overview.workflowServices, 'orderNum');
+                callback(null, overview)
             }
-
-            item.workflowServices = ArrayUtils.sort(item.workflowServices, 'orderNum');
-
-            cb(null, item)
-        }).catch(function (err) {
-            logger.error(err);
-            cb(err);
+        ], function (err, overview) {
+            cb(err, overview);
         });
     };
 

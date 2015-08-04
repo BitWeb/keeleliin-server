@@ -10,9 +10,9 @@ var WorkflowBuilder = require('./../../../src/service/workflow/workflowBuilder')
 var WorkflowRunner = require('./../../../src/service/workflow/workflowRunner');
 
 router.get('/:workflowId', function(req, res) {
-    workflowService.getWorkflowOverview(req, req.params.workflowId, function(err, workflow) {
+    workflowService.getWorkflowOverview(req, req.params.workflowId, function(err, overview) {
         if (err) return res.status(403).send({errors: err});
-        return res.send(workflow);
+        return res.send(overview);
     });
 });
 
@@ -33,7 +33,6 @@ router.get('/service/:workflowServiceId/params', function(req, res) {
 });
 
 router.post('/', function(req, res) {
-
     var workflowBuilder = new WorkflowBuilder();
     workflowBuilder.create( req.body, function (err, workflow) {
         if(err) return res.status(403).send({errors: err});

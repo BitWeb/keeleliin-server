@@ -4,40 +4,37 @@
 var logger = require('log4js').getLogger('resource_dao_service');
 var Resource = require(__base + 'src/service/dao/sql').Resource;
 var Project = require(__base + 'src/service/dao/sql').Project;
+var Workflow = require(__base + 'src/service/dao/sql').Workflow;
+var WorkflowServiceSubstep = require(__base + 'src/service/dao/sql').WorkflowServiceSubstep;
+var WorkflowService = require(__base + 'src/service/dao/sql').WorkflowService;
 
 function ResourceDaoService() {
+
+    this.getResources = function(query, callback) {
+
+        //todo: query.projectId AND query.workflowId
+
+        Resource.findAll({
+            attributes: [
+                'id',
+                'name',
+                'createdAt'
+            ]
+        }).then(function(resources) {
+            return callback(null, resources);
+        });
+    };
 
     this.getResource = function(resourceId, callback) {
 
         Resource.find({ where: {id: resourceId }}).then(function(resource) {
             if(!resource){
-                return callback('resource not found');
+                return callback('Resource not found');
             }
             return callback(null, resource);
         }).catch(function(error) {
             logger.error(error);
             return callback(error);
-        });
-    };
-
-    this.getResources = function(pagination, callback) {
-        Resource.findAll({
-            limit: pagination.limit,
-            offset: pagination.offset
-        }).then(function(resources) {
-            return callback(null, resources);
-        });
-    };
-
-    this.getProjectResources = function(projectId, callback) {
-        Resource.findAll({
-            include: [
-                {model: Project, where: {
-                    id: projectId
-                }}
-            ]
-        }).then(function(resources) {
-            return callback(null, resources);
         });
     };
 

@@ -7,20 +7,67 @@ var User = require(__base + 'src/service/dao/sql').User;
 
 function ProjectDaoService() {
 
-    this.getUserProjectsList = function (userId, callback) {
+    var self = this;
 
-        Project.findAll({
-            attributes: [
-                'id',
-                'name',
-                'description',
-                'createdAt'
-            ],
+    var limit = 10;
+
+    this.getUserProjectsList = function (userId, params, cb) {
+
+        var queryProperties = {
             where: {
                 userId: userId
             }
-        }).then(function (result) {
-            return callback(null, result);
+        };
+
+        if(params.name){
+            queryProperties.where.name = {
+                $iLike: params.name + '%'
+            }
+        }
+
+        self._getProjectsCount(queryProperties, params, function (err, totalCount) {
+            self._getProjectsList( queryProperties, params, function(err, list){
+
+                var result = {
+                    items: list,
+                    total: totalCount
+                };
+
+                return cb(null, result);
+
+            });
+        });
+    };
+
+    this._getProjectsCount = function ( queryProperties, params, cb) {
+
+        Project.count( queryProperties ).then(function (totalCount) {
+            cb(null, totalCount);
+        }).catch(function (err) {
+            cb(err.message);
+        });
+    };
+
+    this._getProjectsList = function (queryProperties, params, cb) {
+
+        queryProperties.attributes = [
+            'id',
+            'name',
+            'description',
+            'createdAt'
+        ];
+
+        if(params.page){
+            queryProperties.limit = limit;
+            queryProperties.offset = (params.page - 1) * limit;
+        }
+
+        if(params.sort && params.order){
+            queryProperties.order = [[params.sort, params.order]]
+        }
+
+        Project.findAll( queryProperties ).then(function (list) {
+            return cb(null, list);
         });
     };
 

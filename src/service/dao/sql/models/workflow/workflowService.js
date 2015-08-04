@@ -42,7 +42,7 @@ module.exports = function(sequelize, DataTypes) {
             field: 'order_num'
         },
         log: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT,
             allowNull: true,
             defaultValue: ''
         },

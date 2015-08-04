@@ -137,12 +137,15 @@ module.exports = function(sequelize, DataTypes) {
                 Resource.belongsToMany(models.WorkflowServiceSubstep, {
                         through: 'workflow_service_substep_has_input_resource',
                         foreignKey: 'resource_id',
-                        otherKey: 'workflow_service_substep_id'}
+                        otherKey: 'workflow_service_substep_id',
+                        as: 'inputSubsteps'
+                    }
                 );
                 Resource.belongsToMany(models.WorkflowServiceSubstep, {
                         through: 'workflow_service_substep_has_output_resource',
                         foreignKey: 'resource_id',
-                        otherKey: 'workflow_service_substep_id'
+                        otherKey: 'workflow_service_substep_id',
+                        as: 'outputSubsteps'
                     }
                 );
             }

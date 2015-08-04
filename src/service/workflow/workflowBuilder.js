@@ -14,6 +14,13 @@ var WorkflowServiceParamValue = require(__base + 'src/service/dao/sql').Workflow
 var async = require('async');
 
 
+/*workflowService.getWorkflowOverview(req, req.params.workflowId, function(err, overview) {
+ if (err) return res.status(403).send({errors: err});
+ return res.send(overview);
+ });*/
+
+
+
 function WorkflowBuilder(){
     var self = this;
 
@@ -31,7 +38,7 @@ function WorkflowBuilder(){
         initResourceIds = data.resources;
 
         async.waterfall([
-            function (callback) {
+            function getProject(callback) {
                 projectDaoService.getProject(projectId, function (err, data) {
                     if(err) return callback(err);
                     project = data;
@@ -39,7 +46,7 @@ function WorkflowBuilder(){
                     callback();
                 });
             },
-            function (callback) {
+            function getWorkflowDefinition(callback) {
                 workflowDefinitionDaoService.getWorkflowDefinition(workflowDefinitionId, function (err, data) {
                     if(err) return callback(err);
                     workflowDefinition = data;
@@ -60,44 +67,87 @@ function WorkflowBuilder(){
             workflowDefinitionId: workflowDefinition.id
         };
 
-        Workflow.build(workflowData).save().then(function (item) {
-            if(!item) return cb('Err');
-            logger.info('Workflow created: ' + item.id);
-            workflow = item;
-
-            self.setInitResources(function (err) {
-                if(err) return cb(err);
-                self.setServices(cb);
-            });
-        }).catch(cb);
+        async.waterfall([
+            function (callback) {
+                Workflow.build(workflowData).save().then(function (item) {
+                    if(!item) return cb('Err');
+                    logger.info('Workflow created: ' + item.id);
+                    workflow = item;
+                    callback();
+                }).catch(function (err) {
+                    callback(err.message);
+                });
+            },
+            function (callback) {
+                self.setServices(callback);
+            },
+            function (callback) {
+                self._setResources(callback);
+            }
+        ], function (err) {
+            cb(err, workflow);
+        });
     };
 
-    this.setInitResources = function (cb) {
-
-        async.each(initResourceIds,
+    this._setResources = function (cb) {
+        async.eachSeries(
+            initResourceIds,
             function (resourceId, callback) {
                 logger.info('Add init resource: ' + resourceId);
-
-                resourceDaoService.getResource(resourceId, function (err, data) {
-                    if(err) return cb(err);
-                    logger.info('Got resource: ' + data.id);
-                    workflow.addInputResource(data).then(function () {
-                        callback();
-                    }).catch(function (err) {
-                        return callback(err);
+                resourceDaoService.getResource(resourceId, function (err, resource) {
+                    if(err) return callback(err);
+                    logger.info('Got resource: ' + resource.id);
+                    self._setResource(resource, function (err) {
+                        logger.info('Back from resource: ' + resource.id);
+                        callback(err);
                     });
                 });
-
             }, function(err){
                 if(err){
-                    logger.error('Definition services copy failed');
                     logger.error(err);
-                    return cb(err);
                 }
-                logger.debug('Definition services copied');
-                cb(null, workflow);
+                logger.debug('Resources are set');
+                cb(err);
             }
         );
+    };
+
+    this._setResource = function (resource, cb) {
+        async.waterfall([
+            function (callback) {
+                workflow.hasInputResource(resource).then(function (result) {
+                    if(result == false){
+                        workflow.addInputResource(resource).then(function () {
+                            callback();
+                        }).catch(function (err) {
+                            return callback(err.message);
+                        });
+                    } else {
+                        callback();
+                    }
+                }).catch(function (err) {
+                    return callback(err.message);
+                });
+            },
+            function (callback) {
+                project.hasResource(resource).then(function (result) {
+                    if(result == false){
+                        project.addResource(resource).then(function () {
+                            callback();
+                        }).catch(function (err) {
+                            return callback(err.message);
+                        });
+                    } else {
+                        callback();
+                    }
+                }).catch(function (err) {
+                    return callback(err.message);
+                });
+            }
+        ], function (err) {
+            logger.debug('Resource is set');
+            cb(err);
+        });
     };
 
     this.setServices = function (cb) {
@@ -105,7 +155,9 @@ function WorkflowBuilder(){
         workflowDefinition.getWorkflowServices().then(function (definitionServices) {
             logger.info('Got definition services: ' + definitionServices.length);
             self.copyDefinitionServicesToServices(definitionServices, cb);
-        }).catch(cb);
+        }).catch(function (err) {
+            cb(err.message);
+        });
     };
 
     this.copyDefinitionServicesToServices = function(definitionServices, cb){
@@ -121,7 +173,7 @@ function WorkflowBuilder(){
                     return cb(err);
                 }
                 logger.debug('Definition services copied');
-                cb(null, workflow);
+                cb();
             }
         );
     };

@@ -50,17 +50,6 @@ router.get('/download/concat/:resourceIds', function(req, res) {
     });
 });
 
-router.get('/projectId/:projectId', function(req, res) {
-
-    resourceService.getProjectResources(req, req.params.projectId, function(error, resources) {
-        if(error){
-            return res.status(400).send({errors: 'Resources not found'});
-        }
-        return res.send(resources);
-    });
-});
-
-
 router.post('/upload/:projectId?', function(req, res) {
     resourceService.createResource(req, function(err, resource) {
         if (err) {

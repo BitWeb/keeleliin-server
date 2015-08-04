@@ -45,34 +45,10 @@ function ResourceService() {
         });
     };
 
-    this.getProjectResources = function(req, projectId, callback) {
-
-        return resourceDaoService.getProjectResources(projectId, callback);
-    };
-
     this.getResources = function(req, callback) {
-        var pagination = {
-            total: (req.params.total ? req.params.total : 100),
-            offset: (req.params.offset ? req.params.offset : 0)
-        };
 
-        return resourceDaoService.getResources(pagination, callback);
+        return resourceDaoService.getResources(req.query, callback);
     };
-
-    //todo: Not used?
-/*    this.saveResource = function(req, resourceId, resourceData, callback) {
-
-        resourceDaoService.getResource(resourceId, function (err, resource) {
-            if (err) {
-                return callback(err);
-            }
-            resource.updateAttributes(resourceData).then(function (updatedResource) {
-                return callback(null, updatedResource);
-            }).catch(function (error) {
-                return callback(error);
-            });
-        });
-    };*/
 
     this.createResource = function(req, cb) {
         var form = new formidable.IncomingForm();

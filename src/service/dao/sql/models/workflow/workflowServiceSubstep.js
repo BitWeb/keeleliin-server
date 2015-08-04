@@ -44,7 +44,7 @@ module.exports = function(sequelize, DataTypes) {
             field: 'service_session'
         },
         log: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT,
             allowNull: true,
             defaultValue: ''
         },

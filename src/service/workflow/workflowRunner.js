@@ -6,31 +6,43 @@ var async = require('async');
 var config = require(__base + 'config');
 var WorkflowDefinition = require(__base + 'src/service/dao/sql').WorkflowDefinition;
 var Workflow = require(__base + 'src/service/dao/sql').Workflow;
+var Project = require(__base + 'src/service/dao/sql').Project;
+
+
+
 var WorkflowServiceSubstep = require(__base + 'src/service/dao/sql').WorkflowServiceSubstep;
 var WorkflowService = require(__base + 'src/service/dao/sql').WorkflowService;
 var Resource = require(__base + 'src/service/dao/sql').Resource;
 var workflowDaoService = require(__base + 'src/service/dao/workflowDaoService');
-var substepRunner = require('./substep/substepRunner');
-var resourceHandler = require('./resource/resourceHandler');
+var SubstepRunner = require('./substep/substepRunner');
+var ResourceHandler = require('./resource/resourceHandler');
 var StatusHolder = require('./statusHolder');
 
 function Runner() {
     var self = this;
 
     var workflow;
+    var project;
     var workflowServices;
-    var statusHolder = new StatusHolder();
+    var statusHolder;
+    var substepRunner;
+    var resourceHandler;
+
 
     this.run = function (workflowId, cb) {
         logger.debug('Run workflow id: ' + workflowId);
         async.waterfall([
-            function (callback) {
-                self._getWorkflow(workflowId, callback);
+            function getWorkflow(callback) {
+                workflowDaoService.getWorkflow(workflowId, function (err, item) {
+                    if (err) { return callback(err); }
+                    workflow = item;
+                    callback();
+                });
             },
-            function (callback) {
+            function checkStatusForRun(callback) {
                 self._checkStatusForRun(callback);
             },
-            function (callback) {
+            function startWorkflow(callback) {
                 self._startWorkflow(callback);
             }
         ], function (err) {
@@ -42,16 +54,6 @@ function Runner() {
         });
     };
 
-    this._getWorkflow = function (id, cb) {
-        workflowDaoService.getWorkflow(id, function (err, item) {
-            if (err) {
-                return cb(err);
-            }
-            workflow = item;
-            cb();
-        });
-    };
-
     this._checkStatusForRun = function (cb) {
         if (workflow.status != Workflow.statusCodes.INIT) {
             return cb('Antud töövoog on juba varem käivitatud');
@@ -60,6 +62,30 @@ function Runner() {
     };
 
     this._startWorkflow = function (cb) {
+
+        async.waterfall([
+            function getProject(callback) {
+                Project.find({ where: { id: workflow.projectId }}).then(function(item) {
+                    if(!item){
+                        return callback('Project not found');
+                    }
+                    project = item;
+                    return callback();
+                }).catch(function(error) {
+                    return callback(error.message);
+                });
+            },
+            function (callback) {
+                statusHolder = new StatusHolder();
+                substepRunner = new SubstepRunner(project, workflow);
+                resourceHandler = new ResourceHandler(project);
+                callback();
+            }
+
+
+        ], function (err) {
+            cb(err);
+        });
 
         workflow.status = Workflow.statusCodes.RUNNING;
         workflow.datetimeStart = new Date();
@@ -257,9 +283,10 @@ function Runner() {
         async.waterfall([
             function (callback) {
                 substepRunner.run(subStep, function (err, subStep) {
-                    logger.info('Substep is finished running: ' + subStep.id + ' status: ' + subStep.status);
+                    if(!err){
+                        logger.info('Substep is finished running: ' + subStep.id + ' status: ' + subStep.status);
+                    }
                     statusHolder.updateSubStepsToRunCount(workflowService, -1);
-
                     self.checkForContinue(err, subStep, function (err) {
                         callback(err, subStep);
                     });
@@ -273,6 +300,7 @@ function Runner() {
                         if(success == true){
                             self.tryToFinishWorkflow(function () {
                                 logger.debug('Tried to finish workflow id: ' + workflow.id + ' Status: ' + workflow.status);
+                                callback(err);
                             });
                         }
                     });

@@ -7,12 +7,13 @@ var fs = require('fs');
 var Resource = require(__base + 'src/service/dao/sql').Resource;
 var FileUtil = require(__base + 'src/util/fileUtil');
 
-function ResourceCreator(sourceResource, workflowService, resourceIndex){
+function ResourceCreator(sourceResource, workflowService, resourceIndex, project){
     var self = this;
 
     this.sourceResource = sourceResource;
     this.workflowService = workflowService;
     this.resourceIndex = resourceIndex;
+    this.project = project;
 
     var encoding = 'utf-8';
     var resourceFilename;
@@ -48,23 +49,37 @@ function ResourceCreator(sourceResource, workflowService, resourceIndex){
 
     this._getNewResource = function( cb ){
 
-        var data = {
-            resourceTypeId: self.sourceResource.resourceTypeId,
-            filename: resourceFilename,
-            contentType: self.sourceResource.contentType,
-            encoding: self.sourceResource.encoding,
-            name: self.getOriginalName(),
-            originalName: self.getOriginalName()
-        };
+        async.waterfall([
+            function collectData(callback) {
+                var data = {
+                    resourceTypeId: self.sourceResource.resourceTypeId,
+                    filename: resourceFilename,
+                    contentType: self.sourceResource.contentType,
+                    encoding: self.sourceResource.encoding,
+                    name: self.getOriginalName(),
+                    originalName: self.getOriginalName()
+                };
+                callback(null, data);
+            },
+            function createResource(data, callback) {
 
-        var resource = Resource.build(data);
-        resource.save().then(function(resource) {
-            logger.debug('Resource created');
-            cb(null, resource);
-        }).catch(function (err) {
-            logger.error(err);
-            cb(err.message);
-        });
+                var resource = Resource.build(data);
+                resource.save().then(function(resource) {
+                    logger.debug('Resource created');
+                    callback(null, resource);
+                }).catch(function (err) {
+                    logger.error(err);
+                    callback(err.message);
+                });
+            },
+            function addResourceToProject(resource, callback) {
+                project.addResource(resource).then(function () {
+                    callback(null, resource);
+                }).catch(function (err) {
+                    callback(err.message);
+                });
+            }
+        ], cb);
     };
 
     this._getNewResourceFilename = function (resource, workflowService, index, cb) {

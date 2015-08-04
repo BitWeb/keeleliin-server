@@ -14,7 +14,7 @@ var config = require(__base + 'config');
 var FileUtil = require('./../../../util/fileUtil');
 
 
-function SubStepRunner(){
+function SubStepRunner(project, workflow){
 
     var self = this;
 
@@ -99,24 +99,22 @@ function SubStepRunner(){
 
 
     this._finishSubstepRequest = function (substep, dto, response, cb) {
-        var files =  response.response.data.files;
-        async.waterfall([
-            function getWorkflowId(wfCallback) {
-                substep.getWorkflowService().then(function (workflowService) {
-                    wfCallback(null, workflowService.workflowId);
-                }).catch(wfCallback);
-            },
-            function loadOutputResources(workflowId, wfCallback) {
-                async.eachSeries(
-                    files,
-                    function iterator(fileData, callback) {
-                        self.getSubstepOutputResourceType(substep, fileData, function (err, resourceType) {
-                           if(err) return callback(null, substep); //SKIP if not used
 
-                            var outputPath = self.getOutputResourcePath(substep, fileData, workflowId);
+        var filesData = response.response.data.files;
+
+        async.waterfall([
+            function loadOutputResources(wfCallback) {
+                async.eachSeries(
+                    filesData,
+                    function iterator(fileData, callback) {
+
+                        self.getSubstepOutputResourceType(substep, fileData, function (err, resourceType) {
+                            if(err) return callback(null, substep); //SKIP if not used
+
+                            var outputPath = self.getOutputResourcePath(substep, fileData);
                             var requestSessionId = response.response.sessionId;
                             apiService.loadRequestResponse(dto, requestSessionId, fileData, outputPath, function (err) {
-                                self.addSubstepOutputResource(substep, outputPath, fileData, resourceType, function (err, updatedSubstep) {
+                                self._addSubstepOutputResource(substep, outputPath, fileData, resourceType, function (err, updatedSubstep) {
                                     substep = updatedSubstep;
                                     logger.debug('Output resource added: ' +  updatedSubstep.id);
                                     callback(err, substep);
@@ -125,13 +123,19 @@ function SubStepRunner(){
                         });
                     },
                     function done( err ) {
-                    wfCallback(err, substep);
-                });
+                        wfCallback(err);
+                    }
+                );
             },
-            function setFinishStatus(substep, wfCallback) {
+            function setFinishStatus(wfCallback) {
                 self._updateSubstepFinishStatus(substep, Workflow.statusCodes.FINISHED, wfCallback);
             }
         ], function (err, data) {
+            if(err){
+                return self._updateSubstepFinishStatus(substep, Workflow.statusCodes.FINISHED, function () {
+                    logger.error('Substep finished with error:' + err);
+                });
+            }
             logger.debug('Finished: ' + substep.id);
             cb(err, data);
         });
@@ -145,14 +149,14 @@ function SubStepRunner(){
         }).catch(cb);
     };
 
-    this.getOutputResourcePath = function ( substep, fileData, workflowId) {
+    this.getOutputResourcePath = function ( substep, fileData) {
 
         var rootLocation = config.resources.location;
         if (!fs.existsSync( rootLocation )) {
             fs.mkdirSync( rootLocation );
         }
 
-        var location = '/workflow_' + workflowId;
+        var location = '/workflow_' + workflow.id;
         if (!fs.existsSync( rootLocation + location )) {
             fs.mkdirSync( rootLocation + location );
         }
@@ -160,7 +164,7 @@ function SubStepRunner(){
         return location + '/substep_' + substep.id + '_' + fileData.key;
     };
 
-    this.addSubstepOutputResource = function (substep, outputPath, fileData, resourceType, cb) {
+    this._addSubstepOutputResource = function (substep, outputPath, fileData, resourceType, cb) {
 
         async.waterfall([
             function (callback) {
@@ -187,6 +191,11 @@ function SubStepRunner(){
             },
             function addSubstepResource(resource, callback) {
                 substep.addOutputResource(resource).then(function () {
+                    callback(null, resource);
+                });
+            },
+            function addProjectResource(resource, callback) {
+                project.addResource(resource).then(function () {
                     callback(null, substep);
                 });
             }
@@ -242,8 +251,6 @@ function SubStepRunner(){
             }
         ], cb );
     };
-
-
 }
 
-module.exports = new SubStepRunner();
+module.exports = SubStepRunner;
