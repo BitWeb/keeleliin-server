@@ -5,6 +5,7 @@
 var logger = require('log4js').getLogger('workflow_service');
 
 var async = require('async');
+var projectService = require(__base + 'src/service/projectService');
 var resourceService = require(__base + 'src/service/resourceService');
 var workflowDaoService = require(__base + 'src/service/dao/workflowDaoService');
 var workflowDefinitionService = require(__base + 'src/service/workflowDefinitionService');
@@ -181,24 +182,31 @@ function WorkflowService() {
     this.getProjectWorkflowsList = function(req, projectId, callback) {
 
         logger.debug('Get project workflows list');
-        return workflowDaoService.getProjectWorkflowsList(projectId, function (err, workflows) {
-            var dto = [];
-            for(i in workflows){
-                var item = workflows[i];
 
-                var dtoItem = {
-                    id: item.id,
-                    name: item.name,
-                    status: item.status,
-                    datetimeCreated: item.datetimeCreated,
-                    datetimeStart: item.datetimeStart,
-                    datetimeEnd: item.datetimeEnd,
-                    progress: (item.workflowServices.filter(function(value){return value.status == 'FINISHED';}).length * 100) / item.workflowServices.length
-                };
-                dto.push(dtoItem);
+        projectService.getProject(req, projectId, function(err, project) {
+            if (err) {
+                return callback(err);
             }
-            callback(err, dto);
+            workflowDaoService.getProjectWorkflowsList(project.id, function (err, workflows) {
+                var dto = [];
+                for(i in workflows){
+                    var item = workflows[i];
+
+                    var dtoItem = {
+                        id: item.id,
+                        name: item.name,
+                        status: item.status,
+                        datetimeCreated: item.datetimeCreated,
+                        datetimeStart: item.datetimeStart,
+                        datetimeEnd: item.datetimeEnd,
+                        progress: (item.workflowServices.filter(function(value){return value.status == 'FINISHED';}).length * 100) / item.workflowServices.length
+                    };
+                    dto.push(dtoItem);
+                }
+                return callback(err, dto);
+            });
         });
+
     };
 
 

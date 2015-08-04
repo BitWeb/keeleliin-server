@@ -18,33 +18,28 @@ router.get('/:workflowId', function(req, res) {
 
 router.put('/:workflowId/cancel', function(req, res) {
     workflowService.setWorkflowStatusCanceled(req, req.params.workflowId, function(err, workflow) {
-        if (err) return res.status(403).send({errors: err});
-        return res.send(workflow);
+        return res.sendApiResponse(req, res, err, workflow);
     });
 });
 
 router.get('/service/:workflowServiceId/params', function(req, res) {
 
     workflowService.getWorkflowServiceParamValues(req, req.params.workflowServiceId, function(err, workflowServiceParamValues) {
-        if (err) return res.status(403).send({errors: err});
-
-        return res.send(workflowServiceParamValues);
+        return res.sendApiResponse(req, res, err, workflowServiceParamValues);
     });
 });
 
 router.post('/', function(req, res) {
     var workflowBuilder = new WorkflowBuilder();
     workflowBuilder.create( req.body, function (err, workflow) {
-        if(err) return res.status(403).send({errors: err});
-        res.send( workflow );
+        return res.sendApiResponse(req, res, err, workflow);
     });
 });
 
 router.get('/run/:workflowId', function(req, res) {
     var workflowRunner = new WorkflowRunner();
     workflowRunner.run(req.params.workflowId, function(err, data){
-        if(err) return res.status(403).send({errors: err});
-        res.send(data);
+        return res.sendApiResponse(req, res, err, data);
     });
 });
 

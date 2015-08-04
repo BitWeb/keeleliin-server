@@ -6,7 +6,9 @@ module.exports = {
         logger.error('Error 500 happened', err);
         res.status(err.status || 500);
         res.send({
-            errors: err.message
+            data: null,
+            errors: err.message,
+            statusCode: res.statusCode
         });
     },
 
@@ -15,7 +17,9 @@ module.exports = {
         logger.debug('Error 404 happened');
         res.status(404);
         res.send({
-            errors: 'Lehekülge ei leitud'
+            data: null,
+            errors: 'Lehekülge ei leitud',
+            statusCode: res.statusCode
         });
     }
 };

@@ -22,6 +22,7 @@ var http = require('http');
 var config = require('./../config');
 var sessionMiddleware = require('./../middlewares/session');
 var sessionDebugger = require('./../middlewares/sessionDebugger');
+var jsonApiResponseMiddleware = require('./../middlewares/jsonApiResponse');
 var controllers = require('./../controllers/index');
 var routerMiddleware = require('./../middlewares/router');
 var errorhandlerMiddleware = require('./../middlewares/errorhandler');
@@ -43,6 +44,7 @@ app.use(routerMiddleware);
 
 app.use(sessionMiddleware);
 app.use(sessionDebugger);
+app.use(jsonApiResponseMiddleware);
 app.use(controllers);
 app.use(errorhandlerMiddleware.error404);
 app.use(errorhandlerMiddleware.common);

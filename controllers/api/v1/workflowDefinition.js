@@ -9,94 +9,68 @@ var workflowDefinitionService = require(__base + 'src/service/workflowDefinition
 router.get('/:workflowDefinitionId', function(req, res) {
 
     workflowDefinitionService.getWorkflowDefinition(req, req.params.workflowDefinitionId, function(err, workflowDefinition) {
-        if (err) {
-            return res.send({errors: err});
+        if (!workflowDefinition) {
+            res.status(404);
         }
-
-        return res.send(workflowDefinition);
+        return res.sendApiResponse(req, res, err, workflowDefinition);
     });
 });
 
 router.get('/projectId/:projectId', function(req, res) {
 
     workflowDefinitionService.getWorkflowDefinitionsByProject(req, req.params.projectId, function(err, workflowDefinitions) {
-        if (err) {
-            return res.send({errors: err});
-        }
-        return res.send(workflowDefinitions);
+        return res.sendApiResponse(req, res, err, workflowDefinitions);
     });
 });
 
 router.get('/service/:workflowDefinitionServiceId/params', function(req, res) {
 
     workflowDefinitionService.getWorkflowDefinitionServiceParamValues(req, req.params.workflowDefinitionServiceId, function(err, workflowDefinitionServiceParamValues) {
-        if (err) {
-            return res.send({errors: err});
-        }
-        return res.send(workflowDefinitionServiceParamValues);
+        return res.sendApiResponse(req, res, err, workflowDefinitionServiceParamValues);
     });
 });
 
 router.post('/projectId/:projectId', function(req, res) {
     workflowDefinitionService.createWorkflowDefinition(req, req.params.projectId, req.body, function(err, workflowDefinion) {
-        if (err) {
-            return res.send({errors: err});
-        }
-
-        return res.send({id: workflowDefinion.id, date_created: workflowDefinion.date_created});
+        return res.sendApiResponse(req, res, err, workflowDefinion);
     });
 });
 
 router.put('/:workflowDefinitionId', function(req, res) {
 
     return workflowDefinitionService.saveWorkflowDefinition(req, req.params.workflowDefinitionId, req.body, function(err, workflowDefinition) {
-        if (err) {
-            return res.send(err);
-        }
-
-        return res.send({id: workflowDefinition.id, date_updated: workflowDefinition.date_updated});
+        return res.sendApiResponse(req, res, err, workflowDefinitionServiceModel);
     });
 });
 
 router.get('/service/:workflowDefinitionServiceId', function(req, res) {
 
     workflowDefinitionService.getWorkflowDefinitionServiceModel(req, req.params.workflowDefinitionServiceId, function(err, workflowDefinitionServiceModel) {
-        if (err) {
-            return res.send(err);
+        if (!workflowDefinitionServiceModel) {
+            res.status(404);
         }
-
-        return res.send(workflowDefinitionServiceModel);
+        return res.sendApiResponse(req, res, err, workflowDefinitionServiceModel);
     });
 });
 
 router.post('/:workflowDefinitionId/service', function(req, res) {
 
     workflowDefinitionService.createWorkflowDefinitionServiceModel(req, req.params.workflowDefinitionId, req.body, function(err, workflowDefinitionServiceModel) {
-        if (err) {
-            return res.send(err);
-        }
-
-        return res.send(workflowDefinitionServiceModel);
+        return res.sendApiResponse(req, res, err, workflowDefinitionServiceModel);
     });
 });
 
 router.delete('/service/:workflowDefinitionServiceId', function(req, res) {
 
     workflowDefinitionService.removeWorkflowDefinitionServiceModel(req, req.params.workflowDefinitionServiceId, function(err) {
-        if (err) {
-            return res.send(err);
-        }
-        return res.send();
+        return res.sendApiResponse(req, res, err);
     });
 });
 
 router.post('/:workflowDefinitionId/sort', function(req, res) {
 
     workflowDefinitionService.sortWorkflowDefinitionServices(req, req.body.idsString, function(err) {
-        if (err) {
-            return res.send(err);
-        }
-        return res.send();
+        return res.sendApiResponse(req, res, err);
     });
 });
 

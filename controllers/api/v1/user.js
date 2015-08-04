@@ -13,9 +13,9 @@ var userService = require('../../../src/service/userService');
 router.get('/', authMiddleware, function( req, res ) {
     userService.getCurrentUser(req, function (error, user) {
         if(error){
-            return res.status(401).send(error);
+            res.status(401);
         }
-        return res.send(user);
+        return res.sendApiResponse(req, res, error, user);
     });
 });
 

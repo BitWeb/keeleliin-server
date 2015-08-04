@@ -11,26 +11,21 @@ var config = require(__base + 'config');
 router.get('/', function(req, res) {
 
     resourceService.getResources(req, function(error, resources) {
-        if (error) {
-            return res.status(404).send({errors: error});
-        }
-        return res.send(resources);
+        return res.sendApiResponse(req, res, error, resources);
     });
 });
 
 router.get('/:resourceId', function(req, res) {
     resourceService.getResource(req, req.params.resourceId, function(error, resource) {
-        if (error || !resource) {
-            return res.status(404).send({errors: 'Resource not found'});
-        }
-        return res.send(resource);
+        return res.sendApiResponse(req, res, error, resource);
     });
 });
 
 router.get('/download/:resourceId', function(req, res) {
     resourceService.getResource(req, req.params.resourceId, function(error, resource) {
         if (error || !resource) {
-            return res.status(404).send({errors: 'Resource not found'});
+            res.status(404);
+            return sendApiResponse(req, res, 'Resource not found', resource);
         }
         fs.createReadStream(config.resources.location + resource.filename).pipe(res);
     });
@@ -39,7 +34,8 @@ router.get('/download/:resourceId', function(req, res) {
 router.get('/download/concat/:resourceIds', function(req, res) {
     resourceService.getConcatedResourcePath(req, req.params.resourceIds, function(error, concatPath) {
         if (error) {
-            return res.status(404).send({errors: error});
+            res.status(404);
+            return sendApiResponse(req, res, error);
         }
         var readStream = fs.createReadStream( concatPath );
         readStream.pipe(res);

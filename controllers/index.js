@@ -64,8 +64,8 @@ res.send('asd');
     ////////////
     var workflowRunner;
     var initData = {
-        "projectId": 1,
-        "workflowDefinitionId": 1,
+        "project_id": 1,
+        "workflow_definition_id": 1,
         "resources": [85]
     };
 

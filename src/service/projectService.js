@@ -11,6 +11,9 @@ function ProjectService(){
 
     this.getProject = function(req, projectId, callback) {
         Project.find({ where: { id: projectId }}).then(function(project) {
+            if (!project) {
+                return callback('Project not found.');
+            }
             return callback(null, project);
         }).catch(function(error) {
             return callback(error);

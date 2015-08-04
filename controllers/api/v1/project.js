@@ -11,37 +11,36 @@ var projectService = require('../../../src/service/projectService');
 router.get('/', function(req, res) {
 
     projectService.getCurrentUserProjectsList(req, function (err, projects) {
-        return res.send(projects);
+        return res.sendApiResponse(req, res, err, projects);
     });
 });
 
 router.get('/:id', function(req, res) {
 
     projectService.getCurrentUserProject(req, req.params.id, function (error, project) {
-        if(error){
-            return res.status(400).send({errors: 'Project not found'});
+        if(!project){
+            res.status(404);
+            return res.sendApiResponse(req, res, error, project);
         }
-        return res.send(project);
+        return res.sendApiResponse(req, res, error, project);
     });
 });
 
 router.put('/:id', function(req, res) {
 
     projectService.updateCurrentUserProject(req, req.params.id, req.body, function (error, project) {
-        if(error){
-            return res.status(400).send({errors: error});
+        if(error && !project){
+            res.status(404);
+            return res.sendApiResponse(req, res, error, project);
         }
-        return res.send(project);
+        return res.sendApiResponse(req, res, error, project);
     });
 });
 
 router.post('/', function(req, res) {
 
     projectService.createCurrentUserProject(req, req.body, function (error, project) {
-        if(error){
-            return res.status(400).send({errors: error});
-        }
-        return res.send(project);
+        return res.sendApiResponse(req, res, error, project);
     });
 });
 
@@ -49,19 +48,16 @@ router.delete('/:id', function(req, res) {
 
     projectService.deleteCurrentUserProject(req, req.params.id, function (error) {
         if(error){
-            return res.status(400).send({errors: error});
+            res.status(400);
         }
-        return res.send( { success: true } );
+        return res.sendApiResponse(req, res, error);
     });
 });
 
 router.get('/:projectId/workflows', function(req, res) {
 
-    workflowService.getProjectWorkflowsList(req, req.params.projectId, function(err, workflows) {
-        if (err) {
-            return res.send(err);
-        }
-        return res.send(workflows);
+    workflowService.getProjectWorkflowsList(req, req.params.projectId, function(error, workflows) {
+        return res.sendApiResponse(req, res, error, workflows);
     });
 });
 
