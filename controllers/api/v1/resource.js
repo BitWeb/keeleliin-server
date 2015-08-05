@@ -25,7 +25,7 @@ router.get('/download/:resourceId', function(req, res) {
     resourceService.getResource(req, req.params.resourceId, function(error, resource) {
         if (error || !resource) {
             res.status(404);
-            return sendApiResponse(req, res, 'Resource not found', resource);
+            return res.sendApiResponse(req, res, 'Resource not found', resource);
         }
         fs.createReadStream(config.resources.location + resource.filename).pipe(res);
     });
@@ -35,7 +35,7 @@ router.get('/download/concat/:resourceIds', function(req, res) {
     resourceService.getConcatedResourcePath(req, req.params.resourceIds, function(error, concatPath) {
         if (error) {
             res.status(404);
-            return sendApiResponse(req, res, error);
+            return res.sendApiResponse(req, res, error);
         }
         var readStream = fs.createReadStream( concatPath );
         readStream.pipe(res);
@@ -46,7 +46,7 @@ router.get('/download/concat/:resourceIds', function(req, res) {
     });
 });
 
-router.post('/upload/:projectId?', function(req, res) {
+router.post('/:projectId?', function(req, res) {
     resourceService.createResource(req, function(err, resource) {
         if (err) {
             return res.send({errors: err});
