@@ -41,6 +41,15 @@ module.exports = function(sequelize, DataTypes) {
             },
             field: 'resource_type_id'
         },
+        workflowServiceSubstepId: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            references: {
+                model: 'workflow_service_substep',
+                key: 'id'
+            },
+            field: 'workflow_service_substep_id'
+        },
         filename: {
             type: DataTypes.STRING,
             allowNull: true,
@@ -141,10 +150,8 @@ module.exports = function(sequelize, DataTypes) {
                         as: 'inputSubsteps'
                     }
                 );
-                Resource.belongsToMany(models.WorkflowServiceSubstep, {
-                        through: 'workflow_service_substep_has_output_resource',
-                        foreignKey: 'resource_id',
-                        otherKey: 'workflow_service_substep_id',
+                Resource.belongsTo(models.WorkflowServiceSubstep, {
+                        foreignKey: 'workflowServiceSubstepId',
                         as: 'outputSubsteps'
                     }
                 );

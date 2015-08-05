@@ -70,6 +70,9 @@ module.exports = function(sequelize, DataTypes) {
                         foreignKey: 'workflowServiceId',
                         as: 'workflowService'}
                 );
+                WorkflowServiceSubstep.hasMany(models.Resource, {
+                    as: 'outputResources'}
+                );
                 WorkflowServiceSubstep.belongsTo(models.WorkflowServiceSubstep, {
                     foreignKey: 'prevSubstepId',
                     as: 'prevSubstep'
@@ -78,11 +81,6 @@ module.exports = function(sequelize, DataTypes) {
                         through: 'workflow_service_substep_has_input_resource',
                         foreignKey: 'workflow_service_substep_id',
                         as: 'inputResources'}
-                );
-                WorkflowServiceSubstep.belongsToMany(models.Resource, {
-                        through: 'workflow_service_substep_has_output_resource',
-                        foreignKey: 'workflow_service_substep_id',
-                        as: 'outputResources'}
                 );
             }
         }

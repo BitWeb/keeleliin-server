@@ -96,7 +96,7 @@ function ResourceService() {
             },
 
             function(project, resourceType, callback) {
-                var projectLocation = (project != null ? '/' + project.id : ''),
+                var projectLocation = (project != null ? '/project_' + project.id : ''),
                     hash = uniqid(),
                     parsedUrl = urlHelper.parse(url),
                     fileName = hash + path.extname(url),
@@ -183,7 +183,7 @@ function ResourceService() {
                     var hash = uniqid(),
                         fileName = hash + path.extname(resourceFile.name),
                         originalFileName = path.basename(resourceFile.name),
-                        projectLocation = (project != null ? '/' + project.id : ''),
+                        projectLocation = (project != null ? '/project_' + project.id : ''),
                         resourceFileLocation = config.resources.location + projectLocation;
 
                     if (!fs.existsSync(config.resources.location )) {

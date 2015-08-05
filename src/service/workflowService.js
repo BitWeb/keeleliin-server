@@ -35,7 +35,8 @@ function WorkflowService() {
                         'status',
                         'datetimeCreated',
                         'datetimeStart',
-                        'datetimeEnd'
+                        'datetimeEnd',
+                        'projectId'
                     ],
                     where: {
                         id: workflowId
