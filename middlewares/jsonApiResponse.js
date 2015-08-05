@@ -7,10 +7,18 @@ module.exports = function(req, res, next) {
         data = data || null;
         err = err || null;
 
+        var errorMessage = null,
+            errorCode = null;
+
+        if (err) {
+            errorMessage = (err.message !== undefined ? err.message : err);
+            errorCode = (err.code !== undefined ? err.code : res.statusCode);
+        }
+
         res.send({
             data: data,
-            errors: err,
-            statusCode: res.statusCode
+            errors: errorMessage,
+            statusCode: errorCode
         });
     };
     next();

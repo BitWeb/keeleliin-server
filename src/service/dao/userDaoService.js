@@ -28,12 +28,22 @@ function UserDaoService() {
             }
 
             return callbac(null, userResult.result.user);
+        }).catch(function(error) {
+            return callback({
+                message: error.message,
+                code: 500
+            });
         });
     };
 
     this.getUserByEntuId = function (id, callback) {
         User.find({where:{entuId:id}}).then(function (user) {
             callback(null, user);
+        }).catch(function(error) {
+            return callback({
+                message: error.message,
+                code: 500
+            });
         });
     };
 
@@ -43,12 +53,22 @@ function UserDaoService() {
                 callback("Not found");
             }
             callback(null, user);
+        }).catch(function(error) {
+            return callback({
+                message: error.message,
+                code: 500
+            });
         });
     };
 
     this.create = function (params, callback) {
         User.create(params).then(function (user) {
             callback(null, user);
+        }).catch(function(error) {
+            return callback({
+                message: error.message,
+                code: 500
+            });
         });
     };
 }

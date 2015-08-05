@@ -41,13 +41,13 @@ app.use(bodyParser.json({limit: '1000mb'})); // for parsing application/json
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(routerMiddleware);
-
 app.use(sessionMiddleware);
 app.use(sessionDebugger);
 app.use(jsonApiResponseMiddleware);
 app.use(controllers);
 app.use(errorhandlerMiddleware.error404);
 app.use(errorhandlerMiddleware.common);
+
 /**
  * Create HTTP server.
  */

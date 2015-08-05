@@ -40,6 +40,11 @@ function WorkflowDaoService() {
             }
         }).then(function(workflowDefinitionServiceModels) {
             return callback(null, workflowDefinitionServiceModels);
+        }).catch(function(error) {
+            return callback({
+                message: error.message,
+                code: 500
+            });
         });
     };
 
@@ -67,7 +72,10 @@ function WorkflowDaoService() {
         }).then(function(workflows) {
             return callback(null, workflows);
         }).catch(function (err) {
-            return callback(err.message);
+            return callback({
+                message: error.message,
+                code: 500
+            });
         });
     };
 };

@@ -96,6 +96,11 @@ function ProjectDaoService() {
                 return callback('Projekti ei leitud');
             }
             return callback(null, result);
+        }).catch(function(error) {
+            return callback({
+                message: error.message,
+                code: 500
+            });
         });
     };
 
@@ -107,6 +112,11 @@ function ProjectDaoService() {
                 return callback('Projekti ei leitud');
             }
             return callback(null, result);
+        }).catch(function(error) {
+            return callback({
+                message: error.message,
+                code: 500
+            });
         });
     }
 }

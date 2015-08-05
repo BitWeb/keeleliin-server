@@ -19,6 +19,11 @@ function WorkflowDefinitionDaoService() {
                 return callback('Not found.');
             }
             return callback(null, workflowDefinition);
+        }).catch(function() {
+            return callback({
+                message: error.message,
+                code: 500
+            });
         });
     };
 
@@ -37,6 +42,11 @@ function WorkflowDefinitionDaoService() {
                 return callback('Not found.');
             }
             return callback(null, workflowDefinition);
+        }).catch(function(error) {
+            return callback({
+                message: error.message,
+                code: 500
+            });
         });
     };
 
@@ -51,6 +61,11 @@ function WorkflowDefinitionDaoService() {
             ]
         }).then(function(workflowDefinitions) {
             return callback(null, workflowDefinitions);
+        }).catch(function(error) {
+            return callback({
+                message: error.message,
+                code: 500
+            });
         });
     };
 
@@ -70,6 +85,11 @@ function WorkflowDefinitionDaoService() {
             }
         }).then(function(workflowDefinitionServiceModels) {
             return callback(null, workflowDefinitionServiceModels);
+        }).catch(function(error) {
+            return callback({
+                message: error.message,
+                code: 500
+            });
         });
     };
 
@@ -102,6 +122,11 @@ function WorkflowDefinitionDaoService() {
             }
 
             return callback(null, workflowDefinitionServiceModel);
+        }).catch(function(error) {
+            return callback({
+                message: error.message,
+                code: 500
+            });
         });
 
     };

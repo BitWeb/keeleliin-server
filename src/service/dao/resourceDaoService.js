@@ -22,6 +22,11 @@ function ResourceDaoService() {
             ]
         }).then(function(resources) {
             return callback(null, resources);
+        }).catch(function(error) {
+            return callback({
+                message: error.message,
+                code: 500
+            });
         });
     };
 
@@ -34,7 +39,10 @@ function ResourceDaoService() {
             return callback(null, resource);
         }).catch(function(error) {
             logger.error(error);
-            return callback(error);
+            return callback({
+                message: error.message,
+                code: 500
+            });
         });
     };
 

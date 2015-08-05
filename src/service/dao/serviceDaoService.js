@@ -32,6 +32,11 @@ function ServiceDaoService() {
                 return callback('Service not found.');
             }
             return callback(null, service);
+        }).catch(function(error) {
+            return callback({
+                message: error.message,
+                code: 500
+            });
         });
     };
 
@@ -56,6 +61,11 @@ function ServiceDaoService() {
             offset: pagination.offset
         }).then(function(services) {
             return callback(null, services);
+        }).catch(function(error) {
+            return callback({
+                message: error.message,
+                code: 500
+            });
         });
     };
 
@@ -80,6 +90,11 @@ function ServiceDaoService() {
             }
         }).then(function(services) {
             return callback(null, services)
+        }).catch(function(error) {
+            return callback({
+                message: error.message,
+                code: 500
+            });
         });
     }
 
