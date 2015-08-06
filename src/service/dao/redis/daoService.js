@@ -28,7 +28,7 @@ var DaoService = function(){
     this.set =  function(key, value, cb){
 
         this.client.set(prefix + key, JSON.stringify(value), function (err, reply) {
-            if(cb != undefined){
+            if(cb){
                 cb(err, reply);
             }
         });

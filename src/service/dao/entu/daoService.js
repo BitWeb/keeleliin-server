@@ -5,11 +5,10 @@ var request = require('request');
 request.debug = true;
 var logger = require('log4js').getLogger('entu_dao_service');
 var config = require(__base + 'config');
-var Base64 = require("crypto-js/enc-base64");
-var Utf8 = require("crypto-js/enc-utf8");
-var HmacSHA1 = require("crypto-js/hmac-sha1");
 
 var DaoService = function(){
+
+    var self = this;
 
     this.getAuthUrl = function( postData, callback ) {
         var options = {
@@ -40,7 +39,7 @@ var DaoService = function(){
             headers : this._getRequestHeaders({})
         };
 
-        request(options, function (error, response, body) {
+        request( options , function (error, response, body) {
             if(error){
                 if(error instanceof Error){
                     error = error.message;
@@ -53,23 +52,6 @@ var DaoService = function(){
             logger.debug('problem with request: ' + e);
             return callback( e, null );
         });
-    };
-
-    this._getSignedData = function(userId, key, data) {
-        if(!userId || !key) return;
-
-        var conditions = [];
-        for(k in data) {
-            conditions.push({k: data[k]});
-        }
-
-        var expiration = new Date();
-        expiration.setMinutes(expiration.getMinutes() + 60);
-
-        data.user = userId;
-        data.policy = Base64.stringify(Utf8.parse(JSON.stringify({expiration: expiration.toISOString(), conditions: conditions})));
-        data.signature = Base64.stringify(HmacSHA1(data.policy, key));
-        return data;
     };
 
     this._getRequestHeaders = function ( meta ) {
@@ -87,10 +69,6 @@ var DaoService = function(){
 
     this.getEntities = function(data, meta, callback){
 
-        if(meta.apiKey){
-            data = this._getSignedData(meta.userId, meta.apiKey, data);
-        }
-
         var options = {
             method  : 'GET',
             uri     : config.entu.apiUrl + 'api2/entity',
@@ -104,7 +82,26 @@ var DaoService = function(){
             logger.debug('problem with request: ' + e);
             return callback( e );
         });
+    };
+
+    this.getEntity = function(id, meta, callback){
+
+        logger.debug('Get entu entity');
+
+        var options = {
+            method  : 'GET',
+            uri     : config.entu.apiUrl + 'api2/entity-' + id,
+            headers : self._getRequestHeaders(meta)
+        };
+
+        request(options, function (error, response, body) {
+            return callback( error, JSON.parse(body) );
+        }).on('error', function(e) {
+            logger.debug('problem with request: ' + e);
+            return callback( e );
+        });
     }
+
 };
 
 module.exports = new DaoService();

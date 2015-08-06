@@ -3,26 +3,14 @@
  */
 
 var daoService = require('../daoService');
-var logger = require('log4js').getLogger('redis_dao_service');
+var logger = require('log4js').getLogger('redis_session');
+var uid = require('uid-safe').sync;
+var async = require('async');
 
 function RedisSession( id, cb ){
     var self = this;
     this.data = {};
     this.id = id;
-
-    this.init = function ( callback ) {
-        daoService.get(self.id, function (err, data) {
-            if(err || data == null || data == undefined){
-                self.data = {id: self.id};
-            } else {
-                self.data = data;
-            }
-
-            logger.debug('DATA GOT ON INIT');
-            logger.debug(self.data);
-            callback();
-        });
-    };
 
     this.save = function (callback) {
         logger.debug('SAVE: ' + self.id);
@@ -34,7 +22,28 @@ function RedisSession( id, cb ){
         daoService.delete(self.id, callback);
     };
 
-    this.init( cb );
+    async.waterfall([
+        function (callback) {
+            if( !self.id ){
+                self.id = uid(24);
+                logger.info('New session: ' + self.id);
+            }
+            callback();
+        },
+        function (callback) {
+            daoService.get(self.id, function (err, data) {
+                if(err || data == null || data == undefined){
+                    self.data = {id: self.id};
+                } else {
+                    self.data = data;
+                }
+
+                logger.debug('DATA GOT ON INIT');
+                logger.debug(self.data);
+                callback();
+            });
+        }
+    ], cb);
 }
 
 module.exports = RedisSession;

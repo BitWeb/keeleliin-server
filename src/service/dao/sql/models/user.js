@@ -6,10 +6,11 @@
 module.exports = function(sequelize, DataTypes) {
 
     var User = sequelize.define("User", {
-        entu_id: {
+        entuId: {
             type: DataTypes.INTEGER,
             allowNull: false,
-            primaryKey: false
+            primaryKey: false,
+            field: 'entu_id'
         },
         email: {
             type: DataTypes.STRING,
@@ -21,6 +22,11 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: false,
             primaryKey: false
         },
+        displaypicture: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            primaryKey: false
+        },
         createdAt: {
             type: DataTypes.DATE,
             field: 'created_at'
@@ -28,20 +34,26 @@ module.exports = function(sequelize, DataTypes) {
         updatedAt: {
             type: DataTypes.DATE,
             field: 'updated_at'
-        },
-        deletedAt: {
-            type: DataTypes.DATE,
-            field: 'deleted_at'
         }
     }, {
         tableName: 'user',
-        timestamps: true,
+        timestamps: false,
         paranoid: true,
         underscored: true,
 
         classMethods: {
             associate: function(models) {
                 User.hasMany(models.Project,{as: 'projects', foreignKey: 'userId'});
+            }
+        },
+        hooks: {
+            beforeCreate: function(resource, options, fn) {
+                resource.createdAt = new Date();
+                fn(null, resource);
+            },
+            beforeUpdate: function(resource, options, fn) {
+                resource.updatedAt = new Date();
+                fn(null, resource);
             }
         }
     });

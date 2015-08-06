@@ -14,29 +14,6 @@ function ResourceDaoService() {
 
     this.getResources = function(query, callback) {
 
-        var andConditions = [];
-
-        if(query.projectId){
-            andConditions.push('project_id = '+ query.projectId);
-        }
-
-        if(query.workflowId){
-            andConditions.push('workflow_id = ' + query.workflowId);
-        }
-
-        if(query.type){
-            if(query.type == 'input'){
-                andConditions.push("context_type = 'input'");
-            } else if(query.type == 'output'){
-                andConditions.push("context_type = 'output'");
-            }
-        }
-
-        var whereCondition = '';
-        if(andConditions.length > 0){
-            whereCondition = ' WHERE ' + andConditions.join(' AND ')
-        }
-
         var resourceHasNoWorkflow =  " SELECT " +
             " resource.id, " +
             " resource.name, " +
@@ -50,7 +27,9 @@ function ResourceDaoService() {
             " LEFT JOIN project_has_resource AS phr ON ( phr.resource_id = resource.id ) " +
             " LEFT JOIN project AS project ON ( phr.project_id = project.id ) " +
             " LEFT JOIN workflow AS workflow ON ( workflow.project_id = project.id )" +
-            " WHERE workflow.id IS NULL ";
+            " WHERE workflow.id IS NULL " +
+            (query.projectId ?  (" AND project.id = " + query.projectId ) : "") +
+            (query.workflowId ?  (" AND workflow.id = " + query.workflowId ) : "");
 
         var resourceIsOutput = " SELECT " +
             " resource.id, " +
@@ -67,9 +46,11 @@ function ResourceDaoService() {
             " LEFT JOIN workflow AS workflow ON ( workflow.id = outputWfService.workflow_id ) " +
             " LEFT JOIN project_has_resource AS phr ON ( phr.resource_id = resource.id ) " +
             " LEFT JOIN project AS project ON ( project.id = phr.project_id ) " +
-            " WHERE workflow.project_id = project.id ";
+            " WHERE workflow.project_id = project.id " +
+            (query.projectId ?  (" AND project.id = " + query.projectId ) : "") +
+            (query.workflowId ?  (" AND workflow.id = " + query.workflowId ) : "");
 
-        var resourceIsWfInput = " SELECT " +
+        var resourceIsWorkflowInput = " SELECT " +
             " resource.id, " +
             " resource.name, " +
             " resource.created_at as created_at, " +
@@ -83,7 +64,34 @@ function ResourceDaoService() {
             " LEFT JOIN workflow AS workflow ON ( workflow.id = workflowInput.workflow_id ) " +
             " LEFT JOIN project_has_resource AS phr ON ( phr.resource_id = resource.id ) " +
             " LEFT JOIN project AS project ON ( project.id = phr.project_id ) " +
-            " WHERE workflow.project_id = project.id ";
+            " WHERE workflow.project_id = project.id " +
+            (query.projectId ?  (" AND project.id = " + query.projectId ) : "") +
+            (query.workflowId ?  (" AND workflow.id = " + query.workflowId ) : "");
+
+        //Exclude some sub queries
+        var queries = [];
+        if(!query.workflowId || query.type != 'output'){
+            queries.push( resourceHasNoWorkflow );
+        }
+        if(query.type != 'input'){
+            queries.push( resourceIsOutput );
+        }
+        if(query.type != 'output') {
+            queries.push(resourceIsWorkflowInput);
+        }
+
+        var andConditions = [];
+        if(query.type){
+            if(query.type == 'input'){
+                andConditions.push("context_type = 'input'");
+            } else if(query.type == 'output'){
+                andConditions.push("context_type = 'output'");
+            }
+        }
+        var whereCondition = '';
+        if(andConditions.length > 0){
+            whereCondition = ' WHERE ' + andConditions.join(' AND ')
+        }
 
         var totalQuery = " SELECT " +
             " id, " +
@@ -94,7 +102,7 @@ function ResourceDaoService() {
             " workflow_id, " +
             " workflow_name, " +
             " context_type " +
-            " FROM ( (" + resourceHasNoWorkflow + ") UNION ALL (" + resourceIsOutput + ") UNION ALL (" + resourceIsWfInput + ") ) as resource " +
+            " FROM ( " + queries.join(" UNION ALL ") + " ) as resource " +
             whereCondition +
             " ORDER BY id; ";
 
