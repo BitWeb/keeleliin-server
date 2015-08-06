@@ -22,9 +22,9 @@ function UserDaoService() {
     this.findById = function (id, callback) {
         User.find({where:{id:id}}).then(function (user) {
             if(!user){
-                callback("Not found");
+                return callback("User not found");
             }
-            callback(null, user);
+            return callback(null, user);
         }).catch(function(error) {
             return callback({
                 message: error.message,

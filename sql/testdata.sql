@@ -69,3 +69,5 @@ INSERT INTO workflow_definition_service_param_value (workflow_definition_service
 SELECT 1 FROM workflow_definition_service_param_value WHERE workflow_definition_service_param_value.id = 5);
 INSERT INTO workflow_definition_service_param_value (workflow_definition_service_id, service_param_id) SELECT 6, 6 WHERE NOT EXISTS (
 SELECT 1 FROM workflow_definition_service_param_value WHERE workflow_definition_service_param_value.id = 6);
+
+INSERT INTO "user" (entu_id, email, name, created_at, updated_at) SELECT 3, 'taivo.teder@gmail.com', 'taivo1', now(), now() WHERE NOT EXISTS (SELECT 1 FROM "user" WHERE "user".email = 'taivo.teder@gmail.com');

@@ -1,31 +1,18 @@
-/**
- * Created by priit on 9.06.15.
- */
 "use strict";
 
 module.exports = function(sequelize, DataTypes) {
 
-    var User = sequelize.define("User", {
-        entuId: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-            primaryKey: false,
-            field: 'entu_id'
-        },
-        email: {
-            type: DataTypes.STRING,
-            allowNull: true,
-            primaryKey: false
-        },
-        name: {
+    var roles = {
+        ROLE_OWNER : 'owner',
+        ROLE_EDITOR : 'editor',
+        ROLE_VIEWER : 'viewer'
+    };
+
+    var ProjectUser = sequelize.define("projectUser", {
+        role: {
             type: DataTypes.STRING,
             allowNull: false,
-            primaryKey: false
-        },
-        displaypicture: {
-            type: DataTypes.STRING,
-            allowNull: true,
-            primaryKey: false
+            defaultValue: roles.ROLE_EDITOR
         },
         createdAt: {
             type: DataTypes.DATE,
@@ -33,20 +20,19 @@ module.exports = function(sequelize, DataTypes) {
         },
         updatedAt: {
             type: DataTypes.DATE,
-            field: 'updated_at'
+            field: 'updatedAt'
         }
     }, {
-        tableName: 'user',
+        tableName: 'project_user',
         timestamps: false,
         paranoid: true,
         underscored: true,
 
         classMethods: {
             associate: function(models) {
-                User.belongsToMany(models.Project, {as: 'userProjects', through: models.ProjectUser, foreignKey: 'user_id'});
-                User.hasMany(models.Project,{as: 'projects', foreignKey: 'userId'});
             }
         },
+
         hooks: {
             beforeCreate: function(resource, options, fn) {
                 resource.createdAt = new Date();
@@ -59,5 +45,7 @@ module.exports = function(sequelize, DataTypes) {
         }
     });
 
-    return User;
+    ProjectUser.roles = roles;
+
+    return ProjectUser;
 };

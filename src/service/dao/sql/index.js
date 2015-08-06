@@ -16,6 +16,7 @@ var db = {};
 
 db['User'] = sequelize.import('./models/user');
 db['Project'] = sequelize.import('./models/project');
+db['ProjectUser'] = sequelize.import('./models/project/projectUser');
 db['Resource'] = sequelize.import('./models/resource');
 db['ResourceType'] = sequelize.import('./models/resource/resourceType');
 

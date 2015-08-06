@@ -4,6 +4,7 @@
 var logger = require('log4js').getLogger('project_dao_service');
 var Project = require(__base + 'src/service/dao/sql').Project;
 var User = require(__base + 'src/service/dao/sql').User;
+var ProjectUser = require(__base + 'src/service/dao/sql').ProjectUser;
 
 function ProjectDaoService() {
 
@@ -86,6 +87,14 @@ function ProjectDaoService() {
             include: [{
                 model:User,
                 as: 'user',
+                attributes: [
+                    'id',
+                    'name'
+                ]
+            },
+            {
+                model: User,
+                as: 'projectUsers',
                 attributes: [
                     'id',
                     'name'

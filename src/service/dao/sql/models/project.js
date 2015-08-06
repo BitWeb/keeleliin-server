@@ -30,6 +30,12 @@ module.exports = function(sequelize, DataTypes) {
             },
             field: 'user_id'
         },
+        isPrivate: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false,
+            field: 'is_private'
+        },
         createdAt: {
             type: DataTypes.DATE,
             field: 'created_at'
@@ -57,6 +63,7 @@ module.exports = function(sequelize, DataTypes) {
                     foreignKey: 'project_id',
                     otherKey: 'workflow_definition_id'
                 });
+                Project.belongsToMany(models.User, {as: 'projectUsers', through: models.ProjectUser, foreignKey: 'project_id'});
             }
         }
     });

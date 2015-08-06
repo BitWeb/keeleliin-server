@@ -61,4 +61,18 @@ router.get('/:projectId/workflows', function(req, res) {
     });
 });
 
+router.post('/:projectId/addUser', function(req, res) {
+
+    projectService.addProjectUser(req, req.params.projectId, req.body, function(err, project) {
+        return res.sendApiResponse(err, project);
+    });
+});
+
+router.post('/:projectId/removeUser', function(req, res) {
+
+    projectService.removeProjectUser(req, req.params.projectId, req.body, function(err, project) {
+        return res.sendApiResponse(err, project);
+    });
+});
+
 module.exports = router;

@@ -5,9 +5,13 @@
 var logger = require('log4js').getLogger('project_service');
 var projectDaoService = require('./dao/projectDaoService');
 var Project = require(__base + 'src/service/dao/sql').Project;
+var ProjectUser = require(__base + 'src/service/dao/sql').ProjectUser;
 var userService = require('./userService');
+var async = require('async');
 
 function ProjectService(){
+
+    var self = this;
 
     this.getProject = function(req, projectId, callback) {
         Project.find({ where: { id: projectId }}).then(function(project) {
@@ -29,24 +33,23 @@ function ProjectService(){
     this.getCurrentUserProject = function (req, projectId, callback) {
 
         var userId = req.redisSession.data.userId;
+        userId = 1;
         return projectDaoService.getUserProject( userId, projectId, callback);
     };
 
     this.createCurrentUserProject = function(req, updateData, callback){
-
-        console.log("userService");
-        console.log(userService);
-
-
         userService.getCurrentUser(req, function (err, user) {
             if(err){
                 return callback(err);
             }
 
-            var project = Project.build(updateData );
-
-            user.addProject( project).then(function () {
-                return callback(null, project);
+            var project = Project.build(updateData);
+            user.addProject(project).then(function(project) {
+                project.addProjectUser(user, {role: ProjectUser.roles.ROLE_OWNER}).then(function () {
+                    return callback(null, project);
+                }).catch(function (e) {
+                    return callback(e);
+                });
             }).catch(function (e) {
                 return callback(e);
             });
@@ -93,6 +96,155 @@ function ProjectService(){
                 return callback( error.message );
             });
         });
+    };
+
+    this.addProjectUser = function(req, projectId, userData, cb) {
+
+        async.waterfall([
+            function(callback) {
+                userService.getCurrentUser(req, function(err, currentUser) {
+                    if (err) {
+                        return cb(err);
+                    }
+
+                    return callback(null, currentUser);
+                });
+            },
+
+            function(currentUser, callback) {
+                self.getProject(req, projectId, function(err, project) {
+                    if (err) {
+                        return callback(err);
+                    }
+
+                    return callback(null, currentUser, project);
+                });
+            },
+
+            function(currentUser, project, callback) {
+                project.getProjectUsers().then(function(users) {
+                    var isOwner = false;
+                    users.forEach(function(user) {
+
+                        console.log(user);
+                        if (user.id == currentUser.id && user.ProjectUser.role == ProjectUser.roles.ROLE_OWNER) {
+                            isOwner = true;
+                        }
+                    });
+
+                    if (!isOwner) {
+                        return callback({
+                            message: 'Not allowed to add users.'
+                        })
+                    }
+
+                    return callback(null, project);
+                });
+            },
+
+            function(project, callback) {
+                 userService.getUser(req, userData.userId, function(err, user) {
+                     if (err) {
+                         return callback(err);
+                     }
+
+                     project.hasProjectUser(user).then(function(result) {
+                         if (!result) {
+                             var role = (userData.role !== undefined ? userData.role : ProjectUser.roles.ROLE_EDITOR);
+
+                             // Add user
+                             project.addProjectUser(user, {role: role}).then(function(user) {
+                                 return callback(null, project);
+                             });
+                         } else {
+                             return callback('User is already added to this project.');
+                         }
+                     }).catch(function(error) {
+                         return callback({
+                             message: error.message,
+                             code: 500
+                         })
+                     });
+                 });
+            }
+
+        ], cb);
+    };
+
+    this.removeProjectUser = function(req, projectId, userData, cb) {
+
+        async.waterfall([
+            function(callback) {
+                userService.getCurrentUser(req, function(err, currentUser) {
+                    if (err) {
+                        return cb(err);
+                    }
+
+                    return callback(null, currentUser);
+                });
+            },
+
+            function(currentUser, callback) {
+                self.getProject(req, projectId, function(err, project) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    return callback(null, currentUser, project);
+                });
+            },
+
+            function(currentUser, project, callback) {
+                project.getProjectUsers().then(function(users) {
+                    var isOwner = false;
+                    users.forEach(function(user) {
+                        if (user.id == currentUser.id && user.ProjectUser.role == ProjectUser.roles.ROLE_OWNER) {
+                            isOwner = true;
+                        }
+                    });
+
+                    if (!isOwner) {
+                        return callback({
+                            message: 'Not allowed to add users.'
+                        })
+                    }
+
+                    return callback(null, currentUser, project);
+                });
+            },
+
+            function(currentUser, project, callback) {
+                userService.getUser(req, userData.userId, function(err, user) {
+                    if (err) {
+                        return callback(err);
+                    }
+
+                    if (currentUser.id == user.id) {
+                        return callback({
+                            message: 'Owner cannot remove himself.'
+                        })
+                    }
+
+                    project.hasProjectUser(user).then(function(result) {
+                        if (result) {
+                            // Remove user
+                            project.removeProjectUser(user).then(function() {
+                                return callback(null, project);
+                            });
+                        } else {
+                            return callback({
+                                message: 'User is not added to this project.'
+                            });
+                        }
+                    }).catch(function(error) {
+                        return callback({
+                            message: error.message,
+                            code: 500
+                        })
+                    });
+                });
+            }
+
+        ], cb);
     }
 }
 
