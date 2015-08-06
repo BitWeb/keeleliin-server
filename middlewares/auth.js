@@ -12,6 +12,11 @@ module.exports = function(req, res, next){
         return next();
     }
 
+    if( !req.redisSession.data.authUrl ){
+        res.status(401);
+        return res.sendApiResponse( 'User not found');
+    }
+
     userService.auth(req, function (error, userId) {
         if(error){
             logger.trace('Auth error', error);

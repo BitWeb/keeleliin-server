@@ -25,6 +25,7 @@ router.put('/:workflowId/cancel', function(req, res) {
 router.get('/service/:workflowServiceId/params', function(req, res) {
 
     workflowService.getWorkflowServiceParamValues(req, req.params.workflowServiceId, function(err, workflowServiceParamValues) {
+
         return res.sendApiResponse( err, workflowServiceParamValues);
     });
 });
@@ -36,9 +37,12 @@ router.post('/', function(req, res) {
     });
 });
 
-router.get('/run/:workflowId', function(req, res) {
+router.get('/:workflowId/run', function(req, res) {
     var workflowRunner = new WorkflowRunner();
     workflowRunner.run(req.params.workflowId, function(err, data){
+        if(err){
+            res.status(403);
+        }
         return res.sendApiResponse( err, data);
     });
 });

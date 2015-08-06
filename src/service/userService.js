@@ -41,23 +41,6 @@ function UserService() {
         });
     };
 
-
-    this.getEntuUser = function (authUrl, token, callbac) {
-
-        return entuDaoService.getUser(authUrl, token, function (error, userResult) {
-            if (error) {
-                logger.debug('Get user error: ', error);
-                return callbac(error);
-            }
-            if (userResult.error) {
-                logger.debug('Get user result error: ', userResult);
-                return callbac(userResult);
-            }
-
-            return callbac(null, userResult.result.user);
-        });
-    };
-
     this.auth = function (request, cb) {
 
         async.waterfall([

@@ -46,17 +46,4 @@ router.get('/logout', function( req, res ) {
     });
 });
 
-router.get('/entu', function( req, res ) {
-
-    var meta = {
-        userId: req.redisSession.data.entuUserId,
-        sessionKey: req.redisSession.data.entuSessionKey
-    };
-    var id = 3021;
-    entuDao.getEntity( id, req, function (err, response) {
-        return res.sendApiResponse( err, response);
-    });
-});
-
-
 module.exports = router;

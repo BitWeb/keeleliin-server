@@ -9,17 +9,22 @@ module.exports = function(req, res, next) {
         err = err || null;
 
         var errorMessage = null,
-            errorCode = null;
+            statusCode = null;
 
         if (err) {
             errorMessage = (err.message !== undefined ? err.message : err);
-            errorCode = (err.code !== undefined ? err.code : res.statusCode);
+            statusCode = (err.code !== undefined ? err.code : null);
         }
+
+        if(statusCode == null){
+            statusCode = res.statusCode
+        }
+
 
         res.send({
             data: data,
             errors: errorMessage,
-            statusCode: errorCode
+            statusCode: statusCode
         });
     };
 
