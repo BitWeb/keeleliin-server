@@ -28,11 +28,6 @@ function UserDaoService() {
             }
 
             return callbac(null, userResult.result.user);
-        }).catch(function(error) {
-            return callback({
-                message: error.message,
-                code: 500
-            });
         });
     };
 

@@ -15,7 +15,7 @@ router.get('/', authMiddleware, function( req, res ) {
         if(error){
             res.status(401);
         }
-        return res.sendApiResponse(req, res, error, user);
+        return res.sendApiResponse( error, user);
     });
 });
 
@@ -26,10 +26,7 @@ router.get('/login/:redirectUrl', function( req, res ) {
         var redirectUrl = req.params.redirectUrl;
 
         userService.getAuthUrl( req, redirectUrl, function (error, url) {
-            if(error){
-                return res.send(error);
-            }
-            res.send({ authUrl: url, token: req.redisSession.id });
+            res.sendApiResponse(error,{ authUrl: url, token: req.redisSession.id });
         });
         return;
     }
@@ -39,8 +36,8 @@ router.get('/login/:redirectUrl', function( req, res ) {
 
 router.get('/logout', function( req, res ) {
 
-    userService.logout( req, function () {
-        res.send( {success: true} );
+    userService.logout( req, function (err) {
+        res.sendApiResponse( err, {success: true} );
     });
 });
 

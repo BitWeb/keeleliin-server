@@ -11,13 +11,13 @@ var config = require(__base + 'config');
 router.get('/', function(req, res) {
 
     resourceService.getResources(req, function(error, resources) {
-        return res.sendApiResponse(req, res, error, resources);
+        return res.sendApiResponse( error, resources);
     });
 });
 
 router.get('/:resourceId', function(req, res) {
     resourceService.getResource(req, req.params.resourceId, function(error, resource) {
-        return res.sendApiResponse(req, res, error, resource);
+        return res.sendApiResponse( error, resource);
     });
 });
 
@@ -25,7 +25,7 @@ router.get('/download/:resourceId', function(req, res) {
     resourceService.getResource(req, req.params.resourceId, function(error, resource) {
         if (error || !resource) {
             res.status(404);
-            return res.sendApiResponse(req, res, 'Resource not found', resource);
+            return res.sendApiResponse( 'Resource not found' );
         }
         fs.createReadStream(config.resources.location + resource.filename).pipe(res);
     });
@@ -35,7 +35,7 @@ router.get('/download/concat/:resourceIds', function(req, res) {
     resourceService.getConcatedResourcePath(req, req.params.resourceIds, function(error, concatPath) {
         if (error) {
             res.status(404);
-            return res.sendApiResponse(req, res, error);
+            return res.sendApiResponse( error);
         }
         var readStream = fs.createReadStream( concatPath );
         readStream.pipe(res);

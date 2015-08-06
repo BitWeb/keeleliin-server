@@ -18,28 +18,28 @@ router.get('/:workflowId', function(req, res) {
 
 router.put('/:workflowId/cancel', function(req, res) {
     workflowService.setWorkflowStatusCanceled(req, req.params.workflowId, function(err, workflow) {
-        return res.sendApiResponse(req, res, err, workflow);
+        return res.sendApiResponse( err, workflow);
     });
 });
 
 router.get('/service/:workflowServiceId/params', function(req, res) {
 
     workflowService.getWorkflowServiceParamValues(req, req.params.workflowServiceId, function(err, workflowServiceParamValues) {
-        return res.sendApiResponse(req, res, err, workflowServiceParamValues);
+        return res.sendApiResponse( err, workflowServiceParamValues);
     });
 });
 
 router.post('/', function(req, res) {
     var workflowBuilder = new WorkflowBuilder();
     workflowBuilder.create( req.body, function (err, workflow) {
-        return res.sendApiResponse(req, res, err, workflow);
+        return res.sendApiResponse( err, workflow);
     });
 });
 
 router.get('/run/:workflowId', function(req, res) {
     var workflowRunner = new WorkflowRunner();
     workflowRunner.run(req.params.workflowId, function(err, data){
-        return res.sendApiResponse(req, res, err, data);
+        return res.sendApiResponse( err, data);
     });
 });
 

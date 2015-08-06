@@ -1,9 +1,10 @@
 /**
  * Created by taivo on 4.08.15.
  */
+var logger = require('log4js').getLogger('api_response_middleware');
 
 module.exports = function(req, res, next) {
-    res.sendApiResponse = function(req, res, err, data) {
+    res.sendApiResponse = function( err, data ) {
         data = data || null;
         err = err || null;
 
@@ -21,5 +22,6 @@ module.exports = function(req, res, next) {
             statusCode: errorCode
         });
     };
+
     next();
 };

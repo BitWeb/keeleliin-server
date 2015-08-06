@@ -9,7 +9,7 @@ var serviceService = require(__base + 'src/service/serviceService');
 router.get('/', function(req, res) {
     serviceService.getServices(req, function(err, services) {
 
-        return res.sendApiResponse(req, res, err, services);
+        return res.sendApiResponse( err, services);
     });
 });
 
@@ -18,19 +18,19 @@ router.get('/:serviceId', function(req, res) {
         if (!service) {
             res.status(404);
         }
-        return res.sendApiResponse(req, res, err, service);
+        return res.sendApiResponse( err, service);
     });
 });
 
 router.post('/', function(req, res) {
     serviceService.createService(req, req.body, function(err, service) {
         if (err) {
-            return res.sendApiResponse(req, res, err, service);
+            return res.sendApiResponse( err, service);
         }
 
         // Get service with persisted data
         serviceService.getService(req, service.id, function(err, service) {
-            return res.sendApiResponse(req, res, err, service);
+            return res.sendApiResponse( err, service);
         });
     });
 });
@@ -42,12 +42,12 @@ router.put('/:serviceId', function(req, res) {
         }
 
         if (err) {
-            return res.sendApiResponse(req, res, err, service);
+            return res.sendApiResponse( err, service);
         }
 
         // Get service with persisted data
         serviceService.getService(req, req.params.serviceId, function(err, service) {
-            return res.sendApiResponse(req, res, err, service);
+            return res.sendApiResponse( err, service);
 
         });
     });
@@ -55,7 +55,7 @@ router.put('/:serviceId', function(req, res) {
 
 router.get('/get-dependent-services/:serviceId', function(req, res) {
     serviceService.getDependentServices(req, req.params.serviceId, function(err, services) {
-        return res.sendApiResponse(req, res, err, services);
+        return res.sendApiResponse( err, services);
     });
 });
 

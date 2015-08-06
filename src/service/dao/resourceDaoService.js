@@ -121,36 +121,6 @@ function ResourceDaoService() {
             });
         });
     };
-
 }
 
 module.exports = new ResourceDaoService();
-
-/*
- SELECT
- resource.id,
- resource.name,
- resource.created_at as created_at,
- project.id AS project_id,
- workflow.id AS workflow_id,
- wfhir.resource_id as input_resource_id,
- outputResource.id AS outputResource
- FROM resource as resource
- LEFT JOIN project_has_resource AS phr ON ( phr.resource_id = resource.id )
- LEFT JOIN project as project ON ( project.id = phr.project_id )
- LEFT JOIN workflow as workflow ON ( workflow.project_id = project.id )
- LEFT JOIN workflow_has_input_resource AS wfhir ON ( wfhir.resource_id = resource.id AND wfhir.workflow_id = workflow.id  )
- LEFT JOIN workflow_service wfs ON ( wfs.workflow_id = workflow.id )
- LEFT JOIN workflow_service_substep AS wfss ON ( wfs.id = wfss.workflow_service_id AND resource.workflow_service_substep_id = wfss.id )
- LEFT JOIN resource AS outputResource ON ( outputResource.workflow_service_substep_id = wfss.id AND resource.id = outputResource.id )
-
-
- WHERE ((workflow.id IS NOT NULL AND (wfss.id IS NOT NULL OR wfhir.resource_id IS NOT NULL ))
- OR
- ( workflow.id IS NULL AND wfss.id IS NULL AND wfhir.resource_id IS NULL ))
- AND project.id = 1
- GROUP BY resource.id, project.id, workflow.id, wfhir.resource_id, outputResource.id
- ORDER BY workflow.id
-
- ;
-* */
