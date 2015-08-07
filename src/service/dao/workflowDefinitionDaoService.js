@@ -6,6 +6,8 @@ var WorkflowDefinition = require(__base + 'src/service/dao/sql').WorkflowDefinit
 var WorkflowDefinitionServiceModel = require(__base + 'src/service/dao/sql').WorkflowDefinitionService;
 var WorkflowDefinitionServiceParamValue = require(__base + 'src/service/dao/sql').WorkflowDefinitionServiceParamValue;
 var ServiceModelParam = require(__base + 'src/service/dao/sql').ServiceParam;
+var WorkflowDefinitionUser = require(__base + 'src/service/dao/sql').WorkflowDefinitionUser;
+var sequelize = require(__base + 'src/service/dao/sql').sequelize;
 
 function WorkflowDefinitionDaoService() {
 
@@ -66,6 +68,34 @@ function WorkflowDefinitionDaoService() {
                 message: error.message,
                 code: 500
             });
+        });
+    };
+
+    this.findWorkflowDefinitionsPublished = function(projectId, userId, callback) {
+        var query = "SELECT " +
+            "workflow_definition.id AS id, " +
+            "workflow_definition.name AS name, " +
+            "workflow_definition.description AS description, " +
+            "workflow_definition.date_created AS dateCreated, " +
+            "workflow_definition.date_updated AS dateUpdated, " +
+            "workflow_definition.is_public " +
+            "FROM workflow_definition " +
+            "LEFT JOIN workflow_definition_user ON (workflow_definition.id = workflow_definition_user.workflow_definition_id) " +
+            "WHERE workflow_definition.project_id = :projectId" +
+            " AND workflow_definition.user_id = :userId" +
+            " OR workflow_definition_user.user_id = :userId" +
+            " OR workflow_definition.is_public = :isPublic " +
+            "GROUP BY workflow_definition.id";
+
+        // TODO: include also workflow services in the result, if needed, needs to be separate query
+        sequelize.query(query, {
+            replacements: {projectId: projectId, userId: userId, isPublic: true},
+            type: sequelize.QueryTypes.SELECT
+        }).then(function (workflowDefinitions) {
+            return callback(null, workflowDefinitions);
+        }).catch(function (err) {
+            logger.error(err.message);
+            return callback(err.message);
         });
     };
 

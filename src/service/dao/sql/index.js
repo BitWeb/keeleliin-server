@@ -19,9 +19,10 @@ db['Project'] = sequelize.import('./models/project');
 db['ProjectUser'] = sequelize.import('./models/project/projectUser');
 db['Resource'] = sequelize.import('./models/resource');
 db['ResourceType'] = sequelize.import('./models/resource/resourceType');
-
+db['ResourceUser'] = sequelize.import('./models/resource/resourceUser');
 db['WorkflowDefinition'] = sequelize.import('./models/workflowDefinition');
 db['WorkflowDefinitionService'] = sequelize.import('./models/workflowDefinition/workflowDefinitionService');
+db['WorkflowDefinitionUser'] = sequelize.import('./models/workflowDefinition/workflowDefinitionUser');
 db['Workflow'] = sequelize.import('./models/workflow');
 db['WorkflowService'] = sequelize.import('./models/workflow/workflowService');
 db['WorkflowServiceSubstep'] = sequelize.import('./models/workflow/workflowServiceSubstep');

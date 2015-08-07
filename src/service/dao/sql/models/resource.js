@@ -105,6 +105,12 @@ module.exports = function(sequelize, DataTypes) {
         updatedAt: {
             type: DataTypes.DATE,
             field: 'updatedAt'
+        },
+        isPublic: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: true,
+            field: 'is_public'
         }
     }, {
         tableName: 'resource',
@@ -155,6 +161,10 @@ module.exports = function(sequelize, DataTypes) {
                         as: 'outputSubsteps'
                     }
                 );
+
+                Resource.hasMany(models.ResourceUser, {
+                    as: 'users', foreignKey: 'resource_id'
+                });
             }
         },
 

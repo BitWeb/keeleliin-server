@@ -74,4 +74,11 @@ router.post('/:workflowDefinitionId/sort', function(req, res) {
     });
 });
 
+router.get('/projectId/:projectId/published', function(req, res) {
+
+    workflowDefinitionService.getWorkflowDefinitionsPublished(req, req.params.projectId, function(err, workflowDefinitions) {
+        return res.sendApiResponse(err, workflowDefinitions);
+    });
+});
+
 module.exports = router;

@@ -20,15 +20,15 @@ module.exports = function(sequelize, DataTypes) {
             },
             field: 'project_id'
         },
-        //user_id: {
-        //    type: DataTypes.INTEGER,
-        //    allowNull: false,
-        //    references: {
-        //        model: 'user',
-        //        key: 'id'
-        //    },
-        //    unique: false
-        //},
+        user_id: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: 'user',
+                key: 'id'
+            },
+            unique: false
+        },
         name: {
             type: DataTypes.STRING,
             allowNull: false,
@@ -46,6 +46,12 @@ module.exports = function(sequelize, DataTypes) {
         dateUpdated: {
             type: DataTypes.DATE,
             field: 'date_updated'
+        },
+        isPublic: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: true,
+            field: 'is_public'
         }
     }, {
         tableName: 'workflow_definition',
@@ -69,6 +75,9 @@ module.exports = function(sequelize, DataTypes) {
                         as: 'inputResources'
                     }
                 );
+                WorkflowDefinition.hasMany(models.WorkflowDefinitionUser, {
+                    as: 'users', foreignKey: 'workflow_definition_id'
+                });
             }
         },
 

@@ -48,6 +48,18 @@ function WorkflowDefinitionService() {
         return workflowDefinitionDaoService.findWorkflowDefinitionServiceModel(id, callback);
     };
 
+    this.getWorkflowDefinitionsPublished = function(req, projectId, callback) {
+        var userId = req.redisSession.data.userId;
+
+        projectService.getProject(req, projectId, function(err, project) {
+            if (err) {
+                return callback(err);
+            }
+
+            return workflowDefinitionDaoService.findWorkflowDefinitionsPublished(project.id, userId, callback);
+        });
+    };
+
     this.createWorkflowDefinition = function(req, projectId, workflowDefinitionData, cb) {
         workflowDefinitionData.projectId = projectId;
         //workflowDefinitionData.user_id = 1;

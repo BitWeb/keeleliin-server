@@ -41,7 +41,7 @@ INSERT INTO service_output_type(key, service_id, resource_type_id) SELECT 'outpu
 INSERT INTO service_output_type(key, service_id, resource_type_id) SELECT 'output', 8, 1 WHERE NOT EXISTS (SELECT 1 FROM service_output_type WHERE service_output_type.id = 8);
 
 INSERT INTO project (name, description, user_id, created_at, updated_at) SELECT 'test project', 'test project', 1, now(), now() WHERE NOT EXISTS (SELECT 1 FROM project WHERE project.name = 'test project');
-INSERT INTO workflow_definition (project_id, name, description) SELECT 1, 'Test workflow', 'Test workflow' WHERE NOT EXISTS (SELECT 1 FROM workflow_definition WHERE workflow_definition.id = 1);
+INSERT INTO workflow_definition (project_id, user_id, name, description) SELECT 1, 1, 'Test workflow', 'Test workflow' WHERE NOT EXISTS (SELECT 1 FROM workflow_definition WHERE workflow_definition.id = 1);
 INSERT INTO project_workflow_definition (project_id, workflow_definition_id, created_at, updated_at) SELECT 1, 1, now(), now() WHERE NOT EXISTS (SELECT 1 FROM project_workflow_definition WHERE project_workflow_definition.project_id = 1 AND project_workflow_definition.workflow_definition_id = 1);
 
 INSERT INTO workflow_definition_service (workflow_definition_id, service_id, order_num, created_at, updated_at)

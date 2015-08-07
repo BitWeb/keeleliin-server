@@ -129,6 +129,37 @@ function ResourceDaoService() {
             });
         });
     };
+
+    this.findResourcesPublished = function(projectId, userId, callback) {
+        var query = "SELECT resource.id AS id, " +
+            "resource.name AS name, " +
+            "resource.created_at as created_at " +
+            "FROM resource " +
+            "LEFT JOIN resource_user ON (resource_user.resource_id = resource.id) " +
+            "LEFT JOIN workflow_has_input_resource as workflowInput ON ( workflowInput.resource_id = resource.id )" +
+            "LEFT JOIN workflow_service_substep as serviceSubstep ON ( serviceSubstep.id = resource.workflow_service_substep_id ) " +
+            "LEFT JOIN workflow_service AS outputWfService ON ( outputWfService.id = serviceSubstep.workflow_service_id ) " +
+            "LEFT JOIN workflow AS workflow ON ( workflow.id = outputWfService.workflow_id ) " +
+            "LEFT JOIN project_has_resource AS phr ON (phr.resource_id = resource.id) " +
+            "LEFT JOIN project AS project ON (phr.project_id = project.id) " +
+            "WHERE phr.project_id = :projectId OR resource_user.user_id = :userId OR resource.is_public = :isPublic " +
+            "GROUP BY resource.id";
+
+        // Adding project info would require making separate query, because in this single query,
+        // resources wouldn't be grouped if they belong to multiple projects -
+        // it'll return each row per project resource.
+        // TODO: exclude the project check if only published and shared resources for user are wanted
+
+        sequelize.query(query, {
+            replacements: {projectId: projectId, userId: userId, isPublic: true},
+            type: sequelize.QueryTypes.SELECT
+        }).then(function (resources) {
+            return callback(null, resources);
+        }).catch(function (err) {
+            logger.error(err.message);
+            return callback(err.message);
+        });
+    };
 }
 
 module.exports = new ResourceDaoService();

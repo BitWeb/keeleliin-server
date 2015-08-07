@@ -48,10 +48,14 @@ router.get('/download/concat/:resourceIds', function(req, res) {
 
 router.post('/:projectId?', function(req, res) {
     resourceService.createResource(req, function(err, resource) {
-        if (err) {
-            return res.send({errors: err});
-        }
-        return res.send(resource);
+        return res.sendApiResponse(err, resource);
+    });
+});
+
+router.get('/projectId/:projectId/published', function(req, res) {
+
+    resourceService.getResourcesPublished(req, req.params.projectId, function(err, resources) {
+        return res.sendApiResponse(err, resources);
     });
 });
 

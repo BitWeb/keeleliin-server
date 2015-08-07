@@ -50,6 +50,12 @@ function ResourceService() {
         return resourceDaoService.getResources(req.query, callback);
     };
 
+    this.getResourcesPublished = function(req, projectId, callback) {
+        var userId = req.redisSession.data.userId;
+
+        return resourceDaoService.findResourcesPublished(projectId, userId, callback);
+    };
+
     this.createResource = function(req, cb) {
         var form = new formidable.IncomingForm();
         form.parse(req, function(err, fields, files) {
