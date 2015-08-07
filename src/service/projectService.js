@@ -62,9 +62,7 @@ function ProjectService(){
     };
 
     this.getCurrentUserProject = function (req, projectId, callback) {
-
         var userId = req.redisSession.data.userId;
-        userId = 1;
         return projectDaoService.getUserProject( userId, projectId, callback);
     };
 

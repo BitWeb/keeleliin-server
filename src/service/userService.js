@@ -165,8 +165,6 @@ function UserService() {
     };
 
     this.getCurrentUser = function (request, cb) {
-        request.redisSession.data.userId = 1;
-
         return userDaoService.findById(request.redisSession.data.userId, cb);
     };
 
