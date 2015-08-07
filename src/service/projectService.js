@@ -24,10 +24,41 @@ function ProjectService(){
         });
     };
 
-    this.getCurrentUserProjectsList = function (req, callback) {
+    this.getCurrentUserProjectsList = function (req, cb) {
 
         var userId = req.redisSession.data.userId;
-        return projectDaoService.getUserProjectsList( userId, req.query, callback);
+        return projectDaoService.getUserProjectsList( userId, req.query, function (err, result) {
+
+            logger.debug('Projects result: ', result);
+
+            async.map(
+                result.rows,
+                function (project, callback) {
+                    var newItem = project.dataValues;
+                    project.getProjectUsers().then(function (projectUsers) {
+
+                    async.map(
+                        projectUsers,
+                        function (projectUser, puCallback) {
+                            var pu = {
+                                id: projectUser.id,
+                                name: projectUser.name,
+                                displaypicture: projectUser.displaypicture,
+                                role: projectUser.projectUser.role
+                            };
+                            puCallback(null, pu);
+                        },
+                        function (err, userResult) {
+                            newItem.projectUsers = userResult;
+                            callback(err, newItem);
+                        });
+                    });
+                },
+                function (err, finalResult) {
+                    result.rows = finalResult
+                    cb(err, result);
+                });
+        });
     };
 
     this.getCurrentUserProject = function (req, projectId, callback) {

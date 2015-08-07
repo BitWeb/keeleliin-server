@@ -9,6 +9,15 @@ module.exports = function(sequelize, DataTypes) {
     };
 
     var ProjectUser = sequelize.define("projectUser", {
+
+        userId: {
+            type: DataTypes.INTEGER,
+            field: 'user_id'
+        },
+        projectId: {
+            type: DataTypes.INTEGER,
+            field: 'project_id'
+        },
         role: {
             type: DataTypes.STRING,
             allowNull: false,
@@ -30,6 +39,8 @@ module.exports = function(sequelize, DataTypes) {
 
         classMethods: {
             associate: function(models) {
+                ProjectUser.belongsTo(models.Project, {as: 'project'});
+                ProjectUser.belongsTo(models.User, {as: 'user'});
             }
         },
 

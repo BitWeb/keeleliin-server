@@ -45,6 +45,7 @@ module.exports = function(sequelize, DataTypes) {
             associate: function(models) {
                 User.belongsToMany(models.Project, {as: 'userProjects', through: models.ProjectUser, foreignKey: 'user_id'});
                 User.hasMany(models.Project,{as: 'projects', foreignKey: 'userId'});
+                User.hasMany(models.ProjectUser,{as: 'userProjectRelations', foreignKey: 'user_id'});
             }
         },
         hooks: {

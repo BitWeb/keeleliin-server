@@ -15,9 +15,25 @@ function ProjectDaoService() {
     this.getUserProjectsList = function (userId, params, cb) {
 
         var queryProperties = {
-            where: {
-                userId: userId
-            }
+            attributes: [
+                'id',
+                'name',
+                'description',
+                'createdAt'
+            ],
+            where: {},
+            include: [
+                {
+                    model: ProjectUser,
+                    as: 'projectUserRelations',
+                    attributes: [],
+                    where: {
+                        userId: userId
+                    },
+                    required: true
+                }
+            ],
+            required: true
         };
 
         if(params.name){
@@ -25,38 +41,6 @@ function ProjectDaoService() {
                 $iLike: params.name + '%'
             }
         }
-
-        self._getProjectsCount(queryProperties, params, function (err, totalCount) {
-            self._getProjectsList( queryProperties, params, function(err, list){
-
-                var result = {
-                    items: list,
-                    total: totalCount
-                };
-
-                return cb(null, result);
-
-            });
-        });
-    };
-
-    this._getProjectsCount = function ( queryProperties, params, cb) {
-
-        Project.count( queryProperties ).then(function (totalCount) {
-            cb(null, totalCount);
-        }).catch(function (err) {
-            cb(err.message);
-        });
-    };
-
-    this._getProjectsList = function (queryProperties, params, cb) {
-
-        queryProperties.attributes = [
-            'id',
-            'name',
-            'description',
-            'createdAt'
-        ];
 
         if(params.page){
             queryProperties.limit = limit;
@@ -67,10 +51,14 @@ function ProjectDaoService() {
             queryProperties.order = [[params.sort, params.order]]
         }
 
-        Project.findAll( queryProperties ).then(function (list) {
-            return cb(null, list);
+        Project.findAndCountAll( queryProperties ).then(function (result) {
+            return cb(null, result);
+        }).catch(function (err) {
+            cb(err.message);
         });
     };
+
+
 
     this.getUserProject = function (userId, projectId, callback) {
         Project.find({
@@ -82,24 +70,28 @@ function ProjectDaoService() {
                 'updatedAt'
             ],
             where: {
-                id: projectId, userId: userId
+                id: projectId/*, userId: userId*/
             },
-            include: [{
-                model:User,
-                as: 'user',
-                attributes: [
-                    'id',
-                    'name'
-                ]
-            },
-            {
-                model: User,
-                as: 'projectUsers',
-                attributes: [
-                    'id',
-                    'name'
-                ]
-            }]
+            include: [
+                {
+                    model: User,
+                    as: 'projectUsers',
+                    attributes: [
+                        'id',
+                        'name'
+                    ],
+                    required: true
+                },
+                {
+                    model: ProjectUser,
+                    as: 'projectUserRelations',
+                    attributes: [],
+                    where: {
+                        userId: userId
+                    },
+                    required: true
+                }
+            ]
         }).then(function (result) {
             if(!result){
                 return callback('Projekti ei leitud');

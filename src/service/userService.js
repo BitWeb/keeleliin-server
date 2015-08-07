@@ -6,6 +6,7 @@ var async = require('async');
 var userDaoService = require('./dao/userDaoService');
 var Project = require(__base + 'src/service/dao/sql').Project;
 var User = require(__base + 'src/service/dao/sql').User;
+var ProjectUser = require(__base + 'src/service/dao/sql').ProjectUser;
 var entuDaoService = require('./dao/entu/daoService');
 
 var RedisSession = require( './dao/redis/models/redisSession');
@@ -144,15 +145,20 @@ function UserService() {
                 name: 'Projekt 1',
                 description: 'Minu esimene projekt'
             });
-
             user.addProject(project).then(function () {
-                logger.debug('Vaikimisi project loodud');
-                cb(err, user);
+                user.addUserProject(project, {role: ProjectUser.roles.ROLE_OWNER}).then(function () {
+                    logger.debug('Vaikimisi project loodud');
+                    cb(null, user);
+                }).catch(function (err) {
+                    return cb({
+                        message: err.message,
+                        code: 500
+                    });
+                });
             });
-
-        }).catch(function(error) {
-            return callback({
-                message: error.message,
+        }).catch(function(err) {
+            return cb({
+                message: err.message,
                 code: 500
             });
         });
