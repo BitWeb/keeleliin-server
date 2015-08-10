@@ -15,6 +15,16 @@ var ArrayUtils = {
             if(a[property] > b[property]) return 1;
             return 0;
         });
+    },
+
+    find: function(array, cb){
+
+        for(i in array){
+            if(cb(array[i], i , array)){
+                return array[i];
+            }
+        }
+        return null;
     }
 };
 

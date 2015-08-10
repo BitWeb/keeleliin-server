@@ -33,11 +33,7 @@ function Runner() {
         logger.debug('Run workflow id: ' + workflowId);
         async.waterfall([
             function getWorkflow(callback) {
-                workflowDaoService.getWorkflow(workflowId, function (err, item) {
-                    if (err) { return callback(err); }
-                    workflow = item;
-                    callback();
-                });
+                self._getWorkflow(workflowId, callback);
             },
             function checkStatusForRun(callback) {
                 self._checkStatusForRun(callback);
@@ -51,6 +47,14 @@ function Runner() {
                 return cb(err);
             }
             return cb(null, workflow);
+        });
+    };
+
+    this._getWorkflow = function(workflowId, callback) {
+        workflowDaoService.getWorkflow(workflowId, function (err, item) {
+            if (err) { return callback(err); }
+            workflow = item;
+            callback();
         });
     };
 
@@ -80,23 +84,21 @@ function Runner() {
                 substepRunner = new SubstepRunner(project, workflow);
                 resourceHandler = new ResourceHandler(project);
                 callback();
+            },
+            function(callback){
+                workflow.status = Workflow.statusCodes.RUNNING;
+                workflow.datetimeStart = new Date();
+                workflow.save().then(function () {
+                    callback();
+                }).catch(function (err) {
+                    callback();
+                });
             }
-
-
         ], function (err) {
-            cb(err);
-        });
-
-        workflow.status = Workflow.statusCodes.RUNNING;
-        workflow.datetimeStart = new Date();
-
-        workflow.save().then(function () {
             logger.debug('Return to user');
-            cb(null, workflow); // return to user and continue async
+            cb(); // return to user and continue async
             logger.debug('Continue with running workflow');
             self._startHandleServices();
-        }).catch(function (err) {
-            cb(err);
         });
     };
 
@@ -110,15 +112,17 @@ function Runner() {
 
             if(workflowServices.length == 0){
                 logger.debug('No service to handle on index 0. Finish workflow');
-                return self.finishWorkflow(Workflow.statusCodes.FINISHED, function () {});
+                return self.finishWorkflow(Workflow.statusCodes.FINISHED, function () {
+                    return;
+                });
             }
 
             self._continueFromSubStep( null, function (err) {
 
-            } );
+            });
         }).catch(function (err) {
             self.finishWorkflow(Workflow.statusCodes.ERROR, function (err, item) {
-
+                return;
             });
         });
     };
@@ -140,6 +144,8 @@ function Runner() {
             function getPreviousWorkflowService(callback) {
                 fromSubStep.getWorkflowService().then(function (previousWorkflowService) {
                     callback(null, previousWorkflowService);
+                }).catch(function (err) {
+                    callback(err.message);
                 });
             },
             function getNextWorkflowService(previousWorkflowService, callback) {
@@ -148,6 +154,8 @@ function Runner() {
                 var workflowService = workflowServices[nextOrderNum];
 
                 if (workflowService) {
+                    logger.debug('Continue with wf service: ' + workflowService.id);
+
                     workflowService.orderNum = nextOrderNum;
                     return self._handleWorkflowService(workflowService, fromSubStep, cb);
                 }
@@ -165,15 +173,15 @@ function Runner() {
             function getResources(callback) {
                 if(fromSubStep){
                     fromSubStep.getOutputResources().then(function (resources) {
-                        callback(null, resources);
+                        return callback(null, resources);
                     });
                 } else {
                     workflow.getInputResources().then(function (resources) {
                         logger.debug('Start handle first service resources');
-                        callback(null, resources);
+                        return callback(null, resources);
                     }).catch(function (err) {
                         logger.error(err);
-                        callback(err);
+                        return callback(err);
                     });
                 }
             },
@@ -182,7 +190,10 @@ function Runner() {
                 callback(null, resources);
             },
             function handleInputResources(resources, callback) {
-                self._handleInputResources(resources, workflowService, fromSubStep, callback);
+                self._handleInputResources(resources, workflowService, fromSubStep, function (err) {
+                    statusHolder.updateFilesToParseCount(workflowService, (resources.length*(-1)));
+                    callback(err);
+                });
             }
         ], function (err) {
             logger.info('workflow service ' + workflowService + ' handling started from sub step ' + (fromSubStep != undefined ? fromSubStep.id : null));
@@ -197,33 +208,30 @@ function Runner() {
         });
     };
 
-    this._handleInputResources = function (resources, workflowService, fromSubStep, cb) {
+    this._handleInputResources = function (currentResources, workflowService, fromSubStep, cb) {
 
         async.waterfall([
             function (callback) {
                 resourceHandler.getWorkflowServiceSubStepsInputResources(
-                    resources,
+                    currentResources,
                     workflowService,
-                    function handleSubResource(err, resource) {
+                    fromSubStep,
+                    function handleSubResourceJunk(err, resources) {
                         if(err){
                             logger.error(err);
                             return;
                         }
-                        logger.debug('Got to handle sub input resource id: ' + resource.id);
+                        logger.debug('Got to handle sub input resources : ' + resources.length);
                         statusHolder.updateSubStepsToRunCount(workflowService, 1);
-                        self._makeWorkflowServiceSubStep(resource, workflowService, fromSubStep, function (err, subStep) {
+                        self._makeWorkflowServiceSubStep(resources, workflowService, fromSubStep, function (err, subStep) {
                             logger.debug('Start running subStep id: ' + subStep);
                             self._runSubStep(subStep, workflowService);
-                            return callback();
+                            return callback(err);
                         });
                     },
                     function resourcesTraversed(err) {
                         logger.debug('Workflow service resources traversed');
-                        if(err){
-                            return callback(err);
-                        }
-                        statusHolder.updateFilesToParseCount(workflowService, (resources.length*(-1)));
-                        return callback();
+                        return callback(err);
                     }
                 );
             }
@@ -252,7 +260,7 @@ function Runner() {
         }
     };
 
-    this._makeWorkflowServiceSubStep = function (resource, workflowService, previousStep, cb) {
+    this._makeWorkflowServiceSubStep = function (resources, workflowService, previousStep, cb) {
 
         var subStepData = {
             workflowServiceId: workflowService.id,
@@ -266,7 +274,7 @@ function Runner() {
         }
 
         WorkflowServiceSubstep.build(subStepData).save().then(function (subStep) {
-            subStep.addInputResource(resource).then(function () {
+            subStep.setInputResources(resources).then(function () {
                 cb(null, subStep);
             }).catch(function (err) {
                 logger.error('Add resource error', err);

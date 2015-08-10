@@ -51,7 +51,7 @@ function SubStepRunner(project, workflow){
     this.startProcessing = function (substep, dto, cb){
         apiService.makeRequest(dto, function (err, response) {
             if(err){ return cb(err); }
-            logger.debug(response);
+            logger.debug('Response: ', response);
             self.handleResponse(substep, dto, response, cb);
         });
     };
@@ -59,8 +59,8 @@ function SubStepRunner(project, workflow){
     this.handleResponse = function (substep, dto, response, cb){
 
         if(!response || !response.response){
-            logger.error('TODO:: No response');
-            substep.log = 'No service response';
+            logger.error('TODO:: No valid response', response);
+            substep.log = JSON.stringify(response);
             return self._updateSubstepFinishStatus(substep, Workflow.statusCodes.ERROR, cb);
         }
 
@@ -74,7 +74,7 @@ function SubStepRunner(project, workflow){
             self._recheckRequest(substep, dto, response, cb);
         } else if(response.response.message == 'ERROR'){
             logger.info('Message ERROR');
-            logger.error(response.response);
+            logger.error(dto, response.response);
             substep.log = 'Got service error: ' + JSON.stringify(response.response.errors);
             self._updateSubstepFinishStatus(substep, Workflow.statusCodes.ERROR, cb);
         } else {

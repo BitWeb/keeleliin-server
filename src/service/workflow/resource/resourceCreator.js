@@ -6,6 +6,7 @@ var config = require(__base + 'config');
 var fs = require('fs');
 var Resource = require(__base + 'src/service/dao/sql').Resource;
 var FileUtil = require(__base + 'src/util/fileUtil');
+var async = require('async');
 
 function ResourceCreator(sourceResource, workflowService, resourceIndex, project){
     var self = this;
@@ -41,7 +42,7 @@ function ResourceCreator(sourceResource, workflowService, resourceIndex, project
     this.finish = function (cb) {
 
         writer.on("finish", function () {
-            logger.trace('Writer finished');
+            logger.trace('Writer finished: ' + resourceFilename);
             self._getNewResource(cb);
         });
         writer.end();
