@@ -27,6 +27,11 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: true,
             primaryKey: false
         },
+        dateApiAccessed: {
+            type: DataTypes.DATE,
+            allowNull: true,
+            field: 'date_api_accessed'
+        },
         createdAt: {
             type: DataTypes.DATE,
             field: 'created_at'

@@ -27,6 +27,8 @@ var controllers = require('./../controllers/index');
 var routerMiddleware = require('./../middlewares/router');
 var errorhandlerMiddleware = require('./../middlewares/errorhandler');
 var ServerUtil = require('./../src/util/server');
+var workflowChecker = require('./../src/service/workflow/workflowChecker');
+var apiAccess = require('./../middlewares/apiAccess');
 
 app.set('views', path.join(__base, 'views'));// view engine setup
 app.set('view engine', 'jade');// view engine setup
@@ -44,9 +46,11 @@ app.use(routerMiddleware);
 app.use(sessionMiddleware);
 app.use(sessionDebugger);
 app.use(jsonApiResponseMiddleware);
+//app.use(apiAccess); // Using API call for registering API access
 app.use(controllers);
 app.use(errorhandlerMiddleware.error404);
 app.use(errorhandlerMiddleware.common);
+
 
 /**
  * Create HTTP server.
@@ -66,6 +70,8 @@ function startCluster( instanceCount, cb ){
         cluster.on('exit', function(worker, code, signal) {
             log4jsLogger.error('worker ' + worker.process.pid + ' died; Code: ' + code + '; Signal: ' + signal);
         });
+
+        workflowChecker.init();
     } else {
         startInstance(cb);
     }

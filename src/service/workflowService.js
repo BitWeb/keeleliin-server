@@ -136,6 +136,19 @@ function WorkflowService() {
         });
     };
 
+    this.getWorkflowsRunning = function(cb) {
+
+        Workflow.findAll({
+            where: {
+                status: Workflow.statusCodes.RUNNING
+            }
+        }).then(function(workflows) {
+            return cb(null, workflows);
+        }).catch(function(error) {
+            return cb(error);
+        });
+    };
+
     this.setWorkflowStatusCanceled = function (req, workflowId, cb) {
 
         async.waterfall([

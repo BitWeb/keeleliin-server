@@ -71,3 +71,24 @@ INSERT INTO workflow_definition_service_param_value (workflow_definition_service
 SELECT 1 FROM workflow_definition_service_param_value WHERE workflow_definition_service_param_value.id = 6);
 
 INSERT INTO "user" (entu_id, email, name, created_at, updated_at) SELECT 3, 'taivo.teder@gmail.com', 'taivo1', now(), now() WHERE NOT EXISTS (SELECT 1 FROM "user" WHERE "user".email = 'taivo.teder@gmail.com');
+
+INSERT INTO notification_type (url_template, application_context, message, is_send_email, code, notify_period_days, mail_subject, mail_template)
+SELECT 'http://someurl/id/{id}', 'workflow', 'Töövoog lõppes', TRUE, 'workflow-finished', 0, 'Töövoog lõppes', '<p>Vaata töövoogu <a href="{url}">siit</a>.</p>'
+WHERE NOT EXISTS (SELECT 1 FROM notification_type WHERE notification_type.code = 'workflow-finished');
+
+INSERT INTO notification_type (url_template, application_context, message, is_send_email, code, notify_period_days, mail_subject, mail_template)
+SELECT 'http://someurl/id/{id}', 'project', 'Sinuga on jagatud projekti', TRUE, 'project-user-added', 0, 'Sinuga on jagatud projekti', '<p>Vaata projekti <a href="{url}">siit</a>.</p>'
+WHERE NOT EXISTS (SELECT 1 FROM notification_type WHERE notification_type.code = 'project-user-added');
+
+INSERT INTO notification_type (url_template, application_context, message, is_send_email, code, notify_period_days, mail_subject, mail_template)
+SELECT 'http://someurl/id/{id}', 'workflow', 'Töövoo viga', TRUE, 'workflow-error', 0,
+'Töövoo viga', '<p>Vaata töövoogu <a href="{url}">siit</a>.</p>'
+WHERE NOT EXISTS (SELECT 1 FROM notification_type WHERE notification_type.code = 'workflow-error');
+
+INSERT INTO notification_type (url_template, application_context, message, is_send_email, code, notify_period_days, mail_subject, mail_template)
+SELECT 'http://someurl/id/{id}', 'workflow', 'Töövoog jookseb endiselt', TRUE, 'workflow-still-running', 7, 'Töövoog jookseb endiselt', '<p>Vaata töövoogu <a href="{url}">siit</a>.</p>'
+WHERE NOT EXISTS (SELECT 1 FROM notification_type WHERE notification_type.code = 'workflow-still-running');
+
+INSERT INTO project_user (user_id, project_id, role)
+SELECT 1, 1, 'owner' WHERE NOT EXISTS (SELECT 1 FROM project_user WHERE project_user.user_id = 1 AND project_user.project_id = 1);
+

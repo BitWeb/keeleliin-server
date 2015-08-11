@@ -46,4 +46,11 @@ router.get('/logout', function( req, res ) {
     });
 });
 
+router.post('/register-api-access', function(req, res) {
+    var userId = req.redisSession.data.userId;
+    userService.registerApiAccess(req, userId, function(error, user) {
+        return res.sendApiResponse(error, user);
+    });
+});
+
 module.exports = router;

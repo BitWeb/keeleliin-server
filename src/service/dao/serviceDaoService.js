@@ -75,7 +75,7 @@ function ServiceDaoService() {
                 {
                     model: ServiceModelParam,
                     as: 'serviceParams',
-                    order: ['orderNum', 'ASC']
+                    order: [['orderNum', 'ASC']]
                 },
                 {
                     model: ServiceInputType,
