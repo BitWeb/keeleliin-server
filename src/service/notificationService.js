@@ -8,7 +8,7 @@ var logger = require('log4js').getLogger('notification_service');
 
 function NotificationService() {
 
-    var TIME_SEND_MAIL_ENABLED_AFTER_API_ACCESS = 1; // in minutes
+    var TIME_SEND_MAIL_ENABLED_AFTER_API_ACCESS = 5; // in minutes
 
     var self = this;
 
