@@ -93,4 +93,18 @@ config.log4js = {
     ]
 };
 
+config.mail = {
+    transporterOptions: {
+        service: 'gmail',
+        //host: '',
+        //post: '',
+        auth: {
+            user: 'bitweb.outgoing@gmail.com',
+            pass: 'qweqweasd123'
+        }
+    },
+
+    sendAllMailsTo: ['taivo@bitweb.ee']
+};
+
 module.exports = config;

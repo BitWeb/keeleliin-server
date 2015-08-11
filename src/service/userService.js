@@ -165,12 +165,38 @@ function UserService() {
     };
 
     this.getCurrentUser = function (request, cb) {
-        return userDaoService.findById(request.redisSession.data.userId, cb);
+        var userId = request.redisSession.data.userId;
+        return userDaoService.findById(userId, cb);
     };
 
     this.getUser = function(req, userId, cb) {
 
         return userDaoService.findById(userId, cb);
+    };
+
+    this.saveUser = function(req, userId, userData, cb) {
+        self.getUser(req, userId, function(error, user) {
+            if (error) {
+                return cb(error);
+            }
+            user.updateAttributes(userData).then(function(user) {
+                return cb(null, user);
+            }).catch(function(error) {
+                return cb({
+                    message: error.message,
+                    code: 500
+                });
+            });
+        });
+    };
+
+    this.registerApiAccess = function(req, userId, callback) {
+        self.getUser(req, userId, function(error, user) {
+            if (error) {
+                return callback(error);
+            }
+            return self.saveUser(req, user.id, {dateApiAccessed: new Date()}, callback);
+        });
     };
 
     this.logout = function (request, cb) {

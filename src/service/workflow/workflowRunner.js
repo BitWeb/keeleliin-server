@@ -15,6 +15,9 @@ var SubstepRunner = require('./substep/substepRunner');
 var ResourceHandler = require('./resource/resourceHandler');
 var StatusHolder = require('./statusHolder');
 
+var notificationService = require(__base + 'src/service/notificationService');
+var NotificationType = require(__base + 'src/service/dao/sql').NotificationType;
+
 function Runner() {
     var self = this;
 
@@ -481,8 +484,18 @@ function Runner() {
 
         workflow.status = status;
         workflow.datetimeEnd = new Date();
-        workflow.save().then(function () {
+        workflow.save().then(function (workflow) {
             logger.info('Workflow id:' + workflow.id + ' finished with status: ' + workflow.status);
+            var notificationTypeCode = NotificationType.codes.WORKFLOW_FINISHED;
+            if (workflow.status == Workflow.statusCodes.ERROR) {
+                notificationTypeCode =  NotificationType.codes.WORKFLOW_ERROR;
+            }
+            workflow.getWorkflowDefinition().then(function(workflowDefinition) {
+                notificationService.addNotification(workflowDefinition.userId, notificationTypeCode, workflow.id, function(error, notification) {
+                    // Do not cancel workflow runner if notification save fails
+                });
+            });
+
             cb(null, workflow);
         }).catch(function (err) {
             cb(err);

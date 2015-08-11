@@ -14,12 +14,18 @@ var sequelize = new Sequelize(config.sql.database, config.sql.username, config.s
 
 var db = {};
 
-db['User'] = sequelize.import('./models/user');
+db['Notification'] = sequelize.import('./models/notification');
+db['NotificationType'] = sequelize.import('./models/notification/notificationType');
 db['Project'] = sequelize.import('./models/project');
 db['ProjectUser'] = sequelize.import('./models/project/projectUser');
 db['Resource'] = sequelize.import('./models/resource');
 db['ResourceType'] = sequelize.import('./models/resource/resourceType');
 db['ResourceUser'] = sequelize.import('./models/resource/resourceUser');
+db['Service'] = sequelize.import('./models/service');
+db['ServiceParam'] = sequelize.import('./models/service/serviceParam');
+db['ServiceInputType'] = sequelize.import('./models/service/serviceInputType');
+db['ServiceOutputType'] = sequelize.import('./models/service/serviceOutputType');
+db['User'] = sequelize.import('./models/user');
 db['WorkflowDefinition'] = sequelize.import('./models/workflowDefinition');
 db['WorkflowDefinitionService'] = sequelize.import('./models/workflowDefinition/workflowDefinitionService');
 db['WorkflowDefinitionUser'] = sequelize.import('./models/workflowDefinition/workflowDefinitionUser');
@@ -28,10 +34,7 @@ db['WorkflowService'] = sequelize.import('./models/workflow/workflowService');
 db['WorkflowServiceSubstep'] = sequelize.import('./models/workflow/workflowServiceSubstep');
 db['WorkflowDefinitionServiceParamValue'] = sequelize.import('./models/workflowDefinition/workflowDefinitionServiceParamValue');
 db['WorkflowServiceParamValue'] = sequelize.import('./models/workflow/workflowServiceParamValue');
-db['Service'] = sequelize.import('./models/service');
-db['ServiceParam'] = sequelize.import('./models/service/serviceParam');
-db['ServiceInputType'] = sequelize.import('./models/service/serviceInputType');
-db['ServiceOutputType'] = sequelize.import('./models/service/serviceOutputType');
+
 
 Object.keys(db).forEach(function(modelName) {
     if ("associate" in db[modelName]) {

@@ -8,6 +8,8 @@ var Project = require(__base + 'src/service/dao/sql').Project;
 var ProjectUser = require(__base + 'src/service/dao/sql').ProjectUser;
 var userService = require('./userService');
 var async = require('async');
+var notificationService = require(__base + 'src/service/notificationService');
+var NotificationType = require(__base + 'src/service/dao/sql').NotificationType;
 
 function ProjectService(){
 
@@ -55,7 +57,7 @@ function ProjectService(){
                     });
                 },
                 function (err, finalResult) {
-                    result.rows = finalResult
+                    result.rows = finalResult;
                     cb(err, result);
                 });
         });
@@ -128,7 +130,6 @@ function ProjectService(){
     };
 
     this.addProjectUser = function(req, projectId, userData, cb) {
-
         async.waterfall([
             function(callback) {
                 userService.getCurrentUser(req, function(err, currentUser) {
@@ -151,12 +152,13 @@ function ProjectService(){
             },
 
             function(currentUser, project, callback) {
-                project.getProjectUsers().then(function(users) {
+                project.getProjectUserRelations().then(function(projectUsers) {
                     var isOwner = false;
-                    users.forEach(function(user) {
-
-                        console.log(user);
-                        if (user.id == currentUser.id && user.ProjectUser.role == ProjectUser.roles.ROLE_OWNER) {
+                    projectUsers.forEach(function(projectUser) {
+                        console.log(projectUser);
+                        console.log(projectUser.userId);
+                        console.log(currentUser.id);
+                        if (projectUser.userId == currentUser.id && projectUser.role == ProjectUser.roles.ROLE_OWNER) {
                             isOwner = true;
                         }
                     });
@@ -176,13 +178,14 @@ function ProjectService(){
                      if (err) {
                          return callback(err);
                      }
-
                      project.hasProjectUser(user).then(function(result) {
                          if (!result) {
                              var role = (userData.role !== undefined ? userData.role : ProjectUser.roles.ROLE_EDITOR);
 
                              // Add user
-                             project.addProjectUser(user, {role: role}).then(function(user) {
+                             project.addProjectUser(user, {role: role}).then(function() {
+                                 notificationService.addNotification(user.id, NotificationType.codes.PROJECT_USER_ADDED, project.id, function(error, notification) {
+                                 });
                                  return callback(null, project);
                              });
                          } else {
@@ -223,17 +226,17 @@ function ProjectService(){
             },
 
             function(currentUser, project, callback) {
-                project.getProjectUsers().then(function(users) {
+                project.getProjectUserRelations().then(function(projectUsers) {
                     var isOwner = false;
-                    users.forEach(function(user) {
-                        if (user.id == currentUser.id && user.ProjectUser.role == ProjectUser.roles.ROLE_OWNER) {
+                    projectUsers.forEach(function(projectUser) {
+                        if (projectUser.userId == currentUser.id && projectUser.role == ProjectUser.roles.ROLE_OWNER) {
                             isOwner = true;
                         }
                     });
 
                     if (!isOwner) {
                         return callback({
-                            message: 'Not allowed to add users.'
+                            message: 'Not allowed to remove users.'
                         })
                     }
 

@@ -23,6 +23,7 @@
     "log4js": "^0.6.25",
     "morgan": "~1.5.3",
     "multer": "^0.1.6",
+    "node-schedule": "^0.2.9",
     "nodemailer": "^1.4.0",
     "pg": "^4.3.0",
     "pg-hstore": "^2.3.2",

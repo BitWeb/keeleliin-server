@@ -20,14 +20,14 @@ module.exports = function(sequelize, DataTypes) {
             },
             field: 'project_id'
         },
-        user_id: {
+        userId: {
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
                 model: 'user',
                 key: 'id'
             },
-            unique: false
+            field: 'user_id'
         },
         name: {
             type: DataTypes.STRING,
@@ -69,6 +69,7 @@ module.exports = function(sequelize, DataTypes) {
                     otherKey: 'project_id',
                     as: 'projects'
                 });
+                WorkflowDefinition.belongsTo(models.User, {as: 'user', foreignKey: 'userId'});
                 WorkflowDefinition.belongsToMany(models.Resource, {
                         through: 'workflow_definition_has_input_resource',
                         foreignKey: 'workflowDefinitionId',

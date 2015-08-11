@@ -62,7 +62,7 @@ function WorkflowDefinitionService() {
 
     this.createWorkflowDefinition = function(req, projectId, workflowDefinitionData, cb) {
         workflowDefinitionData.projectId = projectId;
-        //workflowDefinitionData.user_id = 1;
+        workflowDefinitionData.userId = 1;
 
         async.waterfall([
             function getProject(callback) {
