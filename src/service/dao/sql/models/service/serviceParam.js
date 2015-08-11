@@ -11,14 +11,15 @@ module.exports = function(sequelize, DataTypes) {
             primaryKey: true,
             autoIncrement: true
         },
-        //service_id: {
-        //    type: DataTypes.INTEGER,
-        //    allowNull: false,
-        //    references: {
-        //        model: 'service',
-        //        key: 'id'
-        //    }
-        //},
+        serviceId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: 'service',
+                key: 'id'
+            },
+            field: 'service_id'
+        },
         type: {
             type: DataTypes.STRING,
             allowNull: false,
@@ -56,7 +57,7 @@ module.exports = function(sequelize, DataTypes) {
 
         classMethods: {
             associate: function(models) {
-                ServiceParam.belongsTo(models.Service);
+                ServiceParam.belongsTo(models.Service, {foreignKey: 'serviceId', as: 'service'});
                 ServiceParam.hasMany(models.WorkflowDefinitionServiceParamValue, { foreignKey: 'service_param_id' });
             }
         }

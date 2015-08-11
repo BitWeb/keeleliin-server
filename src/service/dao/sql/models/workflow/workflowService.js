@@ -69,6 +69,31 @@ module.exports = function(sequelize, DataTypes) {
                 WorkflowService.hasMany(models.WorkflowServiceSubstep, {foreignKey: 'workflowServiceId', as: 'subSteps'});
                 WorkflowService.hasMany(models.WorkflowServiceParamValue, {foreignKey: 'workflow_service_id', as: 'paramValues'});
             }
+        },
+        instanceMethods: {
+            getNextWorkflowService: function(cb) {
+                var self = this;
+                this.getWorkflow().then(function(workflow){
+                    workflow.getWorkflowServices({
+                        where: {
+                            workflowId: self.workflowId,
+                            orderNum: {
+                                gt: self.orderNum
+                            }
+                        },
+                        order: [['order_num','ASC']]
+                    }).then(function (items) {
+                        if(items.length > 0){
+                            return cb(null, items[0]);
+                        }
+                        return cb();
+                    }).catch(function (err) {
+                        cb(err);
+                    });
+                }).catch(function (err) {
+                    cb(err);
+                });
+            }
         }
     });
 

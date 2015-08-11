@@ -1,7 +1,7 @@
 /**
  * Created by taivo on 15.06.15.
  */
-
+var logger = require('log4js').getLogger('service_dao_service');
 var ServiceModel = require(__base + 'src/service/dao/sql').Service;
 var ServiceModelParam = require(__base + 'src/service/dao/sql').ServiceParam;
 var ServiceInputType = require(__base + 'src/service/dao/sql').ServiceInputType;
@@ -41,6 +41,7 @@ function ServiceDaoService() {
     };
 
     this.findServices = function(pagination, callback) {
+
         ServiceModel.findAll({
             include: [
                 {

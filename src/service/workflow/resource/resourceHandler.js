@@ -16,7 +16,11 @@ function ResourceHandler(project) {
 
     var self = this;
 
-    this.getWorkflowServiceSubStepsInputResources = function (resources, workflowService, fromSubStep, resourceJunkCallback, cb) {
+    /**
+     * resourceJunkCallback Callback if substep junk created
+     * cb Callbac if resources traversed
+     * */
+    this.getWorkflowServiceSubStepsInputResources = function (workflowService, fromSubStep, resourceJunkCallback, resourcesCb) {
 
         var service;
         var inputTypes;
@@ -45,9 +49,9 @@ function ResourceHandler(project) {
             function checkInputTypesLength(callback) {
                 if (inputTypes.length == 0) {
                     logger.info('Service has no inputs!');
-                    resourceJunkCallback(null, []);
-                    cb();
-                    return;
+                    return resourceJunkCallback(null, [], function (err) {
+                        resourcesCb(err);
+                    });
                 }
                 return callback();
             },
@@ -68,11 +72,27 @@ function ResourceHandler(project) {
                 );
             },
 
-            function mapResourceJunks(callback) {
+            function getInitResources(callback) {
                 logger.debug('Get resource junks');
+                if(fromSubStep){
+                    fromSubStep.getOutputResources().then(function (resources) {
+                        return callback(null, resources);
+                    });
+                } else {
+                    workflowService.getWorkflow().then(function (workflow) {
+                        workflow.getInputResources().then(function (resources) {
+                            logger.debug('Start handle first service resources');
+                            return callback(null, resources);
+                        }).catch(function (err) {
+                            logger.error(err);
+                            return callback(err);
+                        });
+                    });
+                }
+            },
+            function mapResourceJunks(resources, callback) {
                 self._getResourceJunks(resources, inputTypes, inputResourceTypes, fromSubStep, callback);
             },
-
             function traverseJunks(resourceJunks, callback) {
 
                 logger.debug('Start traverse junks');
@@ -83,12 +103,12 @@ function ResourceHandler(project) {
                         self._handleResourceJunk(resourceJunk, inputTypes, inputResourceTypes, workflowService, resourceJunkCallback, itCallback);
                     },
                     function done(err) {
-                        logger.debug('Resource junks traversed');
+                        logger.debug('Resource junks traversed for service:' + workflowService.id);
                         callback(err);
                     }
                 );
             }
-        ], cb);
+        ], resourcesCb);
     };
 
 
@@ -227,63 +247,90 @@ function ResourceHandler(project) {
         });
     };
 
-    this._handleResourceJunk = function (resourceJunk, inputTypes, inputResourceTypes, workflowService, resourceJunkCallback, itCallback) {
+    this._handleResourceJunk = function (resourceJunk, inputTypes, inputResourceTypes, workflowService, resourceJunkCallback, junkHandledCb) {
 
-        var junkIndex = 0;
-        var resourceTraverseCount = 0;
-        logger.trace('Resource junk length: ' + resourceJunk);
-        self._handleJunkResourceOnIndex(junkIndex, resourceTraverseCount, resourceJunk, [], inputTypes, inputResourceTypes, workflowService, resourceJunkCallback, itCallback);
 
-        //self._handleResource( resource, serviceInputType, serviceInputResourceType, workflowService, resourceCallback, cb );
-    };
+        var buffer = {};
+        var putToBuffer = function (subResource, index) {
 
-    this._handleJunkResourceOnIndex = function (index, resourceTraverseCount, resourceJunk, resultJunk, inputTypes, inputResourceTypes, workflowService, junkCallback, cb) {
-
-        logger.debug('Handle resource on index: ' + index);
-        resourceTraverseCount = resourceTraverseCount + 1;
-
-        var resource = resourceJunk[index];
-        var serviceInputType = ArrayUtil.find(inputTypes, function (element) {
-            return element.resourceTypeId == resource.resourceTypeId;
-        });
-        var serviceInputResourceType = ArrayUtil.find(inputResourceTypes, function (element) {
-            return element.id == resource.resourceTypeId;
-        });
-
-        self._handleResource(
-            resource,
-            serviceInputType,
-            serviceInputResourceType,
-            workflowService,
-            function subResourceCallback(err, subresource) {
-
-                logger.debug('Get subresource callback: ' + subresource.id);
-
-                if (err) logger.error(err);
-                var result = resultJunk.slice(0); //clone result junk
-                result.push(subresource);
-                logger.debug('Sub resource callback index: ' + index);
-                if (result.length == resourceJunk.length) {
-                    logger.trace('Junk callback length: ' + result.length);
-                    return junkCallback(err, result);
-                } else {
-                    var continueIndex = index + 1;
-                    return self._handleJunkResourceOnIndex(continueIndex, resourceTraverseCount, resourceJunk, result, inputTypes, inputResourceTypes, workflowService, junkCallback, cb);
-                }
-            },
-            function resourceIsHandled(err) {
-                if (err) logger.error(err);
-                logger.debug('Junk resource is handled on index: ' + resourceTraverseCount);
-                resourceTraverseCount = resourceTraverseCount - 1;
-                if (resourceTraverseCount == 0) {
-                    logger.debug('Junk is handled');
-                    cb(err);
-                }
+            if(buffer[index] == undefined){
+                buffer[index] = [];
             }
-        );
+            buffer[index].push(subResource);
+        };
+
+         function SubBufferHandler() {
+            var init = [];
+            this.cross = function (buffer) {
+                var updatedInit = [];
+                for(i in buffer){
+                    var item = buffer[i];
+                    if(init.length > 0){
+                        for(j in init){
+                            var subArray = init[j].slice(0);
+                            subArray.push( item );
+                            updatedInit.push(subArray);
+                        }
+                    } else {
+                        var subArray = [item];
+                        updatedInit.push(subArray);
+                    }
+                }
+                init = updatedInit.slice(0);
+            };
+             this.getResult = function () {
+                 return init;
+             }
+        }
+
+        var handleBuffer = function (cb) {
+
+            var subBufferHandler = new SubBufferHandler();
+            for( i in buffer ){
+                subBufferHandler.cross( buffer[i] );
+            }
+            var resultJunks = subBufferHandler.getResult();
+            var sendJunk = function (index) {
+                if(resultJunks[ index ]){
+                    return resourceJunkCallback(null, resultJunks[ index ], function (err) {
+                        index = index + 1;
+                        sendJunk(index);
+                    });
+                } else {
+                    cb();
+                }
+            };
+            sendJunk(0);
+        };
+
+        async.forEachOfSeries(resourceJunk, function (resource, index, callback) {
+            var serviceInputType = ArrayUtil.find(inputTypes, function (element) { return element.resourceTypeId == resource.resourceTypeId; });
+            var serviceInputResourceType = ArrayUtil.find(inputResourceTypes, function (element) { return element.id == resource.resourceTypeId; });
+
+            self._handleResource(
+                resource,
+                serviceInputType,
+                serviceInputResourceType,
+                workflowService,
+                function subResourceCallback(err, subresource, srCb) {
+                    logger.debug('Get subResource callback: ' + subresource.id);
+                    putToBuffer(subresource, index );
+                    srCb();
+                },
+                function resourceIsHandled(err) {
+                    if (err) logger.error(err);
+                    logger.debug('Resource resource is handled on index: ' + index);
+                    callback();
+                }
+            );
+        }, function (err) {
+            handleBuffer(function ( err ) {
+                junkHandledCb( err )
+            });
+        });
     };
 
-    this._handleResource = function (resource, serviceInputType, serviceInputResourceType, workflowService, resourceCallback, cb) {
+    this._handleResource = function (resource, serviceInputType, serviceInputResourceType, workflowService, subResourceCallback, resourceCallback) {
 
         var resourceType;
         var pathToSourceFile = config.resources.location + '/' + resource.filename;
@@ -316,18 +363,18 @@ function ResourceHandler(project) {
                 resource.getResourceType().then(function (item) {
                     resourceType = item;
                     callback();
-                }).catch(cb);
+                }).catch(resourceCallback);
             },
             function checkResourceTypeCompatibility(callback) {
                 logger.debug('Check compatibility');
                 if (!serviceInputResourceType) {
-                    return cb();
+                    return resourceCallback();
                 }
                 if (!resourceType) {
-                    return cb();
+                    return resourceCallback();
                 }
                 if (serviceInputResourceType.value != resourceType.value) {
-                    return cb();
+                    return resourceCallback();
                 }
                 callback();
             },
@@ -335,8 +382,9 @@ function ResourceHandler(project) {
                 logger.debug('Check do parallel');
                 if (serviceInputType.doParallel == false || serviceInputType.sizeLimit == 0) {
                     logger.debug('Can not do parallel');
-                    resourceCallback(null, resource);
-                    return cb();
+                    return subResourceCallback(null, resource, function (err) {
+                        resourceCallback(err);
+                    });
                 }
                 callback();
             },
@@ -347,8 +395,9 @@ function ResourceHandler(project) {
                             return callback();
                         } else {
                             logger.debug('Can not do parallel. Smaller than limit');
-                            resourceCallback(null, resource);
-                            return cb();
+                            return subResourceCallback(null, resource, function (err) {
+                                resourceCallback(err);
+                            });
                         }
                     });
                 } else {
@@ -358,28 +407,34 @@ function ResourceHandler(project) {
             },
             function doSplit(callback) {
                 logger.debug('Do parallel');
-                self._split(resource, resourceType, serviceInputType, workflowService, resourceCallback, callback);
+                self._split(resource, resourceType, serviceInputType, workflowService, subResourceCallback, callback);
             }
         ], function (err) {
-            cb(err);
+            if(err){
+                logger.error(err);
+            }
+            resourceCallback(err);
         });
     };
 
-    this._split = function (resource, resourceType, serviceInputType, workflowService, subResourceCallback, cb) {
+    this._split = function (resource, resourceType, serviceInputType, workflowService, subResourceCallback, fileFinishCb) {
 
         if (resourceType.splitType == ResourceType.splitTypes.NONE) {
-            subResourceCallback(null, resource);
-            return cb();
+
+            return subResourceCallback(null, resource, function (err) {
+                fileFinishCb(err);
+            });
+
         } else if (resourceType.splitType == ResourceType.splitTypes.LINE) {
             logger.debug('Start line split for resource id: ' + resource.id);
-            self._splitOnLine(resource, serviceInputType, workflowService, subResourceCallback, cb);
+            self._splitOnLine(resource, serviceInputType, workflowService, subResourceCallback, fileFinishCb);
         } else {
             logger.error('Split type split not defined: ' + resourceType.splitType);
-            cb();
+            fileFinishCb();
         }
     };
 
-    this._splitOnLine = function (sourceResource, serviceInputType, workflowService, subResourceCallback, cb) {
+    this._splitOnLine = function (sourceResource, serviceInputType, workflowService, subResourceCallback, fileFinishCb) {
 
         var filename = sourceResource.filename;
         var pathToSourceFile = config.resources.location + '/' + filename;
@@ -393,9 +448,10 @@ function ResourceHandler(project) {
 
             if (globalLineIndex == 0 && last) {
                 logger.debug('One line file. Return current resource.');
-                subResourceCallback(null, sourceResource); // return current resource and finish
-                cb(); //stop handling sourceResource
-                return lineReaderCb(false); //stop reading lines
+                return subResourceCallback(null, sourceResource, function (err) {
+                    fileFinishCb(err);
+                    lineReaderCb(false); //stop reading lines
+                });
             }
 
             globalLineIndex++;
@@ -408,7 +464,7 @@ function ResourceHandler(project) {
             }
 
             if (lineSize > serviceInputType.sizeLimit) {
-                cb('Line size is greater than input size limit');
+                fileFinishCb('Line size is greater than input size limit');
                 return lineReaderCb(false);
             }
 
@@ -418,10 +474,12 @@ function ResourceHandler(project) {
                 resourceCreator.finish(function (err, resource) {
                     subResourceIndex++;
                     logger.debug('Subresource filled');
-                    subResourceCallback(null, resource);
-                    resourceCreator = new ResourceCreator(sourceResource, workflowService, globalLineIndex, project);
-                    limitLeft = serviceInputType.sizeLimit - lineSize;
-                    write();
+
+                    subResourceCallback(null, resource, function (err) {
+                        resourceCreator = new ResourceCreator(sourceResource, workflowService, globalLineIndex, project);
+                        limitLeft = serviceInputType.sizeLimit - lineSize;
+                        write();
+                    });
                 });
             } else {
                 write()
@@ -435,9 +493,10 @@ function ResourceHandler(project) {
                     if (last) {
                         resourceCreator.finish(function (err, resource) {
                             logger.debug('Line split finished');
-                            subResourceCallback(null, resource);
-                            lineReaderCb(false); //stop reading
-                            cb();
+                            subResourceCallback(null, resource, function (err) {
+                                lineReaderCb(false); //stop reading
+                                fileFinishCb();
+                            });
                         });
                     } else {
                         lineReaderCb();
@@ -446,7 +505,6 @@ function ResourceHandler(project) {
             }
         });
     };
-
 }
 
 module.exports = ResourceHandler;

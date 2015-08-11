@@ -48,9 +48,8 @@ app.use(controllers);
 app.use(errorhandlerMiddleware.error404);
 app.use(errorhandlerMiddleware.common);
 
-/**
- * Create HTTP server.
- */
+var workflowServerRestart = require('./../src/service/workflow/workflowServerRestart');
+
 function startCluster( instanceCount, cb ){
 
     if(instanceCount == null){
@@ -66,11 +65,19 @@ function startCluster( instanceCount, cb ){
         cluster.on('exit', function(worker, code, signal) {
             log4jsLogger.error('worker ' + worker.process.pid + ' died; Code: ' + code + '; Signal: ' + signal);
         });
+
+        workflowServerRestart.start(function (err) {
+            log4jsLogger.debug(' Workflows restarted. ');
+        });
+        
     } else {
         startInstance(cb);
     }
 }
 
+/**
+ * Create HTTP server.
+ */
 function startInstance(cb){
     var port = ServerUtil.normalizePort(config.port);
     app.set('port', port);

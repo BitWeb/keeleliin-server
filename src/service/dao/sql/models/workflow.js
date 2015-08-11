@@ -103,6 +103,21 @@ module.exports = function(sequelize, DataTypes) {
                 resource.datetimeCreated = new Date();
                 fn(null, resource);
             }
+        },
+        instanceMethods: {
+            getFirstWorkflowService: function(cb) {
+                this.getWorkflowServices({
+                    order: [['order_num','ASC']],
+                    limit: 1
+                }).then(function (items) {
+                    if(items.length > 0){
+                        return cb(null, items[0]);
+                    }
+                    return cb();
+                }).catch(function (err) {
+                    return cb(err);
+                });
+            }
         }
     });
 

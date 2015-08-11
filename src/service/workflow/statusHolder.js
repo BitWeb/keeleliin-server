@@ -36,6 +36,9 @@ function StatusHolder(){
         self._checkItem( workflowService );
         logger.debug('Is in proccessing check id: '+workflowService.id+'. Files to parse: ' + self._getFilesToParseCount(workflowService) + ' Steps to run: ' + self._getSubStepsToRunCount(workflowService));
 
+
+        logger.trace(serviceStatuses);
+
         if( self._getFilesToParseCount(workflowService) == 0 && self._getSubStepsToRunCount(workflowService) == 0 ){
             return false;
         }
