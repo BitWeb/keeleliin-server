@@ -75,7 +75,7 @@ config.log4js = {
                         port: config.port
                     }
                 },
-                "recipients": "priit@bitweb.ee",
+                "recipients": "someting@gmail.com",
                 "sendInterval": 10, //sec
                 "transport": "SMTP",
                 "SMTP": {
@@ -99,12 +99,12 @@ config.mail = {
         //host: '',
         //post: '',
         auth: {
-            user: 'bitweb.outgoing@gmail.com',
-            pass: 'qweqweasd123'
+            user: 'youruser@gmail.com',
+            pass: '******************'
         }
     },
 
-    sendAllMailsTo: ['taivo@bitweb.ee']
+    sendAllMailsTo: ['youruser@gmail.com']
 };
 
 module.exports = config;
