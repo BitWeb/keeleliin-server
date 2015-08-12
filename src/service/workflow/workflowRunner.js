@@ -142,7 +142,7 @@ function Runner() {
                 }
             ],
             function (err) {
-                cb( err );
+                cb( err ); //fromSubstep output is passed over and stored in future steps
             }
         );
     };
@@ -199,7 +199,7 @@ function Runner() {
                 cb(err);
                 return;
             }
-            cb(); //last subStep output is passed over ond stored
+            cb(); //last subStep output is passed over and stored
         });
     };
 

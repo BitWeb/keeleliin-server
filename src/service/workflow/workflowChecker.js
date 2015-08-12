@@ -44,7 +44,7 @@ var WorkflowChecker = function() {
                                 workflow.getWorkflowDefinition().then(function(workflowDefinition) {
                                     notificationService.addNotification(workflowDefinition.userId, NotificationType.codes.WORKFLOW_STILL_RUNNING, workflow.id, function(error, notification) {
                                         if (error) {
-                                            logger.error('Adding notification error: ' + error);
+                                            logger.error('Adding notification error: ', error);
                                         }
                                     });
                                 }).catch(function(error) {
@@ -67,7 +67,7 @@ var WorkflowChecker = function() {
             }
         ], function(error, result) {
             if (error) {
-                logger.error('Workflow checker error: ' + error);
+                logger.error('Workflow checker error: ', error);
             }
         });
 

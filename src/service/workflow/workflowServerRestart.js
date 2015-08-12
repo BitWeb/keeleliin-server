@@ -37,7 +37,11 @@ function WorkflowServerRestart(){
                     logger.trace('No running workflows');
                 }
                 async.each(workflows, function (workflow, eCb) {
-                    self.restartWorkflow(workflow, eCb);
+                    workflow.log = 'Server taaskäivitati';
+                    workflow.status = Workflow.statusCodes.RUNNING;
+                    workflow.save().then(function () {
+                        eCb();
+                    });
                 }, callback );
             }
         ], function (err) {
@@ -45,50 +49,6 @@ function WorkflowServerRestart(){
                 logger.error(err)
             }
             cb(err);
-        });
-    };
-
-    this.restartWorkflow = function ( workflow, cb ) {
-
-        logger.debug('Restart workflow: ' + workflow.id);
-
-        var workflowRunner = new WorkflowRunner();
-
-        async.waterfall([
-            function ( callback ) {
-                workflowRunner.init(workflow.id, function () {
-                    callback();
-                });
-            },
-            function ( callback ) {
-
-                workflow.getFirstWorkflowService(function (err, firstService) {
-                    if(err){
-                        return logger.error(err);
-                    }
-
-                    if( firstService ){
-                        logger.debug('Workflow ' + workflow.id + ' order num: ' +  firstService.orderNum );
-                        firstService.getNextWorkflowService(function (err, item) {
-                            if(item){
-                                logger.trace(item.orderNum);
-                            }
-                        });
-                    } else {
-                        logger.debug('Workflow has no services: ' + workflow.id);
-                    }
-                });
-
-                callback();
-            },
-            function ( callback ) {
-                callback();
-            },
-            function ( callback ) {
-                callback();
-            }
-        ], function (err) {
-            cb( err );
         });
     };
 }

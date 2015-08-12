@@ -43,6 +43,11 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: false,
             defaultValue: statusCodes.INIT
         },
+        log: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            primaryKey: false
+        },
         workflowDefinitionId: {
             type: DataTypes.INTEGER,
             allowNull: false,
