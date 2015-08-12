@@ -38,7 +38,7 @@ function WorkflowServerRestart(){
                 }
                 async.each(workflows, function (workflow, eCb) {
                     workflow.log = 'Server taaskäivitati';
-                    workflow.status = Workflow.statusCodes.RUNNING;
+                    workflow.status = Workflow.statusCodes.ERROR;
                     workflow.save().then(function () {
                         eCb();
                     });

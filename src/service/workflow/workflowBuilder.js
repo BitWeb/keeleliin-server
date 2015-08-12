@@ -42,6 +42,12 @@ function WorkflowBuilder(){
                 projectDaoService.getProject(projectId, function (err, data) {
                     if(err) return callback(err);
                     project = data;
+
+                    if(!project){
+                        return callback('Project not found');
+                    }
+
+
                     logger.info('Got project: ' + data.id);
                     callback();
                 });
@@ -55,7 +61,10 @@ function WorkflowBuilder(){
                 });
             }],
             function(err){
-                if(err) return cb(err);
+                if(err){
+                    logger.debug(err);
+                    return cb(err);
+                }
                 self.createWorkflow(cb);
         });
     };

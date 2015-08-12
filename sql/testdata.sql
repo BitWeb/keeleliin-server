@@ -12,15 +12,17 @@ INSERT INTO service (name, url, created_at, updated_at) SELECT 'Pindsüntaktilin
 INSERT INTO service (name, url, created_at, updated_at) SELECT 'Sõltuvussüntaktiline analüüs (ja järeltöötlus)', 'http://dev.bitweb.ee:3006/api/v1/', now(), now() WHERE NOT EXISTS (SELECT 1 FROM service WHERE service.id = 6);
 INSERT INTO service (name, url, created_at, updated_at) SELECT 'Arhiivi lahtipakkija', 'http://dev.bitweb.ee:3007/api/v1/', now(), now() WHERE NOT EXISTS (SELECT 1 FROM service WHERE service.id = 7);
 INSERT INTO service (name, url, created_at, updated_at) SELECT 'Sõnestaja', 'http://dev.bitweb.ee:3008/api/v1/', now(), now() WHERE NOT EXISTS (SELECT 1 FROM service WHERE service.id = 8);
+INSERT INTO service (name, url, created_at, updated_at, is_synchronous) SELECT 'LOCO test', 'http://localhost:3001/api/v1/', now(), now(), TRUE WHERE NOT EXISTS (SELECT 1 FROM service WHERE service.id = 9);
 
-INSERT INTO service_param (service_id, key, value) SELECT 1, 'is_async', '1' WHERE NOT EXISTS (SELECT 1 FROM service_param WHERE service_param.id = 1);
-INSERT INTO service_param (service_id, key, value) SELECT 2, 'is_async', '1' WHERE NOT EXISTS (SELECT 1 FROM service_param WHERE service_param.id = 2);
-INSERT INTO service_param (service_id, key, value) SELECT 3, 'is_async', '1' WHERE NOT EXISTS (SELECT 1 FROM service_param WHERE service_param.id = 3);
-INSERT INTO service_param (service_id, key, value) SELECT 4, 'is_async', '1' WHERE NOT EXISTS (SELECT 1 FROM service_param WHERE service_param.id = 4);
-INSERT INTO service_param (service_id, key, value) SELECT 5, 'is_async', '1' WHERE NOT EXISTS (SELECT 1 FROM service_param WHERE service_param.id = 5);
-INSERT INTO service_param (service_id, key, value) SELECT 6, 'is_async', '1' WHERE NOT EXISTS (SELECT 1 FROM service_param WHERE service_param.id = 6);
-INSERT INTO service_param (service_id, key, value) SELECT 7, 'is_async', '1' WHERE NOT EXISTS (SELECT 1 FROM service_param WHERE service_param.id = 7);
-INSERT INTO service_param (service_id, key, value) SELECT 8, 'is_async', '1' WHERE NOT EXISTS (SELECT 1 FROM service_param WHERE service_param.id = 8);
+INSERT INTO service_param (service_id, key, value) SELECT 1, 'isAsync', '1' WHERE NOT EXISTS (SELECT 1 FROM service_param WHERE service_param.id = 1);
+INSERT INTO service_param (service_id, key, value) SELECT 2, 'isAsync', '1' WHERE NOT EXISTS (SELECT 1 FROM service_param WHERE service_param.id = 2);
+INSERT INTO service_param (service_id, key, value) SELECT 3, 'isAsync', '1' WHERE NOT EXISTS (SELECT 1 FROM service_param WHERE service_param.id = 3);
+INSERT INTO service_param (service_id, key, value) SELECT 4, 'isAsync', '1' WHERE NOT EXISTS (SELECT 1 FROM service_param WHERE service_param.id = 4);
+INSERT INTO service_param (service_id, key, value) SELECT 5, 'isAsync', '1' WHERE NOT EXISTS (SELECT 1 FROM service_param WHERE service_param.id = 5);
+INSERT INTO service_param (service_id, key, value) SELECT 6, 'isAsync', '1' WHERE NOT EXISTS (SELECT 1 FROM service_param WHERE service_param.id = 6);
+INSERT INTO service_param (service_id, key, value) SELECT 7, 'isAsync', '1' WHERE NOT EXISTS (SELECT 1 FROM service_param WHERE service_param.id = 7);
+INSERT INTO service_param (service_id, key, value) SELECT 8, 'isAsync', '1' WHERE NOT EXISTS (SELECT 1 FROM service_param WHERE service_param.id = 8);
+INSERT INTO service_param (service_id, key, value) SELECT 9, 'isAsync', '1' WHERE NOT EXISTS (SELECT 1 FROM service_param WHERE service_param.id = 9);
 
 INSERT INTO service_input_type(key, do_parallel, service_id, resource_type_id, size_limit, size_unit) SELECT 'content', FALSE, 1, 1, 0, 'byte' WHERE NOT EXISTS (SELECT 1 FROM service_input_type WHERE service_input_type.id = 1);
 INSERT INTO service_input_type(key, do_parallel, service_id, resource_type_id, size_limit, size_unit) SELECT 'content', FALSE, 2, 1, 0, 'byte' WHERE NOT EXISTS (SELECT 1 FROM service_input_type WHERE service_input_type.id = 2);
@@ -30,6 +32,7 @@ INSERT INTO service_input_type(key, do_parallel, service_id, resource_type_id, s
 INSERT INTO service_input_type(key, do_parallel, service_id, resource_type_id, size_limit, size_unit) SELECT 'content', FALSE, 6, 1, 0, 'byte' WHERE NOT EXISTS (SELECT 1 FROM service_input_type WHERE service_input_type.id = 6);
 INSERT INTO service_input_type(key, do_parallel, service_id, resource_type_id, size_limit, size_unit) SELECT 'content', FALSE, 7, 1, 0, 'byte' WHERE NOT EXISTS (SELECT 1 FROM service_input_type WHERE service_input_type.id = 7);
 INSERT INTO service_input_type(key, do_parallel, service_id, resource_type_id, size_limit, size_unit) SELECT 'content', FALSE, 8, 1, 0, 'byte' WHERE NOT EXISTS (SELECT 1 FROM service_input_type WHERE service_input_type.id = 8);
+INSERT INTO service_input_type(key, do_parallel, service_id, resource_type_id, size_limit, size_unit, is_list) SELECT 'content', FALSE, 9, 1, 0, 'byte', TRUE WHERE NOT EXISTS (SELECT 1 FROM service_input_type WHERE service_input_type.id = 9);
 
 INSERT INTO service_output_type(key, service_id, resource_type_id) SELECT 'output', 1, 1 WHERE NOT EXISTS (SELECT 1 FROM service_output_type WHERE service_output_type.id = 1);
 INSERT INTO service_output_type(key, service_id, resource_type_id) SELECT 'output', 2, 1 WHERE NOT EXISTS (SELECT 1 FROM service_output_type WHERE service_output_type.id = 2);

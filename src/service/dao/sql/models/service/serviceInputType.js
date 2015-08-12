@@ -46,6 +46,12 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: false,
             defaultValue: sizeUnits.BYTE,
             field: 'size_unit'
+        },
+        isList: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false,
+            field:'is_list'
         }
     }, {
         tableName: 'service_input_type',

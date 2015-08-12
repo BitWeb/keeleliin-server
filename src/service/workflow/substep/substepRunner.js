@@ -94,7 +94,7 @@ function SubStepRunner(project, workflow){
                 if(error){return cb(error)}
                 self.handleResponse(substep, dto, response, cb);
             })
-        }, response.response.recheckInterval);
+        }, response.response.recheckInterval * 1000);
     };
 
 

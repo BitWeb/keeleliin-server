@@ -22,7 +22,16 @@ function ApiService(){
         }
 
         for(var j in dto.files){
-            formData[j] = fs.createReadStream( config.resources.location + '/' + dto.files[j] );
+            var file =  dto.files[j];
+            var attachment =  fs.createReadStream( config.resources.location + '/' + file.path );
+            if(formData[file.key] == undefined){
+                formData[file.key] = attachment;
+            } else if(Array.isArray(formData[file.key])) {
+                formData[file.key].push( attachment );
+            } else {
+                var previousAttachment = formData[file.key];
+                formData[file.key] = [previousAttachment, attachment];
+            }
         }
 
         request.post( { url: url, formData: formData }, function (err, resp, body) {

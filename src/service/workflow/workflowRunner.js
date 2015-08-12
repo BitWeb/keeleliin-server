@@ -416,22 +416,46 @@ function Runner() {
     this.finishWorkflowService = function (workflowService, status, cb) {
         logger.info('Set service status ' + status);
 
-        if (workflowService.status != Workflow.statusCodes.ERROR) {
-            workflowService.status = status;
-            workflowService.datetimeEnd = new Date();
-        }
+        async.waterfall([
+            function updateSuccessStatus(callback) {
+                if (workflowService.status != Workflow.statusCodes.ERROR) {
+                    workflowService.status = status;
+                    workflowService.datetimeEnd = new Date();
+                }
+                callback();
+            },
+            function save(callback) {
+                workflowService.save().then(function () {
+                    callback();
 
-        workflowService.save().then(function () {
-
-            if (workflowService.status == Workflow.statusCodes.ERROR) {
-                self.finishWorkflow(Workflow.statusCodes.ERROR, function (err) {
-                    cb(null, true);
+                }).catch(function (err) {
+                    callback(err.message);
                 });
-            } else {
-                cb(null, true);
+            },
+            function checkForErrorClose(callback) {
+                if (workflowService.status == Workflow.statusCodes.ERROR) {
+                    self.finishWorkflow(Workflow.statusCodes.ERROR, function (err) {
+                        callback();
+                    });
+                } else {
+                    callback();
+                }
+            },
+            function checkForSynchronousActions(callback) {
+                if (workflowService.status == Workflow.statusCodes.FINISHED) {
+                    workflowService.getService().then(function (service) {
+                        if(service.isSynchronous){
+                            //todo
+                            throw new Error('Todo');
+                        }
+                        callback();
+                    });
+                } else {
+                    callback();
+                }
             }
-        }).catch(function (err) {
-            cb(err.message);
+        ], function (err) {
+            cb(err);
         });
     };
 

@@ -33,7 +33,7 @@ router.get('/test', function(req, res, next) {
 
 
 
-    WorkflowServiceSubstep.find({
+/*    WorkflowServiceSubstep.find({
         where:{id: 1}
     }).then(function(workflowSubstep) {
 
@@ -51,22 +51,22 @@ router.get('/test', function(req, res, next) {
 
     }).catch(function (err) {
         return logger.error('Some error', err);
-    });
+    });*/
 
 
-res.send('asd');
-    return;
+
 
 
 
     var WorkflowBuilder = require('./../src/service/workflow/workflowBuilder');
     var Runner = require('./../src/service/workflow/workflowRunner');
+    var workflowService = require(__base + 'src/service/workflowService');
     ////////////
-    var workflowRunner;
+
     var initData = {
-        "project_id": 1,
-        "workflow_definition_id": 1,
-        "resources": [85]
+        "projectId": 1,
+        "workflowDefinitionId": 2,
+        "resources": [1,2]
     };
 
     var counter = 3;
@@ -107,11 +107,11 @@ res.send('asd');
                 logger.error('---------');
                 logger.error(data.id);
 
-                workflowRunner.check(data.id, function (err, data) {
+                workflowService.getWorkflowOverview(req, data.id, function(err, overview) {
                     if(err){ return cb(err); }
-                    handleRunCallback(data, cb);
+                    handleRunCallback(overview, cb);
                 });
-            }, 3000);
+            }, 2000);
 
         } else {
             cb(null, data);

@@ -21,6 +21,12 @@ module.exports = function(sequelize, DataTypes) {
         },
         url: {
             type: DataTypes.TEXT
+        },
+        isSynchronous: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false,
+            field:'is_synchronous'
         }
     }, {
         tableName: 'service',

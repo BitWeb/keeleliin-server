@@ -31,7 +31,7 @@ module.exports = function(sequelize, DataTypes) {
             field: 'service_param_id'
         },
         value: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT,
             allowNull: true
         }
     }, {

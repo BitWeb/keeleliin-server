@@ -25,7 +25,7 @@ module.exports = function(sequelize, DataTypes) {
             primaryKey: false
         },
         description: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT,
             allowNull: true,
             primaryKey: false
         },
@@ -44,7 +44,7 @@ module.exports = function(sequelize, DataTypes) {
             defaultValue: statusCodes.INIT
         },
         log: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT,
             allowNull: true,
             primaryKey: false
         },

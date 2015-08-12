@@ -74,7 +74,7 @@ function SubstepServiceDtoMapper(){
 
         var resources;
         var inputTypes;
-        dto.files = {};
+        dto.files = [];
 
         async.waterfall([
             function getInputResources(callback) {
@@ -105,7 +105,15 @@ function SubstepServiceDtoMapper(){
                             if(inputype.resourceTypeId == resource.resourceTypeId){
                                 logger.debug('Suitable input resource found: ' + resource.id);
                                 logger.debug('Key: ' + inputype.key + ' Filename: ' + resource.filename);
-                                dto.files[inputype.key] = resource.filename;
+                                dto.files.push({
+                                    key: inputype.key,
+                                    path: resource.filename
+                                });
+
+                                dto.files.push({
+                                    key: inputype.key,
+                                    path: resource.filename
+                                });
                             }
                         }
                     }
