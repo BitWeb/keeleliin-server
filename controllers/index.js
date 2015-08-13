@@ -65,24 +65,19 @@ router.get('/test', function(req, res, next) {
 
     var initData = {
         "projectId": 1,
-        "workflowDefinitionId": 2,
+        "workflowDefinitionId": 1,
         "resources": [1,2]
     };
 
-    var counter = 3;
-
+    var counter = 30;
 
     createWorkflow(initData, function (err, wf) {
         runWorkflow(wf, function (err, data) {
             logger.trace(data.id);
-            logger.info('returned to user');
-
             handleRunCallback(data, function (err, data) {
-
                 if(err){ logger.error( err ); }
                 logger.trace(data.id);
                 res.send(data);
-                logger.error('FINITO');
             });
         })
     });
@@ -104,9 +99,6 @@ router.get('/test', function(req, res, next) {
         if(data.status == 'RUNNING' && counter > 0){
             counter--;
             setTimeout(function () {
-                logger.error('---------');
-                logger.error(data.id);
-
                 workflowService.getWorkflowOverview(req, data.id, function(err, overview) {
                     if(err){ return cb(err); }
                     handleRunCallback(overview, cb);

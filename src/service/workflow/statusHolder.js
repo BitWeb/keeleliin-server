@@ -29,16 +29,19 @@ function StatusHolder(){
 
     this._getSubStepsToRunCount = function (workflowService) {
         self._checkItem( workflowService );
-        return serviceStatuses[workflowService.id].subStepsToRun;
+        var stepsToRun = 0;
+        for(i in serviceStatuses){
+            var item = serviceStatuses[i];
+            if(i <= workflowService.id){
+                stepsToRun += item.subStepsToRun;
+            }
+        }
+        return stepsToRun;
     };
 
     this.isInProcessing = function (workflowService) {
         self._checkItem( workflowService );
         logger.debug('Is in proccessing check id: '+workflowService.id+'. Files to parse: ' + self._getFilesToParseCount(workflowService) + ' Steps to run: ' + self._getSubStepsToRunCount(workflowService));
-
-
-        logger.trace(serviceStatuses);
-
         if( self._getFilesToParseCount(workflowService) == 0 && self._getSubStepsToRunCount(workflowService) == 0 ){
             return false;
         }

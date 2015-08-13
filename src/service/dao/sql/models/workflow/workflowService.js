@@ -4,7 +4,10 @@
 
 "use strict";
 
-module.exports = function(sequelize, DataTypes) {
+var logger = require('log4js').getLogger('workflow_service');
+var WorkflowModel = require('../workflow');
+
+module.exports = function (sequelize, DataTypes) {
 
     var WorkflowService = sequelize.define("WorkflowService", {
         id: {
@@ -33,7 +36,7 @@ module.exports = function(sequelize, DataTypes) {
         status: {
             type: DataTypes.STRING,
             allowNull: false,
-            defaultValue: 'INIT'
+            defaultValue: WorkflowModel.statusCodes.INIT
         },
         orderNum: {
             type: DataTypes.INTEGER,
@@ -63,17 +66,23 @@ module.exports = function(sequelize, DataTypes) {
         underscored: true,
 
         classMethods: {
-            associate: function(models) {
+            associate: function (models) {
                 WorkflowService.belongsTo(models.Service, {as: 'service', foreignKey: 'serviceId'});
                 WorkflowService.belongsTo(models.Workflow, {as: 'workflow', foreignKey: 'workflowId'});
-                WorkflowService.hasMany(models.WorkflowServiceSubstep, {foreignKey: 'workflowServiceId', as: 'subSteps'});
-                WorkflowService.hasMany(models.WorkflowServiceParamValue, {foreignKey: 'workflow_service_id', as: 'paramValues'});
+                WorkflowService.hasMany(models.WorkflowServiceSubstep, {
+                    foreignKey: 'workflowServiceId',
+                    as: 'subSteps'
+                });
+                WorkflowService.hasMany(models.WorkflowServiceParamValue, {
+                    foreignKey: 'workflow_service_id',
+                    as: 'paramValues'
+                });
             }
         },
         instanceMethods: {
-            getNextWorkflowService: function(cb) {
+            getNextWorkflowService: function (cb) {
                 var self = this;
-                this.getWorkflow().then(function(workflow){
+                this.getWorkflow().then(function (workflow) {
                     workflow.getWorkflowServices({
                         where: {
                             workflowId: self.workflowId,
@@ -81,9 +90,9 @@ module.exports = function(sequelize, DataTypes) {
                                 gt: self.orderNum
                             }
                         },
-                        order: [['order_num','ASC']]
+                        order: [['order_num', 'ASC']]
                     }).then(function (items) {
-                        if(items.length > 0){
+                        if (items.length > 0) {
                             return cb(null, items[0]);
                         }
                         return cb();
@@ -92,6 +101,33 @@ module.exports = function(sequelize, DataTypes) {
                     });
                 }).catch(function (err) {
                     cb(err);
+                });
+            },
+            start: function (cb) {
+
+                if (this.status == WorkflowModel.statusCodes.INIT) {
+                    this.status = WorkflowModel.statusCodes.RUNNING;
+                    this.datetimeStart = new Date();
+
+                    return this.save().then(function () {
+                        cb(null);
+                    }).catch(cb);
+
+                } else if (this.status == WorkflowModel.statusCodes.ERROR) {
+                    return cb('Töövoos on tekkinud viga');
+                }
+
+                cb(null);
+            },
+            finish: function (status, cb) {
+                if (this.status != WorkflowModel.statusCodes.ERROR) {
+                    this.status = status;
+                    this.datetimeEnd = new Date();
+                }
+                this.save().then(function () {
+                    cb();
+                }).catch(function (err) {
+                    cb(err.message);
                 });
             }
         }

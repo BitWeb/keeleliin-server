@@ -2,7 +2,7 @@
  * Created by priit on 2.07.15.
  */
 
-var logger = require('log4js').getLogger('substep_runner');
+var logger = require('log4js').getLogger('substep_handler');
 var async = require('async');
 var fs = require('fs');
 var Resource = require(__base + 'src/service/dao/sql').Resource;
@@ -14,9 +14,33 @@ var config = require(__base + 'config');
 var FileUtil = require('./../../../util/fileUtil');
 
 
-function SubStepRunner(project, workflow){
+function SubStepHandler(project, workflow){
 
     var self = this;
+
+    this.makeWorkflowServiceSubStep = function (inputResources, workflowService, previousStep, cb) {
+
+        var subStepData = {
+            workflowServiceId: workflowService.id,
+            prevSubstepId: previousStep ? previousStep.id: null,
+            status: 'INIT',
+            index: 0
+        };
+
+        WorkflowServiceSubstep.build(subStepData).save().then(function (subStep) {
+
+            subStep.setInputResources(inputResources).then(function () {
+                cb(null, subStep);
+            }).catch(function (err) {
+                logger.error('Add resource error', err);
+                cb(err.message);
+            });
+        }).catch(function (err) {
+            logger.error('SubStep build error', err);
+            cb(err.message);
+        });
+    };
+
 
     this.run = function (substep, cb) {
 
@@ -94,7 +118,7 @@ function SubStepRunner(project, workflow){
                 if(error){return cb(error)}
                 self.handleResponse(substep, dto, response, cb);
             })
-        }, response.response.recheckInterval * 1000);
+        }, response.response.recheckInterval * 1);
     };
 
 
@@ -132,7 +156,7 @@ function SubStepRunner(project, workflow){
             }
         ], function (err, data) {
             if(err){
-                return self._updateSubstepFinishStatus(substep, Workflow.statusCodes.FINISHED, function () {
+                return self._updateSubstepFinishStatus(substep, Workflow.statusCodes.ERROR, function () {
                     logger.error('Substep finished with error:' + err);
                 });
             }
@@ -253,4 +277,4 @@ function SubStepRunner(project, workflow){
     };
 }
 
-module.exports = SubStepRunner;
+module.exports = SubStepHandler;

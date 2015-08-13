@@ -72,6 +72,20 @@ function ResourceHandler(project) {
                 );
             },
 
+            function (callback) {
+                if(service.isSynchronous){
+                    return self.getSyncServiceResources(fromSubStep, workflowService, inputTypes, inputResourceTypes, resourceJunkCallback, callback );
+                } else {
+                    return self.getAsyncServiceResources(fromSubStep, workflowService, inputTypes, inputResourceTypes, resourceJunkCallback, callback );
+                }
+            }
+        ], resourcesCb);
+    };
+
+
+    this.getAsyncServiceResources = function (fromSubStep, workflowService, inputTypes, inputResourceTypes, resourceJunkCallback, resourcesCb) {
+
+        async.waterfall([
             function getInitResources(callback) {
                 logger.debug('Get resource junks');
                 if(fromSubStep){
@@ -96,7 +110,7 @@ function ResourceHandler(project) {
             function traverseJunks(resourceJunks, callback) {
 
                 logger.debug('Start traverse junks');
-                async.eachSeries(
+                async.each(
                     resourceJunks,
                     function iterator(resourceJunk, itCallback) {
                         logger.debug('Traverse resources iteration');
@@ -111,6 +125,62 @@ function ResourceHandler(project) {
         ], resourcesCb);
     };
 
+    this.getSyncServiceResources = function ( fromSubStep, workflowService, inputTypes, inputResourceTypes, resourceJunkCallback, resourcesCb ) {
+
+        async.waterfall([
+            function getResources( callback ) {
+
+                var initResources = [];
+
+                if(fromSubStep){
+                    fromSubStep.getWorkflowService().then(function (previousWorkflowService) {
+
+                        previousWorkflowService.getSubSteps().then(function (substeps) {
+                            async.each(substeps, function (substep, innerCallback) {
+                                substep.getOutputResources().then(function (resources) {
+                                    initResources = initResources.concat( resources );
+                                    return innerCallback();
+                                });
+                            }, function (err) {
+                                callback(err, initResources);
+                            });
+                        });
+                    });
+                } else {
+                    workflowService.getWorkflow().then(function (workflow) {
+                        workflow.getInputResources().then(function (resources) {
+                            return callback(null, resources);
+                        }).catch(function (err) {
+                            return callback(err);
+                        });
+                    });
+                }
+            },
+            function filterResources( resources, callback ) {
+                var filteredResult = [];
+                for(i in resources){
+                    var resource = resources[i];
+                    for(j in inputResourceTypes){
+                        var inputType = inputResourceTypes[j];
+                        if(resource.resourceTypeId == inputType.id){
+                            filteredResult.push(resource);
+                        }
+                    }
+                }
+                callback( null, filteredResult);
+            }
+        ], function (err, resources) {
+
+            if(err){
+                logger.error('Resource handle error happened', err);
+                return resourcesCb(err);
+            }
+
+            resourceJunkCallback(null, resources, function (err) {
+                resourcesCb();
+            });
+        });
+    };
 
     //leiab kogumikud failidest, mis peaksid teenusele sisendiks sobima
     this._getResourceJunks = function (resources, inputTypes, inputResourceTypes, fromSubStep, callback) {

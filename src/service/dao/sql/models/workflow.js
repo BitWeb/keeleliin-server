@@ -3,15 +3,19 @@
  */
 "use strict";
 
+var logger = require('log4js').getLogger('workflow');
+
+var statusCodes = {
+    INIT: 'INIT',
+    RUNNING: 'RUNNING',
+    FINISHED: 'FINISHED',
+    ERROR: 'ERROR',
+    CANCELLED: 'CANCELLED'
+};
+
 module.exports = function(sequelize, DataTypes) {
 
-    var statusCodes = {
-        INIT: 'INIT',
-        RUNNING: 'RUNNING',
-        FINISHED: 'FINISHED',
-        ERROR: 'ERROR',
-        CANCELLED: 'CANCELLED'
-    };
+
 
     var Workflow = sequelize.define("Workflow", {
         id: {
@@ -110,17 +114,41 @@ module.exports = function(sequelize, DataTypes) {
             }
         },
         instanceMethods: {
-            getFirstWorkflowService: function(cb) {
+            getFirstWorkflowService: function (cb) {
                 this.getWorkflowServices({
-                    order: [['order_num','ASC']],
+                    order: [['order_num', 'ASC']],
                     limit: 1
                 }).then(function (items) {
-                    if(items.length > 0){
+                    if (items.length > 0) {
                         return cb(null, items[0]);
                     }
                     return cb();
                 }).catch(function (err) {
                     return cb(err);
+                });
+            },
+            start: function (cb) {
+
+                if (this.status != statusCodes.INIT) {
+                    return cb('Antud töövoog on juba varem käivitatud');
+                }
+
+                this.status = Workflow.statusCodes.RUNNING;
+                this.datetimeStart = new Date();
+                this.save().then(function () {
+                    cb();
+                }).catch(function (err) {
+                    cb(err.message);
+                });
+            },
+            finish: function(status, cb){
+                logger.debug('Set workflow status: ' + status);
+                this.status = status;
+                this.datetimeEnd = new Date();
+                this.save().then(function () {
+                    cb();
+                }).catch(function (err) {
+                    cb(err);
                 });
             }
         }
@@ -130,3 +158,5 @@ module.exports = function(sequelize, DataTypes) {
 
     return Workflow;
 };
+
+module.exports.statusCodes = statusCodes;

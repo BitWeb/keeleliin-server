@@ -99,17 +99,10 @@ function SubstepServiceDtoMapper(){
                         var inputype = inputTypes[i];
                         for(j in resources){
                             var resource = resources[j];
-
                             logger.debug(' Compare: ' + inputype.resourceTypeId + ' == ' + resource.resourceTypeId );
-
                             if(inputype.resourceTypeId == resource.resourceTypeId){
                                 logger.debug('Suitable input resource found: ' + resource.id);
                                 logger.debug('Key: ' + inputype.key + ' Filename: ' + resource.filename);
-                                dto.files.push({
-                                    key: inputype.key,
-                                    path: resource.filename
-                                });
-
                                 dto.files.push({
                                     key: inputype.key,
                                     path: resource.filename
