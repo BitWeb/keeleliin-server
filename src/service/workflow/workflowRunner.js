@@ -117,7 +117,13 @@ function Runner() {
                                     }
 
                                     if(canFinish){
-                                        return self._handleWorkflowService(nextWorkflowService, subStep, callback );
+                                        nextWorkflowService.reload().then(function () {
+                                            if(nextWorkflowService.status == Workflow.statusCodes.INIT){
+                                                return self._handleWorkflowService(nextWorkflowService, subStep, callback );
+                                            } else {
+                                                callback();
+                                            }
+                                        });
                                     }
                                     return callback(); //If not - break the flow
                                 });
