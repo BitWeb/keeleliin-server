@@ -112,12 +112,6 @@ function Runner() {
                                     return callback();
                                 }
                                 self.canFinishWorkflowService( workflowService, function (err, canFinish) {
-                                    // TODO: miks siia mitu korda jõutakse
-
-                                    //  1.
-                                    //  2.
-
-
                                     if(err){
                                         return callback(err);
                                     }
