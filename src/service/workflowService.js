@@ -16,13 +16,13 @@ var WorkflowServiceModel = require(__base + 'src/service/dao/sql').WorkflowServi
 var ServiceModel = require(__base + 'src/service/dao/sql').Service;
 var ArrayUtils = require(__base + 'src/util/arrayUtils');
 
+var apiService = require('./workflow/service/apiService');
+
 function WorkflowService() {
 
     var self = this;
 
     this.getWorkflowOverview = function(req, workflowId, cb) {
-
-
         async.waterfall([
             function overviewQuery(callback) {
 
@@ -180,12 +180,74 @@ function WorkflowService() {
                 }).catch(function (err) {
                     callback(err);
                 });
+            },
+            function sendProcessKillSignals( workflow, callback ) {
+
+                self._killWorkflowRunningSubSteps(workflow, function (err) {
+                    logger.info('Signals sent', err);
+                });
+                callback(null, workflow);
             }
+
         ], function (err, workflow) {
             if(err){
                 return cb(err);
             }
             self.getWorkflowOverview(req, workflowId, cb);
+        });
+    };
+
+    this._killWorkflowRunningSubSteps = function ( workflow, cb ) {
+
+        WorkflowServiceSubstep.findAll(
+            {
+                attributes: ['id', 'serviceSession'],
+                where: {
+                    status: Workflow.statusCodes.RUNNING
+                },
+                include: [
+                    {
+                        model: WorkflowServiceModel,
+                        as: 'workflowService',
+                        attributes: ['id'],
+                        include: [
+                            {
+                                model: ServiceModel,
+                                as: 'service',
+                                attributes: ['url'],
+                                required: true
+                            },
+                            {
+                                model: Workflow,
+                                as: 'workflow',
+                                attributes: ['id'],
+                                where: {
+                                    id: workflow.id
+                                },
+                                required: true
+                            }
+                        ],
+                        required: true
+                    }
+                ]
+            }
+        ).then(function (runningSubSteps) {
+            async.each(
+                runningSubSteps,
+                function (substep, callback) {
+                    var dto = {
+                        id: substep.serviceSession,
+                        url: substep.workflowService.service.url
+                    };
+                    apiService.killRequest(dto, function (err, respBody) {
+                        logger.debug(respBody);
+                        callback();
+                    });
+                },
+                function (err) {
+                    cb( err );
+                }
+            );
         });
     };
 

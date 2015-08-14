@@ -17,6 +17,8 @@ var FileUtil = require('./../../../util/fileUtil');
 function SubStepHandler(project, workflow){
 
     var self = this;
+    this.project = project;
+    this.workflow = workflow;
 
     this.makeWorkflowServiceSubStep = function (inputResources, workflowService, previousStep, cb) {
 
@@ -49,13 +51,13 @@ function SubStepHandler(project, workflow){
                 substep.status = 'RUNNING';
                 substep.datetimeStart = new Date();
                 substep.save().then(function (){
-                    callback(null, substep);
+                    callback();
                 }).catch(function (err) {
                     logger.error('Save step error', err);
                     callback(err.message);
                 });
             },
-            function getDto(substep, callback) {
+            function getDto(callback) {
                 substepServiceDtoMapper.getSubstepServiceDto(substep, callback);
             },
             function (dto, callback) {
@@ -73,11 +75,27 @@ function SubStepHandler(project, workflow){
     };
 
     this.startProcessing = function (substep, dto, cb){
-        apiService.makeRequest(dto, function (err, response) {
-            if(err){ return cb(err); }
-            logger.debug('Response: ', response);
-            self.handleResponse(substep, dto, response, cb);
-        });
+
+        async.waterfall([
+            function makeInitialRequest(callback) {
+                apiService.makeRequest(dto, callback);
+            },
+            function storeSubStepServiceSessionId(response, callback) {
+                if(response && response.response){
+                    substep.updateAttributes({
+                        serviceSession: response.response.sessionId
+                    }).then(function () {
+                        callback(null, response);
+                    });
+                } else {
+                    callback(null, response);
+                }
+            },
+            function (response, callback) {
+                logger.debug('Response: ', response);
+                self.handleResponse(substep, dto, response, callback);
+            }
+        ], cb );
     };
 
     this.handleResponse = function (substep, dto, response, cb){
@@ -87,8 +105,6 @@ function SubStepHandler(project, workflow){
             substep.log = JSON.stringify(response);
             return self._updateSubstepFinishStatus(substep, Workflow.statusCodes.ERROR, cb);
         }
-
-        substep.service_session = response.response.serviceId;
 
         if(response.response.message == 'OK') {
             logger.info('Message OK');
@@ -114,11 +130,11 @@ function SubStepHandler(project, workflow){
         logger.debug(response);
 
         setTimeout(function () {
-            apiService.recheckRequest(dto, response.response.sessionId, function (error, response) {
+            apiService.recheckRequest(dto, substep.serviceSession, function (error, response) {
                 if(error){return cb(error)}
                 self.handleResponse(substep, dto, response, cb);
             })
-        }, response.response.recheckInterval * 1);
+        }, response.response.recheckInterval * 1000);
     };
 
 
@@ -131,20 +147,7 @@ function SubStepHandler(project, workflow){
                 async.eachSeries(
                     filesData,
                     function iterator(fileData, callback) {
-
-                        self.getSubstepOutputResourceType(substep, fileData, function (err, resourceType) {
-                            if(err) return callback(null, substep); //SKIP if not used
-
-                            var outputPath = self.getOutputResourcePath(substep, fileData);
-                            var requestSessionId = response.response.sessionId;
-                            apiService.loadRequestResponse(dto, requestSessionId, fileData, outputPath, function (err) {
-                                self._addSubstepOutputResource(substep, outputPath, fileData, resourceType, function (err, updatedSubstep) {
-                                    substep = updatedSubstep;
-                                    logger.debug('Output resource added: ' +  updatedSubstep.id);
-                                    callback(err, substep);
-                                });
-                            });
-                        });
+                        self._loadOutputResource(substep, fileData, dto,  callback);
                     },
                     function done( err ) {
                         wfCallback(err);
@@ -162,6 +165,19 @@ function SubStepHandler(project, workflow){
             }
             logger.debug('Finished: ' + substep.id);
             cb(err, data);
+        });
+    };
+
+    this._loadOutputResource = function (substep, fileData, dto,  callback) {
+        self.getSubstepOutputResourceType(substep, fileData, function (err, resourceType) {
+            if(err) return callback(null, substep); //SKIP if not used
+            var outputPath = self.getOutputResourcePath(substep, fileData);
+            apiService.loadRequestResponse(dto, substep.serviceSession, fileData, outputPath, function (err) {
+                self._addSubstepOutputResource(substep, outputPath, fileData, resourceType, function (err) {
+                    logger.debug('Output resource added: ' +  substep.id);
+                    callback(err);
+                });
+            });
         });
     };
 
@@ -220,7 +236,7 @@ function SubStepHandler(project, workflow){
             },
             function addProjectResource(resource, callback) {
                 project.addResource(resource).then(function () {
-                    callback(null, substep);
+                    callback(null);
                 });
             }
         ], cb);

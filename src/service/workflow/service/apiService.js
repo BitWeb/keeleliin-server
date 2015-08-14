@@ -68,6 +68,17 @@ function ApiService(){
             if (cb) cb(err.message);
         });
     };
+
+    this.killRequest = function (dto, cb) {
+        var url = dto.url + 'service' + '/' + dto.id + '/kill';
+        request.get( { url: url }, function (err, resp, body) {
+            if (err) {
+                logger.error(err.message);
+                return cb(err.message);
+            }
+            return cb(null, JSON.parse(resp.body));
+        });
+    };
 }
 
 module.exports = new ApiService();

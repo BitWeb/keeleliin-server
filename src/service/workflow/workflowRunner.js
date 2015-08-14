@@ -80,21 +80,21 @@ function Runner() {
     };
 
 
-    this._continueFromSubStep = function (fromSubStep) {
+    this._continueFromSubStep = function (subStep) {
 
-        logger.debug('Continue from substep id: ' + (fromSubStep != undefined ? fromSubStep.id: null));
+        logger.debug('Continue from substep id: ' + (subStep != undefined ? subStep.id: null));
 
         async.waterfall(
             [
                 function getNextWorkflowService(callback){
-                    if (fromSubStep == null) {
-                        workflow.getFirstWorkflowService(function (err, workflowService) {
-                            callback(err, workflowService, null);
+                    if (subStep == null) {
+                        workflow.getFirstWorkflowService(function (err, nextWorkflowService) {
+                            callback(err, nextWorkflowService, null);
                         } );
                     } else {
-                        fromSubStep.getWorkflowService().then(function (previousWorkflowService) {
-                            previousWorkflowService.getNextWorkflowService(function (err, workflowService) {
-                                callback(err, workflowService, previousWorkflowService);
+                        subStep.getWorkflowService().then(function (workflowService) {
+                            workflowService.getNextWorkflowService(function (err, nextWorkflowService) {
+                                callback(err, nextWorkflowService, workflowService);
                             });
                         }).catch(function (err) {
                             callback(err.message);
@@ -102,12 +102,38 @@ function Runner() {
                     }
                 },
 
-                function checkFoundWorkflowService(workflowService, fromService, callback) {
-                    if(workflowService){
-                        self._handleWorkflowService(workflowService, fromSubStep, callback );
+                function checkFoundWorkflowService(nextWorkflowService, workflowService, callback) {
+                    if(nextWorkflowService){
+                        //
+                        nextWorkflowService.getService().then(function (nextService) {
+                            if(nextService.isSynchronous){
+
+                                if(!subStep){
+                                    return callback();
+                                }
+                                self.canFinishWorkflowService( workflowService, function (err, canFinish) {
+                                    // TODO: miks siia mitu korda jõutakse
+
+                                    //  1.
+                                    //  2.
+
+
+                                    if(err){
+                                        return callback(err);
+                                    }
+
+                                    if(canFinish){
+                                        return self._handleWorkflowService(nextWorkflowService, subStep, callback );
+                                    }
+                                    return callback(); //If not - break the flow
+                                });
+                            } else {
+                                self._handleWorkflowService(nextWorkflowService, subStep, callback );
+                            }
+                        });
                     } else {
-                        if(fromService){
-                            return self.tryToCloseWorkflowFromWorkflowService(fromService, callback);
+                        if(workflowService){
+                            return self.tryToCloseWorkflowFromWorkflowService(workflowService, callback);
                         } else {
                             logger.trace('Eelnevat töövoo teenust ei leitud');
                             callback();
@@ -119,11 +145,9 @@ function Runner() {
                 if(err){
                     logger.error( err );
                     return self.finishWorkflow(Workflow.statusCodes.ERROR, function (err) {
-                        logger.debug('Workflow ' + workflow + ' breaked with status ' + workflow.status + '. Came from substep ' + (fromSubStep != undefined ? fromSubStep.id: null));
+                        logger.debug('Workflow ' + workflow + ' breaked with status ' + workflow.status + '. Came from substep ' + (subStep != undefined ? subStep.id: null));
                     });
                 }
-
-                logger.debug('Substep ' + (fromSubStep != undefined ? fromSubStep.id: null) + ' is passed over');
             }
         );
     };
@@ -135,33 +159,6 @@ function Runner() {
         var stepsCreated = 0;
 
         async.waterfall([
-            function checkSynchronous( callback ) {
-                workflowService.getService().then(function (service) {
-                    if(service.isSynchronous){
-
-                        if(!fromSubStep){
-                            return callback();
-                        }
-
-                        fromSubStep.getWorkflowService().then(function (previousWorkflowService) {
-                            self.canFinishWorkflowService( previousWorkflowService, function (err, canFinish) {
-                                if(err){
-                                    return callback(err);
-                                }
-                                if(canFinish){
-                                    return callback();
-                                } else {
-                                    cb();
-                                }
-                            });
-                        });
-
-
-                    } else {
-                        callback();
-                    }
-                });
-            },
             function startWfService(callback) {
                 workflowService.start(callback);
             },
@@ -342,7 +339,7 @@ function Runner() {
 
                 WorkflowService.count({
                     where: {
-                        workflowId: workflowService.workflowid,
+                        workflowId: workflowService.workflowId,
                         status: {
                             ne: Workflow.statusCodes.FINISHED
                         },
