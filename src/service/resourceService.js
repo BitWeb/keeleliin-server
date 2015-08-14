@@ -45,6 +45,14 @@ function ResourceService() {
         });
     };
 
+    this.getResourceTypeByValue = function(value, callback) {
+        ResourceType.find({ where: {value: value }}).then(function(resourceType) {
+            return callback(null, resourceType);
+        }).catch(function(error) {
+            return callback(error);
+        });
+    };
+
     this.getResources = function(req, callback) {
 
         return resourceDaoService.getResources(req.query, callback);
@@ -280,6 +288,14 @@ function ResourceService() {
                 }
                 cb(err, tmpPath);
             });
+    };
+
+    this.createResourceType = function(resourceTypeData, callback) {
+        ResourceType.create(resourceTypeData).then(function(resourceType) {
+            return callback(null, resourceType);
+        }).catch(function(error) {
+            return callback(error);
+        });
     }
 }
 

@@ -5,6 +5,7 @@
 var config = {};
 
 config.port = 3000;
+config.apiKey = '';
 
 config.redis = {
     host: "127.0.0.1",

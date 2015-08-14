@@ -32,6 +32,7 @@
     "request": "^2.57.0",
     "sequelize": "^3.1.1",
     "uid-safe": "^2.0.0",
+    "underscore": "^1.8.3",
     "uniqid": "1.0.0",
     "unzip": "^0.1.11",
     "v8-profiler": "^5.2.9"

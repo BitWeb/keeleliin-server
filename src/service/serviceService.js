@@ -10,6 +10,9 @@ var ServiceOutputType = require(__base + 'src/service/dao/sql').ServiceOutputTyp
 var ServiceInputType = require(__base + 'src/service/dao/sql').ServiceInputType;
 var ArrayUtils = require(__base + 'src/util/arrayUtils');
 var async = require('async');
+var resourceService = require(__base + 'src/service/resourceService');
+var ServiceForm = require(__base + 'src/form/serviceForm');
+var sequelize = require(__base + 'src/service/dao/sql').sequelize;
 
 function ServiceService() {
 
@@ -18,6 +21,19 @@ function ServiceService() {
     this.getService = function(req, serviceId, callback) {
 
         return serviceDaoService.findService(serviceId, callback);
+    };
+
+    this.getServiceBySid = function(req, sid, callback) {
+
+        ServiceModel.find({where: {sid: sid}}).then(function(serviceModel) {
+            return callback(null, serviceModel);
+        }).catch(function(error) {
+            return callback({
+                message: error.message,
+                code: 500
+            });
+        });
+
     };
 
     this.getServiceParamsByIds = function(serviceParamIds, callback) {
@@ -126,12 +142,12 @@ function ServiceService() {
         async.waterfall([
             function(callback) {
                 ServiceModel.create(serviceData).then(function(serviceModel) {
-
                     return callback(null, serviceModel);
                 }).catch(function(error) {
                     return callback(error);
                 });
             },
+
             function(serviceModel, callback) {
                 self._addServiceParamValues(req, serviceData, serviceModel, callback);
             },
@@ -143,13 +159,7 @@ function ServiceService() {
             function(serviceModel, callback) {
                 self._addServiceOutputTypes(req, serviceData, serviceModel, callback);
             }
-        ], function(err, serviceModel) {
-            if (err) {
-                return cb(err);
-            }
-
-            return cb(null, serviceModel);
-        });
+        ], cb);
     };
 
     this.saveService = function(req, serviceId, serviceData, cb) {
@@ -179,7 +189,6 @@ function ServiceService() {
                     self._addServiceOutputTypes(req, serviceData, serviceModel, callback);
                 }
             ], cb);
-
         });
     };
 
@@ -206,31 +215,23 @@ function ServiceService() {
 
                 async.eachSeries(serviceData.serviceParams, function(serviceParam, innerCallback) {
                     self.getServiceModelParam(req, serviceParam.id, function(err, serviceModelParam) {
-                        var serviceParamData = {
-                            key: serviceParam.key,
-                            value: serviceParam.value,
-                            description: serviceParam.description,
-                            orderNum: orderNum
-                        };
+                        serviceParam.serviceId = service.id;
+                        serviceParam.orderNum = orderNum;
 
                         if (serviceModelParam) {
                             addedIds.push(serviceModelParam.id);
-                            serviceModelParam.updateAttributes(serviceParamData).then(function(serviceModelParam) {
+                            serviceModelParam.updateAttributes(serviceParam).then(function(serviceModelParam) {
                                 orderNum++;
                                 return innerCallback();
                             }).catch(function(err) {
-                                return innerCallback(err);
+                                return innerCallback(err.message);
                             });
                         } else {
-                            ServiceModelParam.create(serviceParamData).then(function(serviceModelParam) {
-                                service.addServiceParam(serviceModelParam).then(function(serviceModelParam) {
-                                    return innerCallback();
-                                }).catch(function(err) {
-                                    return innerCallback(err);
-                                });
-
+                            serviceModelParam = ServiceModelParam.build(serviceParam);
+                            service.addServiceParam(serviceModelParam).then(function(serviceModelParam) {
+                                return innerCallback();
                             }).catch(function(err) {
-                                return innerCallback(err);
+                                return innerCallback(err.message);
                             });
                         }
                     });
@@ -282,30 +283,22 @@ function ServiceService() {
                 async.eachSeries(serviceData.serviceInputTypes, function(serviceInputTypeData, innerCallback) {
 
                     self.getServiceInputType(req, serviceInputTypeData.id, function(err, serviceInputType) {
-                        var data = {
-                            key: serviceInputTypeData.key,
-                            doParallel: serviceInputTypeData.doParallel,
-                            sizeLimit: serviceInputTypeData.sizeLimit,
-                            sizeUnit: serviceInputTypeData.sizeUnit,
-                            resourceTypeId: serviceInputTypeData.resourceTypeId
-                        };
+                        serviceInputTypeData.serviceId = service.id;
 
                         if (serviceInputType) {
                             addedIds.push(serviceInputType.id);
-                            serviceInputType.updateAttributes(data).then(function(serviceInputType) {
+                            serviceInputType.updateAttributes(serviceInputTypeData).then(function(serviceInputType) {
                                 return innerCallback();
                             }).catch(function(error) {
-                                return innerCallback(error);
+                                return innerCallback(error.message);
                             })
                         } else {
-                            ServiceInputType.create(data).then(function(serviceInputType) {
-                                service.addServiceInputType(serviceInputType).then(function() {
-                                    return innerCallback();
-                                }).catch(function(error) {
-                                    return innerCallback(error);
-                                });
+
+                            serviceInputType = ServiceInputType.build(serviceInputTypeData);
+                            service.addServiceInputType(serviceInputType).then(function(serviceInputType) {
+                                return innerCallback();
                             }).catch(function(error) {
-                                return innerCallback(error);
+                                return innerCallback(error.message);
                             });
                         }
 
@@ -358,14 +351,11 @@ function ServiceService() {
                 async.eachSeries(serviceData.serviceOutputTypes, function(serviceOutputTypeData, innerCallback) {
 
                     self.getServiceOutputType(req, serviceOutputTypeData.id, function(err, serviceOutputType) {
-                        var data = {
-                            key: serviceOutputTypeData.key,
-                            resourceTypeId: serviceOutputTypeData.resourceTypeId
-                        };
+                        serviceOutputTypeData.serviceId = service.id;
 
                         if (serviceOutputType) {
                             addedIds.push(serviceOutputType.id);
-                            serviceOutputType.updateAttributes(data).then(function(serviceOutputType) {
+                            serviceOutputType.updateAttributes(serviceOutputTypeData).then(function(serviceOutputType) {
 
                                 return innerCallback();
                             }).catch(function(error) {
@@ -373,15 +363,12 @@ function ServiceService() {
                                 return innerCallback(error);
                             });
                         } else {
-                            ServiceOutputType.create(data).then(function(serviceOutputType) {
-                                service.addServiceOutputType(serviceOutputType).then(function() {
+                            serviceOutputType = ServiceOutputType.build(serviceOutputTypeData);
+                            service.addServiceOutputType(serviceOutputType).then(function() {
 
-                                    return innerCallback();
-                                }).catch(function(error) {
-
-                                    return innerCallback(error);
-                                });
+                                return innerCallback();
                             }).catch(function(error) {
+
                                 return innerCallback(error);
                             });
                         }
@@ -408,6 +395,156 @@ function ServiceService() {
                 }
             }
         ], cb);
+    };
+
+    this.installService = function(req, sid, serviceData, callback) {
+        self.getServiceBySid(req, sid, function(error, serviceModel) {
+            if (error) {
+                return callback(error);
+            }
+
+            if (serviceModel) {
+                return callback('Service already installed.', serviceModel);
+            }
+
+            self._composeServiceDataFromInstallServiceData(sid, serviceData, function(error, data) {
+                if (error) {
+                    return callback(error);
+                }
+
+                var serviceForm = new ServiceForm(data);
+                if (serviceForm.isValid()) {
+                    return self.createService(req, serviceForm.getData(), callback);
+                } else {
+                    return callback(serviceForm.errors);
+                }
+            });
+        });
+    };
+
+    this._composeServiceDataFromInstallServiceData = function(sid, installData, cb) {
+
+        var serviceData = {
+            name: installData.name,
+            url: installData.url,
+            sid: sid,
+            description: installData.description,
+            serviceParams: [],
+            serviceInputTypes: [],
+            serviceOutputTypes: []
+        };
+
+        async.waterfall([
+            function(callback) {
+                for (var i = 0; i < installData.parameters.length; i++) {
+                    var param = installData.parameters[i];
+                    serviceData.serviceParams.push({
+                        type: param.type,
+                        key: param.key,
+                        value: param.value
+                    });
+                }
+
+                callback();
+            },
+            function(callback) {
+                if (installData.inputTypes) {
+                    async.eachSeries(installData.inputTypes, function(inputType, innerCallback) {
+                        resourceService.getResourceTypeByValue(inputType.type, function(error, resourceType) {
+                            if (error) {
+                                return innerCallback(error);
+                            }
+
+                            if (!resourceType) {
+                                resourceService.createResourceType({
+                                    value: inputType.type,
+                                    name: inputType.type
+                                }, function(error, resourceType) {
+                                    if (error) {
+                                        return innerCallback(error);
+                                    }
+                                    serviceData.serviceInputTypes.push({
+                                        key: inputType.key,
+                                        resourceTypeId: resourceType.id,
+                                        sizeLimit: inputType.sizeLimit,
+                                        sizeUnit: inputType.sizeUnit,
+                                        isList: inputType.isList
+                                    });
+                                    innerCallback();
+                                });
+                            } else {
+                                serviceData.serviceInputTypes.push({
+                                    key: inputType.key,
+                                    resourceTypeId: resourceType.id,
+                                    sizeLimit: inputType.sizeLimit,
+                                    sizeUnit: inputType.sizeUnit,
+                                    isList: inputType.isList
+                                });
+                                innerCallback();
+                            }
+
+
+                        });
+                    }, function(error) {
+                        if (error) {
+                            return callback(error);
+                        }
+                        return callback();
+                    });
+                } else {
+                    return callback();
+                }
+            },
+
+            function(callback) {
+                if (installData.outputTypes) {
+                    async.eachSeries(installData.outputTypes, function(outputType, innerCallback) {
+                        resourceService.getResourceTypeByValue(inputType.type, function(error, resourceType) {
+                            if (error) {
+                                return innerCallback(error);
+                            }
+
+                            if (!resourceType) {
+                                resourceService.createResourceType({
+                                    value: outputType.type,
+                                    name: outputType.type
+                                }, function(error, resourceType) {
+                                    if (error) {
+                                        return innerCallback(error);
+                                    }
+                                    serviceData.serviceOutputTypes.push({
+                                        resourceTypeId: resourceType.id,
+                                        key: resourceType.key
+                                    });
+                                    innerCallback();
+                                });
+                            } else {
+                                serviceData.serviceInputTypes.push({
+                                    resourceTypeId: resourceType.id,
+                                    key: resourceType.key
+                                });
+                                innerCallback();
+                            }
+
+
+                        });
+                    }, function(error) {
+                        if (error) {
+                            return callback(error);
+                        }
+                        return callback();
+                    });
+                } else {
+                    return callback();
+                }
+            }
+        ], function(error) {
+            if (error) {
+                return cb(error);
+            }
+            return cb(null, serviceData);
+        });
+
     };
 }
 

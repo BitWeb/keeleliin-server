@@ -11,6 +11,15 @@ module.exports = function(sequelize, DataTypes) {
             primaryKey: true,
             autoIncrement: true
         },
+        serviceId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: 'service',
+                key: 'id'
+            },
+            field: 'service_id'
+        },
         resourceTypeId: {
             type: DataTypes.INTEGER,
             allowNull: true,

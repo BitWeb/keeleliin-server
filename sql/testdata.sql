@@ -1,18 +1,18 @@
-INSERT INTO resource_type (value, name, split_type) SELECT 'TEXT', 'Tekst', 'LINE' WHERE NOT EXISTS (SELECT 1 FROM resource_type WHERE resource_type.id = 1);
-INSERT INTO resource_type (value, name, split_type) SELECT 'ZIP', 'Zip-file', 'NONE' WHERE NOT EXISTS (SELECT 1 FROM resource_type WHERE resource_type.id = 2);
+INSERT INTO resource_type (value, name, split_type) SELECT 'text', 'Tekst', 'LINE' WHERE NOT EXISTS (SELECT 1 FROM resource_type WHERE resource_type.id = 1);
+INSERT INTO resource_type (value, name, split_type) SELECT 'zip', 'Zip-file', 'NONE' WHERE NOT EXISTS (SELECT 1 FROM resource_type WHERE resource_type.id = 2);
 
 INSERT INTO "user" (entu_id, email, name, created_at, updated_at) SELECT 1, 'taivo@bitweb.ee', 'taivo', now(), now() WHERE NOT EXISTS (SELECT 1 FROM "user" WHERE "user".email = 'taivo@bitweb.ee');
 INSERT INTO "user" (entu_id, email, name, created_at, updated_at) SELECT 2, 'priit@bitweb.ee', 'priit', now(), now() WHERE NOT EXISTS (SELECT 1 FROM "user" WHERE "user".email = 'priit@bitweb.ee');
 
-INSERT INTO service (name, url, created_at, updated_at) SELECT 'Lausestaja', 'http://dev.bitweb.ee:3001/api/v1/', now(), now() WHERE NOT EXISTS (SELECT 1 FROM service WHERE service.id = 1);
-INSERT INTO service (name, url, created_at, updated_at) SELECT 'Morfoloogiline analüüs', 'http://dev.bitweb.ee:3002/api/v1/', now(), now() WHERE NOT EXISTS (SELECT 1 FROM service WHERE service.id = 2);
-INSERT INTO service (name, url, created_at, updated_at) SELECT 'Osalausestaja', 'http://dev.bitweb.ee:3003/api/v1/', now(), now() WHERE NOT EXISTS (SELECT 1 FROM service WHERE service.id = 3);
-INSERT INTO service (name, url, created_at, updated_at) SELECT 'Morfoloogiline ühestamine (kitsenduste grammatika)', 'http://dev.bitweb.ee:3004/api/v1/', now(), now() WHERE NOT EXISTS (SELECT 1 FROM service WHERE service.id = 4);
-INSERT INTO service (name, url, created_at, updated_at) SELECT 'Pindsüntaktiline analüüs', 'http://dev.bitweb.ee:3005/api/v1/', now(), now() WHERE NOT EXISTS (SELECT 1 FROM service WHERE service.id = 5);
-INSERT INTO service (name, url, created_at, updated_at) SELECT 'Sõltuvussüntaktiline analüüs (ja järeltöötlus)', 'http://dev.bitweb.ee:3006/api/v1/', now(), now() WHERE NOT EXISTS (SELECT 1 FROM service WHERE service.id = 6);
-INSERT INTO service (name, url, created_at, updated_at) SELECT 'Arhiivi lahtipakkija', 'http://dev.bitweb.ee:3007/api/v1/', now(), now() WHERE NOT EXISTS (SELECT 1 FROM service WHERE service.id = 7);
-INSERT INTO service (name, url, created_at, updated_at) SELECT 'Sõnestaja', 'http://dev.bitweb.ee:3008/api/v1/', now(), now() WHERE NOT EXISTS (SELECT 1 FROM service WHERE service.id = 8);
-INSERT INTO service (name, url, created_at, updated_at, is_synchronous) SELECT 'LOCO test', 'http://localhost:3001/api/v1/', now(), now(), TRUE WHERE NOT EXISTS (SELECT 1 FROM service WHERE service.id = 9);
+INSERT INTO service (sid, name, url, created_at, updated_at) SELECT 'lau', 'Lausestaja', 'http://dev.bitweb.ee:3001/api/v1/', now(), now() WHERE NOT EXISTS (SELECT 1 FROM service WHERE service.sid = 'lau');
+INSERT INTO service (sid, name, url, created_at, updated_at) SELECT 'moa', 'Morfoloogiline analüüs', 'http://dev.bitweb.ee:3002/api/v1/', now(), now() WHERE NOT EXISTS (SELECT 1 FROM service WHERE service.sid = 'moa');
+INSERT INTO service (sid, name, url, created_at, updated_at) SELECT 'osl', 'Osalausestaja', 'http://dev.bitweb.ee:3003/api/v1/', now(), now() WHERE NOT EXISTS (SELECT 1 FROM service WHERE service.sid = 'osl');
+INSERT INTO service (sid, name, url, created_at, updated_at) SELECT 'moy', 'Morfoloogiline ühestamine (kitsenduste grammatika)', 'http://dev.bitweb.ee:3004/api/v1/', now(), now() WHERE NOT EXISTS (SELECT 1 FROM service WHERE service.sid = 'moy');
+INSERT INTO service (sid, name, url, created_at, updated_at) SELECT 'pia', 'Pindsüntaktiline analüüs', 'http://dev.bitweb.ee:3005/api/v1/', now(), now() WHERE NOT EXISTS (SELECT 1 FROM service WHERE service.sid = 'pia');
+INSERT INTO service (sid, name, url, created_at, updated_at) SELECT 's6a', 'Sõltuvussüntaktiline analüüs (ja järeltöötlus)', 'http://dev.bitweb.ee:3006/api/v1/', now(), now() WHERE NOT EXISTS (SELECT 1 FROM service WHERE service.sid = 's6a');
+INSERT INTO service (sid, name, url, created_at, updated_at) SELECT 'uzip', 'Arhiivi lahtipakkija', 'http://dev.bitweb.ee:3007/api/v1/', now(), now() WHERE NOT EXISTS (SELECT 1 FROM service WHERE service.sid = 'uzip');
+INSERT INTO service (sid, name, url, created_at, updated_at) SELECT 'tok', 'Sõnestaja pipe', 'http://dev.bitweb.ee:3008/api/v1/', now(), now() WHERE NOT EXISTS (SELECT 1 FROM service WHERE service.sid = 'tok');
+INSERT INTO service (sid, name, url, created_at, updated_at, is_synchronous) SELECT 'loco-test', 'LOCO test', 'http://localhost:3001/api/v1/', now(), now(), TRUE WHERE NOT EXISTS (SELECT 1 FROM service WHERE service.sid = 'loco-test');
 
 INSERT INTO service_param (service_id, key, value) SELECT 1, 'isAsync', '1' WHERE NOT EXISTS (SELECT 1 FROM service_param WHERE service_param.id = 1);
 INSERT INTO service_param (service_id, key, value) SELECT 2, 'isAsync', '1' WHERE NOT EXISTS (SELECT 1 FROM service_param WHERE service_param.id = 2);
