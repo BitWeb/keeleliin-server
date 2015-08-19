@@ -138,6 +138,7 @@ function UserService() {
     };
 
     this.createNewUser = function (userParams, cb) {
+        logger.debug('Create New User', userParams);
 
         User.create(userParams, function (user) {
 
@@ -145,7 +146,9 @@ function UserService() {
                 name: 'Projekt 1',
                 description: 'Minu esimene projekt'
             });
+            logger.debug('User Add project');
             user.addProject(project).then(function () {
+                logger.debug('User Add userProject');
                 user.addUserProject(project, {role: ProjectUser.roles.ROLE_OWNER}).then(function () {
                     logger.debug('Vaikimisi project loodud');
                     cb(null, user);
