@@ -47,6 +47,10 @@ app.use(sessionMiddleware);
 app.use(sessionDebugger);
 app.use(jsonApiResponseMiddleware);
 //app.use(apiAccess); // Using API call for registering API access
+
+
+
+
 app.use(controllers);
 app.use(errorhandlerMiddleware.error404);
 app.use(errorhandlerMiddleware.common);
