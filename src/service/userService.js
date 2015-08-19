@@ -100,14 +100,18 @@ function UserService() {
                     logger.debug(entity);
 
                     var result = entity.result;
-                    if(!result){
-                        return callback('entu entity not found');
-                    }
+
 
                     callback(err, result, user)
                 });
             },
             function updateUserEntity(entity, user, callback) {
+
+                if(!entity){
+                    logger.error('Entu entity not found for user: ' + user.id);
+                    return callback(null, user);
+                }
+
                 logger.debug('Update user entity');
                 user.name = entity.displayname;
                 user.displaypicture = entity.displaypicture;
