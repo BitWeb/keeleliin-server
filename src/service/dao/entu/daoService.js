@@ -97,6 +97,9 @@ var DaoService = function(){
         logger.debug('Options ', options);
 
         request(options, function (error, response, body) {
+
+            logger.debug('Response: ', JSON.parse(body));
+
             return callback( error, JSON.parse(body) );
         }).on('error', function(e) {
             logger.debug('problem with request: ' + e);
