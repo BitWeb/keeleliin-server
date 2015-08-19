@@ -27,7 +27,7 @@ router.get('/login/:redirectUrl', function( req, res ) {
     if(req.redisSession.data.userId){
         userService.getCurrentUser(req, function ( error, user ) {
             if(error){ res.status(401); }
-            return res.sendApiResponse( error, { user: user });
+            return res.sendApiResponse( error, user );
         });
         return;
     }
