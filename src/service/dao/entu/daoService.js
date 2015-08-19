@@ -94,6 +94,8 @@ var DaoService = function(){
             headers : self._getRequestHeaders(meta)
         };
 
+        logger.debug('Options ', options);
+
         request(options, function (error, response, body) {
             return callback( error, JSON.parse(body) );
         }).on('error', function(e) {
