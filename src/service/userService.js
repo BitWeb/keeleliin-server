@@ -140,7 +140,7 @@ function UserService() {
     this.createNewUser = function (userParams, cb) {
         logger.debug('Create New User', userParams);
 
-        User.create(userParams, function (user) {
+        User.create(userParams).then(function (user) {
 
             var project = Project.build({
                 name: 'Projekt 1',
