@@ -139,9 +139,11 @@ function ServiceService() {
     };
 
     this.createService = function(req, serviceData, cb) {
+        var service = null;
         async.waterfall([
             function(callback) {
                 ServiceModel.create(serviceData).then(function(serviceModel) {
+                    service = serviceModel;
                     return callback(null, serviceModel);
                 }).catch(function(error) {
                     return callback(error);
@@ -159,7 +161,22 @@ function ServiceService() {
             function(serviceModel, callback) {
                 self._addServiceOutputTypes(req, serviceData, serviceModel, callback);
             }
-        ], cb);
+        ], function(error, serviceModel) {
+            if (error && service) {
+
+                // Rollback, manually removing incomplete service
+                // There exists transaction implementation, but too tedious to use it for creating service
+                ServiceModel.destroy({where: {id: service.id}}).then(function() {
+                    return cb(error);
+                }).catch(function(error) {
+                    return cb(error, serviceModel);
+                });
+            } else {
+                return cb(error, serviceModel);
+            }
+
+
+        });
     };
 
     this.saveService = function(req, serviceId, serviceData, cb) {

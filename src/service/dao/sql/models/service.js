@@ -14,8 +14,7 @@ module.exports = function(sequelize, DataTypes) {
         },
         sid: {
             type: DataTypes.STRING,
-            allowNull: false,
-            unique: true
+            allowNull: false
         },
         name: {
             type: DataTypes.STRING
@@ -41,9 +40,9 @@ module.exports = function(sequelize, DataTypes) {
 
         classMethods: {
             associate: function(models) {
-                Service.hasMany(models.ServiceParam, { foreignKey: 'service_id', as: 'serviceParams' });
-                Service.hasMany(models.ServiceInputType, { foreignKey: 'service_id', as: 'serviceInputTypes' });
-                Service.hasMany(models.ServiceOutputType, { foreignKey: 'service_id', as: 'serviceOutputTypes' });
+                Service.hasMany(models.ServiceParam, { foreignKey: 'service_id', as: 'serviceParams', onDelete: 'cascade'});
+                Service.hasMany(models.ServiceInputType, { foreignKey: 'service_id', as: 'serviceInputTypes',  onDelete: 'cascade'});
+                Service.hasMany(models.ServiceOutputType, { foreignKey: 'service_id', as: 'serviceOutputTypes',  onDelete: 'cascade'});
                 Service.belongsToMany(Service, {through: 'service_has_parent_service', as: 'childServices', foreignKey: 'service_parent_id'});
                 Service.belongsToMany(Service, {through: 'service_has_parent_service', as: 'parentServices', foreignKey: 'service_sibling_id'});
             }
