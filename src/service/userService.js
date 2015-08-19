@@ -94,15 +94,14 @@ function UserService() {
                 entuDaoService.getEntity( entuUser.id, meta, function (err, entity) {
 
                     if(err){
-                       callback(err);
+                       return callback(err);
                     }
 
                     logger.debug(entity);
 
-
                     var result = entity.result;
                     if(!result){
-                        callback('entu entity not found');
+                        return callback('entu entity not found');
                     }
 
                     callback(err, result, user)
