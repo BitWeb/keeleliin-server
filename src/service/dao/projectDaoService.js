@@ -39,15 +39,16 @@ function ProjectDaoService() {
             sql += " ORDER BY project." + params.sort + " " + params.order + " ";
         }
 
-        var countQuery = "SELECT COUNT(id) as total FROM ("+ sql +");";
+        var countQuery = "SELECT COUNT(id) as total FROM ("+ sql +") as projects;";
 
         if(params.page){
             sql += " LIMIT "+ limit +" OFFSET " + ((params.page - 1) * limit) + " ";
         }
 
         sequelize.query( sql, { type: sequelize.QueryTypes.SELECT}).then(function (rows) {
-            sequelize.query( countQuery, { type: sequelize.QueryTypes.SELECT}).then(function (count) {
-                return cb(null, { rows: rows, count: count });
+            sequelize.query( countQuery, { type: sequelize.QueryTypes.SELECT}).then(function (countResult) {
+                var countRow = countResult.pop();
+                return cb(null, { rows: rows, count: countRow['total'] });
             }).catch(function (err) {
                 return cb(err.message);
             });
