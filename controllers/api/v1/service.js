@@ -78,7 +78,7 @@ router.post('/install/sid/:sid/apiKey/:apiKey', function(req, res) {
         });
     } else {
         return res.sendApiResponse({
-            message: 'Api key do not match!',
+            message: 'Api key does not match!',
             code: 401
         });
     }
