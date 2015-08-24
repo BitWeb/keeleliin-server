@@ -47,12 +47,12 @@ function ProjectDaoService() {
 
         sequelize.query( sql, { type: sequelize.QueryTypes.SELECT}).then(function (rows) {
             sequelize.query( countQuery, { type: sequelize.QueryTypes.SELECT}).then(function (count) {
-                return callback(null, { rows: rows, count: count });
+                return cb(null, { rows: rows, count: count });
             }).catch(function (err) {
-                return callback(err.message);
+                return cb(err.message);
             });
         }).catch(function (err) {
-            return callback(err.message);
+            return cb(err.message);
         });
     };
 
