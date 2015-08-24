@@ -31,6 +31,11 @@ function ProjectService(){
         var userId = req.redisSession.data.userId;
         return projectDaoService.getUserProjectsList( userId, req.query, function (err, result) {
 
+            if(err){
+                logger.error(err);
+                return cb(err);
+            }
+
             logger.debug('Projects result: ', result);
 
             async.map(

@@ -16,11 +16,11 @@ function ProjectDaoService() {
     this.getUserProjectsList = function (userId, params, cb) {
 
         var sql = "SELECT " +
-            " project.id as id," +
-            " project.name as name," +
-            " project.description as description," +
-            " project.access_status as access_status," +
-            " project.created_at as created_at," +
+            " project.id as id, " +
+            " project.name as name, " +
+            " project.description as description, " +
+            " project.access_status as access_status, " +
+            " project.created_at as created_at " +
             " FROM project as project" +
             " LEFT JOIN project_user as pu ON (pu.project_id = project.id)" +
             " ";
