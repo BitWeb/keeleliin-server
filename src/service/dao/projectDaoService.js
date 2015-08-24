@@ -5,61 +5,56 @@ var logger = require('log4js').getLogger('project_dao_service');
 var Project = require(__base + 'src/service/dao/sql').Project;
 var User = require(__base + 'src/service/dao/sql').User;
 var ProjectUser = require(__base + 'src/service/dao/sql').ProjectUser;
+var sequelize = require(__base + 'src/service/dao/sql').sequelize;
 
 function ProjectDaoService() {
 
     var self = this;
 
-    var limit = 10;
+    var limit = 15;
 
     this.getUserProjectsList = function (userId, params, cb) {
 
-        var queryProperties = {
-            attributes: [
-                'id',
-                'name',
-                'description',
-                'accessStatus',
-                'createdAt'
-            ],
-            where: {},
-            include: [
-                {
-                    model: ProjectUser,
-                    as: 'projectUserRelations',
-                    attributes: [],
-                    where: {
-                        userId: userId
-                    },
-                    required: true
-                }
-            ],
-            required: true
-        };
+        var sql = "SELECT " +
+            " project.id as id," +
+            " project.name as name," +
+            " project.description as description," +
+            " project.access_status as access_status," +
+            " project.created_at as created_at," +
+            " FROM project as project" +
+            " LEFT JOIN project_user as pu ON (pu.project_id = project.id)" +
+            " ";
+
+        var where = " WHERE project.deleted_at IS NULL " +
+            " AND (pu.user_id = " + userId + " OR project.access_status = '"+ Project.accessStatuses.PUBLIC +"' ) ";
 
         if(params.name){
-            queryProperties.where.name = {
-                $iLike: params.name + '%'
-            }
+            where += " AND project.name ILIKE '"+ params.name +"%'"
         }
 
-        if(params.page){
-            queryProperties.limit = limit;
-            queryProperties.offset = (params.page - 1) * limit;
-        }
+        sql += where;
+        sql += " GROUP BY project.id, project.name, project.description, project.access_status, project.created_at ";
 
         if(params.sort && params.order){
-            queryProperties.order = [[params.sort, params.order]]
+            sql += " ORDER BY project." + params.sort + " " + params.order + " ";
         }
 
-        Project.findAndCountAll( queryProperties ).then(function (result) {
-            return cb(null, result);
+        var countQuery = "SELECT COUNT(id) as total FROM ("+ sql +");";
+
+        if(params.page){
+            sql += " LIMIT "+ limit +" OFFSET " + ((params.page - 1) * limit) + " ";
+        }
+
+        sequelize.query( sql, { type: sequelize.QueryTypes.SELECT}).then(function (rows) {
+            sequelize.query( countQuery, { type: sequelize.QueryTypes.SELECT}).then(function (count) {
+                return callback(null, { rows: rows, count: count });
+            }).catch(function (err) {
+                return callback(err.message);
+            });
         }).catch(function (err) {
-            cb(err.message);
+            return callback(err.message);
         });
     };
-
-
 
     this.getUserProject = function (userId, projectId, callback) {
         Project.find({

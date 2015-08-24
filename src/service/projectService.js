@@ -35,11 +35,17 @@ function ProjectService(){
 
             async.map(
                 result.rows,
-                function (project, callback) {
-                    var newItem = project.dataValues;
+                function (row, callback) {
 
-                    project = Project.build({id: 1});
+                    var newItem = {
+                        id:  row.id,
+                        name:  row.name,
+                        description:  row.description,
+                        createdAt:  row.created_at,
+                        accessStatus:  row.access_status,
+                    };
 
+                    project = Project.build( newItem );
 
                     project.getProjectUsers().then(function (projectUsers) {
 
