@@ -5,6 +5,11 @@
 
 module.exports = function(sequelize, DataTypes) {
 
+    var accessStatuses = {
+        PRIVATE: 'private',
+        PUBLIC: 'public'
+    };
+
     var Project = sequelize.define("Project", {
         id: {
             type: DataTypes.INTEGER,
@@ -33,7 +38,7 @@ module.exports = function(sequelize, DataTypes) {
         accessStatus: {
             type: DataTypes.BOOLEAN,
             allowNull: false,
-            defaultValue: 'private',
+            defaultValue: accessStatuses.PRIVATE,
             field: 'access_status'
         },
         createdAt: {
@@ -68,6 +73,8 @@ module.exports = function(sequelize, DataTypes) {
             }
         }
     });
+
+    Project.accessStatuses = accessStatuses;
 
     return Project;
 };

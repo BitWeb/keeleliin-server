@@ -37,6 +37,10 @@ function ProjectService(){
                 result.rows,
                 function (project, callback) {
                     var newItem = project.dataValues;
+
+                    project = Project.build({id: 1});
+
+
                     project.getProjectUsers().then(function (projectUsers) {
 
                     async.map(
