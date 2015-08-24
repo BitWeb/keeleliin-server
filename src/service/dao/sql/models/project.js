@@ -30,11 +30,11 @@ module.exports = function(sequelize, DataTypes) {
             },
             field: 'user_id'
         },
-        isPrivate: {
+        isPublic: {
             type: DataTypes.BOOLEAN,
             allowNull: false,
             defaultValue: false,
-            field: 'is_private'
+            field: 'is_public'
         },
         createdAt: {
             type: DataTypes.DATE,

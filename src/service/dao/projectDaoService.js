@@ -19,6 +19,7 @@ function ProjectDaoService() {
                 'id',
                 'name',
                 'description',
+                'isPublic',
                 'createdAt'
             ],
             where: {},
