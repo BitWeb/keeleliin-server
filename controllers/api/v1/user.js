@@ -9,6 +9,7 @@ var logger = require('log4js').getLogger('user_controller');
 var authMiddleware = require(__base + 'middlewares/auth');
 
 var userService = require('../../../src/service/userService');
+var userDaoService = require('../../../src/service/dao/userDaoService');
 
 var entuDao = require('../../../src/service/dao/entu/daoService');
 
@@ -43,6 +44,16 @@ router.get('/logout', function( req, res ) {
 
     userService.logout( req, function (err) {
         res.sendApiResponse( err, {success: true} );
+    });
+});
+
+/**
+ * Return active users list
+ */
+router.get('/list', function( req, res ) {
+
+    userDaoService.getActiveUsersList( function (err, users) {
+        res.sendApiResponse( err, users );
     });
 });
 

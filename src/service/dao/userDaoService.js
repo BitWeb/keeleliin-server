@@ -32,6 +32,20 @@ function UserDaoService() {
             });
         });
     };
+
+    this.getActiveUsersList = function (callback) {
+        User.findAll({
+            where:{},
+            attributes: ['id', 'name', 'email']
+        }).then(function (data) {
+            return callback(null, data);
+        }).catch(function(error) {
+            return callback({
+                message: error.message,
+                code: 500
+            });
+        });
+    }
 }
 
 module.exports = new UserDaoService();

@@ -208,6 +208,10 @@ function UserService() {
     this.logout = function (request, cb) {
         request.redisSession.delete(cb);
     };
+
+
+
+
 }
 
 module.exports = new UserService();

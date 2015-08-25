@@ -7,7 +7,8 @@ module.exports = function(sequelize, DataTypes) {
 
     var accessStatuses = {
         PRIVATE: 'private',
-        PUBLIC: 'public'
+        PUBLIC: 'public',
+        SHARED: 'shared'
     };
 
     var Project = sequelize.define("Project", {

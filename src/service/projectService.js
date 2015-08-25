@@ -47,7 +47,7 @@ function ProjectService(){
                         name:  row.name,
                         description:  row.description,
                         createdAt:  row.created_at,
-                        accessStatus:  row.access_status,
+                        accessStatus:  row.access_status
                     };
 
                     project = Project.build( newItem );
