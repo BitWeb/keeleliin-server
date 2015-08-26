@@ -7,9 +7,12 @@ var projectDaoService = require('./dao/projectDaoService');
 var Project = require(__base + 'src/service/dao/sql').Project;
 var ProjectUser = require(__base + 'src/service/dao/sql').ProjectUser;
 var userService = require('./userService');
+var userDaoService = require('./dao/userDaoService');
 var async = require('async');
 var notificationService = require(__base + 'src/service/notificationService');
 var NotificationType = require(__base + 'src/service/dao/sql').NotificationType;
+var ArrayUtil = require('../util/arrayUtils');
+var ObjectUtil = require('../util/objectUtils');
 
 function ProjectService(){
 
@@ -30,7 +33,7 @@ function ProjectService(){
 
         var userId = req.redisSession.data.userId;
         return projectDaoService.getUserProjectsList( userId, req.query, function (err, result) {
-
+//todo: can delete property
             if(err){
                 logger.error(err);
                 return cb(err);
@@ -47,7 +50,8 @@ function ProjectService(){
                         name:  row.name,
                         description:  row.description,
                         createdAt:  row.created_at,
-                        accessStatus:  row.access_status
+                        accessStatus:  row.access_status,
+                        canDelete: false
                     };
 
                     project = Project.build( newItem );
@@ -57,6 +61,11 @@ function ProjectService(){
                     async.map(
                         projectUsers,
                         function (projectUser, puCallback) {
+
+                            if(projectUser.id == userId && projectUser.projectUser.role == ProjectUser.roles.ROLE_OWNER){
+                                newItem.canDelete = true;
+                            }
+
                             var pu = {
                                 id: projectUser.id,
                                 name: projectUser.name,
@@ -83,41 +92,50 @@ function ProjectService(){
         return projectDaoService.getUserProject( userId, projectId, callback);
     };
 
-    this.createCurrentUserProject = function(req, updateData, callback){
-        userService.getCurrentUser(req, function (err, user) {
-            if(err){
-                return callback(err);
-            }
+    this.createCurrentUserProject = function(req, projectData, cb){
 
-            var project = Project.build(updateData);
-            user.addProject(project).then(function(project) {
-                project.addProjectUser(user, {role: ProjectUser.roles.ROLE_OWNER}).then(function () {
+        async.waterfall([
+            function getCurrentUser( callback ) {
+                userService.getCurrentUser(req, function (err, user) {
+                    callback(err, user);
+                });
+            },
+            function createProject( currentUser, callback ){
+                var project = Project.build(projectData);
+                currentUser.addProject(project).then(function(project) {
+                    callback(null, project, currentUser)
+                }).catch(function (e) {
+                    return callback(e.message);
+                });
+            },
+            function addOwnerRelation(project, currentUser, callback) {
+                project.addProjectUser(currentUser, {role: ProjectUser.roles.ROLE_OWNER}).then(function () {
                     return callback(null, project);
                 }).catch(function (e) {
                     return callback(e);
                 });
-            }).catch(function (e) {
-                return callback(e);
-            });
+            },
+            function addUserRelations( project, callback) {
+                self._updateProjectUserRelations(req, project, projectData.users, callback);
+            }
+        ], function (err, project) {
+            cb(err, project);
         });
     };
 
     this.updateCurrentUserProject = function(req, projectId, updateData, callback){
 
         var userId = req.redisSession.data.userId;
-
         projectDaoService.getUserProject( userId, projectId, function (err, project) {
             if(err){
                 return callback( err );
             }
-
             if(updateData.name != undefined){
                 project.name = updateData.name;
             }
             if(updateData.description != undefined){
                 project.description = updateData.description;
             }
-
             project.save().then(function (updatedProject) {
                 return callback(null, updatedProject);
             }).catch(function (error) {
@@ -125,7 +143,129 @@ function ProjectService(){
             });
         });
     };
-    
+
+    /**
+     * @param req
+     * @param project
+     * @param newRelations [{userId: "", role:""}]
+     * @param cb
+     * @returns {*}
+     * @private
+     */
+    this._updateProjectUserRelations = function (req, project, newRelations, cb) {
+
+        if(!newRelations){
+            return cb(null, project);
+        }
+
+        var currentUser;
+
+        async.waterfall([
+            function getCurrentUser( callback ) {
+                userService.getCurrentUser(req, function (err, user) {
+                    currentUser = user;
+                    callback(err);
+                });
+            },
+            function getRelations( callback ) {
+                logger.debug('Get relations');
+                project.getProjectUserRelations().then(function (existingRelations) {
+                    callback(null, existingRelations);
+                });
+            },
+            function isCurrentUserInOwnerRelation(existingRelations, callback) {
+                logger.debug('Is current user in owner');
+                var currentOwnerRelation = ArrayUtil.find(existingRelations, function (projectUser) {
+                   return projectUser.userId == currentUser.id && projectUser.role == ProjectUser.roles.ROLE_OWNER
+                });
+
+                if(currentOwnerRelation){
+                    return callback( null, existingRelations);
+                }
+
+                logger.info('User is not owner in projectuser relation');
+                return cb(null, project);
+            },
+
+            function removeOrUpdateRelations(existingRelations, callback) {
+                logger.debug('Remove or update relations');
+                async.eachOfSeries(existingRelations, function (existingRelation, key, innerCb) {
+
+                    if(existingRelation.userId == currentUser.id) { // do not update current user record
+                        return innerCb();
+                    }
+
+                    var updateRelation = ArrayUtil.find(newRelations, function (newRelation) { return newRelation.userId == existingRelation.userId; });
+
+                    if(updateRelation){
+
+                        if( ObjectUtil.hasKeyValue(ProjectUser.roles, updateRelation.role) ){
+                            existingRelation.role = updateRelation.role;
+
+                            logger.debug('Update', existingRelation);
+
+                            existingRelation.save().then(function () {
+                                innerCb();
+                            });
+                        }
+                    } else {
+                        logger.debug('Remove', existingRelation);
+
+                        existingRelation.destroy().then(function () {
+                            innerCb();
+                        });
+                    }
+                }, function (err) {
+                    callback(err);
+                });
+            },
+            function addNewRelations( callback ){
+                logger.debug('Add new relations');
+
+                project.getProjectUserRelations().then(function (existingRelations) {
+
+                    logger.debug('New relations', newRelations);
+
+                   async.eachOfSeries( newRelations ,
+                       function (newRelation, key, innerCb) {
+
+                           logger.debug('New relation', newRelation);
+
+                           var oldRelation = ArrayUtil.find(existingRelations, function (existingRelation) {
+                               existingRelation.userId == newRelation.userId;
+                           });
+
+                           if(!oldRelation && ObjectUtil.hasKeyValue(ProjectUser.roles, newRelation.role)){
+                               logger.debug('No relation for: ', newRelation);
+
+                                userDaoService.findById(newRelation.userId, function (err, user) {
+                                    if(err){
+                                        return innerCb(err.message);
+                                    }
+                                    project.addProjectUser(user, {role: newRelation.role}).then(function () {
+                                        return innerCb();
+                                    }).catch(function (e) {
+                                        return innerCb(e.message);
+                                    });
+                                });
+                           } else {
+                                return innerCb();
+                           }
+                       },
+                       function (err) {
+                            callback(err);
+                       }
+                   );
+                });
+            }
+        ], function (err) {
+            if(err){
+                logger.error(err);
+            }
+            cb(err, project);
+        });
+    };
+
     this.deleteCurrentUserProject = function (req, projectId, callback) {
 
         // todo: kustuta seotud andmeobjektid
@@ -144,6 +284,7 @@ function ProjectService(){
         });
     };
 
+    //todo Not used??
     this.addProjectUser = function(req, projectId, userData, cb) {
         async.waterfall([
             function(callback) {
@@ -218,6 +359,7 @@ function ProjectService(){
         ], cb);
     };
 
+    //todo Not used??
     this.removeProjectUser = function(req, projectId, userData, cb) {
 
         async.waterfall([
