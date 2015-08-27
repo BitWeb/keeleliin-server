@@ -26,7 +26,7 @@ function ProjectDaoService() {
             " ";
 
         var where = " WHERE project.deleted_at IS NULL " +
-            " AND (pu.user_id = " + userId + " OR project.access_status = '"+ Project.accessStatuses.PUBLIC +"' ) ";
+            " AND pu.user_id = " + userId + " ";
 
         if(params.name){
             where += " AND project.name ILIKE '"+ params.name +"%'"
@@ -64,7 +64,8 @@ function ProjectDaoService() {
                 'name',
                 'description',
                 'createdAt',
-                'updatedAt'
+                'updatedAt',
+                'accessStatus'
             ],
             where: {
                 id: projectId/*, userId: userId*/
@@ -75,7 +76,18 @@ function ProjectDaoService() {
                     as: 'projectUsers',
                     attributes: [
                         'id',
-                        'name'
+                        'name',
+                        'displaypicture'
+                    ],
+                    required: true
+                },
+                {
+                    model: User,
+                    as: 'user',
+                    attributes: [
+                        'id',
+                        'name',
+                        'displaypicture'
                     ],
                     required: true
                 },

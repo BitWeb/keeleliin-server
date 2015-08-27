@@ -268,6 +268,11 @@ function WorkflowService() {
                 for(i in workflows){
                     var item = workflows[i];
 
+                    var progress = 100;
+                    if(item.workflowServices.length > 0){
+                        progress = Math.round((item.workflowServices.filter(function(value){return value.status == Workflow.statusCodes.FINISHED;}).length * 100) / item.workflowServices.length);
+                    }
+
                     var dtoItem = {
                         id: item.id,
                         name: item.name,
@@ -275,7 +280,7 @@ function WorkflowService() {
                         datetimeCreated: item.datetimeCreated,
                         datetimeStart: item.datetimeStart,
                         datetimeEnd: item.datetimeEnd,
-                        progress: (item.workflowServices.filter(function(value){return value.status == 'FINISHED';}).length * 100) / item.workflowServices.length
+                        progress: progress
                     };
                     dto.push(dtoItem);
                 }

@@ -15,6 +15,7 @@ var formidable = require('formidable');
 var projectService = require(__base + 'src/service/projectService');
 var uniqid = require('uniqid');
 var FileUtil = require('../util/fileUtil');
+var ObjectUtils = require('../util/objectUtils');
 
 function ResourceService() {
 
@@ -54,8 +55,16 @@ function ResourceService() {
     };
 
     this.getResources = function(req, callback) {
-
-        return resourceDaoService.getResources(req.query, callback);
+        return resourceDaoService.getResources(req.query, function (err, resources) {
+            if(err){
+                return callback(err);
+            }
+            async.mapSeries(resources, function (item, innerCb) {
+                async.setImmediate(function () {
+                    innerCb(null, ObjectUtils.snakeToCame(item));
+                });
+            }, callback);
+        });
     };
 
     this.getResourcesPublished = function(req, projectId, callback) {

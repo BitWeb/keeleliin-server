@@ -1,16 +1,17 @@
 /**
  * Created by taivo on 12.06.15.
  */
-
+var logger = require('log4js').getLogger('workflow_definition_service');
 var workflowDefinitionDaoService = require(__base + 'src/service/dao/workflowDefinitionDaoService');
 var WorkflowDefinitionServiceParamValue = require(__base + 'src/service/dao/sql').WorkflowDefinitionServiceParamValue;
 var WorkflowDefinition = require(__base + 'src/service/dao/sql').WorkflowDefinition;
 var WorkflowDefinitionServiceModel = require(__base + 'src/service/dao/sql').WorkflowDefinitionService;
 var projectService = require(__base + 'src/service/projectService');
 var serviceService = require(__base + 'src/service/serviceService');
-var Sequelize = require('sequelize');
 var async = require('async');
 var ArrayUtils = require(__base + 'src/util/arrayUtils');
+var userService = require('./userService');
+
 
 function WorkflowDefinitionService() {
 
@@ -48,6 +49,8 @@ function WorkflowDefinitionService() {
         return workflowDefinitionDaoService.findWorkflowDefinitionServiceModel(id, callback);
     };
 
+
+    //todo:
     this.getWorkflowDefinitionsPublished = function(req, projectId, callback) {
         var userId = req.redisSession.data.userId;
 
@@ -60,10 +63,36 @@ function WorkflowDefinitionService() {
         });
     };
 
-    this.createWorkflowDefinition = function(req, projectId, workflowDefinitionData, cb) {
-        workflowDefinitionData.projectId = projectId;
-        workflowDefinitionData.userId = 1;
+    //todo: validate user and project
+    this.createWorkflowDefinition = function(req, projectId, data, cb) {
 
+        async.waterfall([
+            function (callback) {
+                userService.getCurrentUser(req, callback);
+            },
+            function (user, callback) {
+                var workflowDefinitionData = {
+                    name: data.name,
+                    description: data.description,
+                    purpose: data.purpose,
+                    projectId: projectId,
+                    userId: user.id
+                };
+
+                var definition = WorkflowDefinition.build( workflowDefinitionData );
+
+                definition.validate().then(function (err) {
+                    if(err){
+                        return callback(err.message);
+                    }
+                    definition.save().then(function () {
+                        callback( null, definition);
+                    });
+                });
+            }
+        ], cb);
+
+/*
         async.waterfall([
             function getProject(callback) {
                 projectService.getProject(req, projectId, function(error, project) {
@@ -160,7 +189,7 @@ function WorkflowDefinitionService() {
                 return cb(err);
             }
             return cb(null, workflowDefinition);
-        });
+        });*/
     };
 
     /**

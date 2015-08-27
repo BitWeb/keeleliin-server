@@ -7,7 +7,6 @@ module.exports = function(sequelize, DataTypes) {
 
     var accessStatuses = {
         PRIVATE: 'private',
-        PUBLIC: 'public',
         SHARED: 'shared'
     };
 

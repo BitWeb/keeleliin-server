@@ -172,6 +172,9 @@ function UserService() {
 
     this.getCurrentUser = function (request, cb) {
         var userId = request.redisSession.data.userId;
+        userId = userId ? userId: 1; //todo remove
+
+
         return userDaoService.findById(userId, cb);
     };
 

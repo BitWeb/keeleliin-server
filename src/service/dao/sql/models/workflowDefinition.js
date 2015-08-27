@@ -36,7 +36,12 @@ module.exports = function(sequelize, DataTypes) {
         },
         description: {
             type: DataTypes.TEXT,
-            allowNull: false,
+            allowNull: true,
+            primaryKey: false
+        },
+        purpose: {
+            type: DataTypes.TEXT,
+            allowNull: true,
             primaryKey: false
         },
         dateCreated: {
@@ -84,11 +89,11 @@ module.exports = function(sequelize, DataTypes) {
 
         hooks: {
             beforeCreate: function(workflowDefinition, options, fn) {
-                workflowDefinition.date_created = new Date();
+                workflowDefinition.dateCreated = new Date();
                 fn(null, workflowDefinition);
             },
             beforeUpdate: function(workflowDefinition, options, fn) {
-                workflowDefinition.date_updated = new Date();
+                workflowDefinition.dateUpdated = new Date();
                 fn(null, workflowDefinition);
             }
         }

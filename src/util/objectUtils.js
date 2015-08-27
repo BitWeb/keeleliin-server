@@ -7,6 +7,18 @@ var ObjectUtils = {
             }
         }
         return false;
+    },
+
+    snakeToCame: function (object) {
+
+        var newObject = {};
+        for(i in object){
+            newKey = i.replace(/[\-_\s]+(.)?/g, function(match, chr) {
+                return chr ? chr.toUpperCase() : '';
+            });
+            newObject[newKey] = object[i];
+        }
+        return newObject;
     }
 };
 

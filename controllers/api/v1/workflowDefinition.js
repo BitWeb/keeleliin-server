@@ -6,6 +6,14 @@ var express = require('express');
 var router = express.Router();
 var workflowDefinitionService = require(__base + 'src/service/workflowDefinitionService');
 
+router.post('/projectId/:projectId', function(req, res) {
+    workflowDefinitionService.createWorkflowDefinition(req, req.params.projectId, req.body, function(err, workflowDefinion) {
+        return res.sendApiResponse( err, workflowDefinion);
+    });
+});
+
+//....
+
 router.get('/:workflowDefinitionId', function(req, res) {
 
     workflowDefinitionService.getWorkflowDefinition(req, req.params.workflowDefinitionId, function(err, workflowDefinition) {
@@ -30,11 +38,7 @@ router.get('/service/:workflowDefinitionServiceId/params', function(req, res) {
     });
 });
 
-router.post('/projectId/:projectId', function(req, res) {
-    workflowDefinitionService.createWorkflowDefinition(req, req.params.projectId, req.body, function(err, workflowDefinion) {
-        return res.sendApiResponse( err, workflowDefinion);
-    });
-});
+
 
 router.put('/:workflowDefinitionId', function(req, res) {
 
