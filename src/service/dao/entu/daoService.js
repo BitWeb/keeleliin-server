@@ -21,7 +21,7 @@ var DaoService = function(){
         request(options, function (error, response, body) {
             logger.debug('Entu auth url response:');
             logger.debug( body );
-            return callback( error, body.auth_url );
+            return callback( error, body.result.auth_url );
         }).on('error', function(e) {
             logger.debug('problem with request: ' + e);
             return callback(e);
