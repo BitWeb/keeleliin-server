@@ -5,9 +5,9 @@
 var express = require('express');
 var router = express.Router();
 var logger = require('log4js').getLogger('user_controller');
-
+var url     = require('url');
 var authMiddleware = require(__base + 'middlewares/auth');
-
+var PaginationParameters = require(__base + 'src/util/paginationParameters');
 var userService = require('../../../src/service/userService');
 var userDaoService = require('../../../src/service/dao/userDaoService');
 
@@ -47,13 +47,22 @@ router.get('/logout', function( req, res ) {
     });
 });
 
-/**
- * Return active users list
- */
 router.get('/list', function( req, res ) {
-
-    userDaoService.getActiveUsersList( function (err, users) {
+    var paginationParameters = new PaginationParameters(url.parse(req.url, true).query);
+    userDaoService.getUsersWithCount(paginationParameters, function (err, users) {
         res.sendApiResponse( err, users );
+    });
+});
+
+router.get('/details/:userId', function(req, res) {
+    userService.getUser(req, req.params.userId, function(err, user) {
+        res.sendApiResponse(err, user);
+    });
+});
+
+router.put('/details/:userId', function(req, res) {
+    userService.saveUser(req, req.params.userId, req.body, function(err, user) {
+        res.sendApiResponse(err, user);
     });
 });
 

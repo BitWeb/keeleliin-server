@@ -5,6 +5,11 @@
 
 module.exports = function(sequelize, DataTypes) {
 
+    var roles = {
+        ROLE_REGULAR    : 'regular',
+        ROLE_ADMIN      : 'admin'
+    };
+
     var User = sequelize.define("User", {
         entuId: {
             type: DataTypes.INTEGER,
@@ -31,6 +36,18 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.DATE,
             allowNull: true,
             field: 'date_api_accessed'
+        },
+        role: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            field: 'role',
+            defaultValue: roles.ROLE_REGULAR
+        },
+        isActive: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            field: 'is_active',
+            defaultValue: true
         },
         createdAt: {
             type: DataTypes.DATE,
@@ -64,6 +81,8 @@ module.exports = function(sequelize, DataTypes) {
             }
         }
     });
+
+    User.roles = roles;
 
     return User;
 };

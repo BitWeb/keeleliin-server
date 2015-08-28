@@ -212,9 +212,6 @@ function UserService() {
         request.redisSession.delete(cb);
     };
 
-
-
-
 }
 
 module.exports = new UserService();

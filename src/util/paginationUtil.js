@@ -4,10 +4,10 @@
 
 
 var PaginationUtil = function() {
-
-    PaginationUtil.prototype.offset = 0;
-    PaginationUtil.prototype.limit = 50;
-
+    PaginationUtil.prototype.limit = 0;
+    PaginationUtil.prototype.offset = 50;
+    PaginationUtil.prototype.sort = null;
+    PaginationUtil.prototype.order = null;
 };
 
 module.exports = PaginationUtil;

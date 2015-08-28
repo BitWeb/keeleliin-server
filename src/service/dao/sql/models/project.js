@@ -36,7 +36,7 @@ module.exports = function(sequelize, DataTypes) {
             field: 'user_id'
         },
         accessStatus: {
-            type: DataTypes.BOOLEAN,
+            type: DataTypes.STRING,
             allowNull: false,
             defaultValue: accessStatuses.PRIVATE,
             field: 'access_status'
