@@ -27,7 +27,9 @@ router.get('/download/:resourceId', function(req, res) {
             res.status(404);
             return res.sendApiResponse( 'Resource not found' );
         }
-        fs.createReadStream(config.resources.location + resource.filename).pipe(res);
+
+        res.setHeader('Content-disposition', 'attachment; filename='+resource.name);
+        res.download(config.resources.location + resource.filename);
     });
 });
 
@@ -37,6 +39,7 @@ router.get('/download/concat/:resourceIds', function(req, res) {
             res.status(404);
             return res.sendApiResponse( error);
         }
+        res.setHeader('Content-disposition', 'attachment; filename=concat_result');
         var readStream = fs.createReadStream( concatPath );
         readStream.pipe(res);
         readStream.on('end', function () {
