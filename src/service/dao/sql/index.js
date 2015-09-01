@@ -23,6 +23,7 @@ db['ResourceType'] = sequelize.import('./models/resource/resourceType');
 db['ResourceUser'] = sequelize.import('./models/resource/resourceUser');
 db['Service'] = sequelize.import('./models/service');
 db['ServiceParam'] = sequelize.import('./models/service/serviceParam');
+db['ParamOption'] = sequelize.import('./models/service/param/paramOption');
 db['ServiceInputType'] = sequelize.import('./models/service/serviceInputType');
 db['ServiceOutputType'] = sequelize.import('./models/service/serviceOutputType');
 db['User'] = sequelize.import('./models/user');

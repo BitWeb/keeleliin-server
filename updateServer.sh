@@ -6,10 +6,18 @@ ssh -t root@dev.bitweb.ee "
     npm install
     echo 'server ok'
 
+    cd /var/www/bitweb.ee/keeleliin.bitweb.ee/keeleliin-files/
+    git pull
+    echo 'klient ok'
+
     echo 'Restart forever'
     forever restartall
     echo 'List forever'
     forever list
+
+
+
+
 
     "
 

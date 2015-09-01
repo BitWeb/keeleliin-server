@@ -16,7 +16,7 @@ router.get('/', function(req, res) {
 });
 
 router.get('/:serviceId', function(req, res) {
-    serviceService.getService(req ,req.params.serviceId, function(err, service) {
+    serviceService.getServiceEditData(req ,req.params.serviceId, function(err, service) {
         if (!service) {
             res.status(404);
         }

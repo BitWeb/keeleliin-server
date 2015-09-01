@@ -555,6 +555,10 @@ function ServiceService() {
         });
     };
 
+    this.getServiceEditData = function (req, serviceId, cb) {
+        serviceDaoService.getServiceEditData(serviceId, cb);
+    };
+
     this.toggleServiceStatus = function (req, serviceId, cb) {
 
         async.waterfall([

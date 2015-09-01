@@ -4,6 +4,7 @@
 var logger = require('log4js').getLogger('service_dao_service');
 var ServiceModel = require(__base + 'src/service/dao/sql').Service;
 var ServiceModelParam = require(__base + 'src/service/dao/sql').ServiceParam;
+var ParamOption = require(__base + 'src/service/dao/sql').ParamOption;
 var ServiceInputType = require(__base + 'src/service/dao/sql').ServiceInputType;
 var ServiceOutputType = require(__base + 'src/service/dao/sql').ServiceOutputType;
 
@@ -12,6 +13,57 @@ function ServiceDaoService() {
     this.findService = function(serviceId, callback) {
         ServiceModel.find({
             where: {id: serviceId}
+        }).then(function(service) {
+            if (!service) {
+                return callback('Service not found.');
+            }
+            return callback(null, service);
+        }).catch(function(error) {
+            return callback({
+                message: error.message,
+                code: 500
+            });
+        });
+    };
+
+    this.getServiceEditData = function (serviceId, callback) {
+        ServiceModel.find({
+            where: { id: serviceId },
+            attributes: [
+                'id',
+                'name',
+                'description',
+                'url',
+                'sid',
+                'isSynchronous',
+                'isActive'
+            ],
+            include: [
+                {
+                    model: ServiceModelParam,
+                    as: 'serviceParams',
+                    attributes: ['id','type', 'key', 'value', 'isEditable', 'description'],
+                    required: false,
+                    include: [{
+                        model: ParamOption,
+                        as : 'paramOptions',
+                        attributes: ['id', 'value', 'label'],
+                        required:false
+                    }]
+                },
+                {
+                    model: ServiceInputType,
+                    as: 'serviceInputTypes',
+                    attributes: ['id', 'key', 'doParallel', 'sizeLimit', 'sizeUnit', 'isList', 'resourceTypeId'],
+                    required: false
+                },
+                {
+                    model: ServiceOutputType,
+                    as: 'serviceOutputTypes',
+                    attributes: ['id', 'key', 'resourceTypeId'],
+                    required: false
+                }
+            ]
         }).then(function(service) {
             if (!service) {
                 return callback('Service not found.');
