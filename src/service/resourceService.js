@@ -305,6 +305,17 @@ function ResourceService() {
         }).catch(function(error) {
             return callback(error);
         });
+    };
+
+    this.getResourceTypesList = function (req, callback) {
+        ResourceType.findAll().then(function (data) {
+            callback(null, data);
+        }).catch(function (err) {
+            callback({
+                code: 500,
+                message: err.message
+            });
+        });
     }
 }
 

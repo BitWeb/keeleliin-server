@@ -15,6 +15,12 @@ router.get('/', function(req, res) {
     });
 });
 
+router.get('/types', function(req, res) {
+    resourceService.getResourceTypesList(req, function(error, types) {
+        return res.sendApiResponse( error, types);
+    });
+});
+
 router.get('/:resourceId', function(req, res) {
     resourceService.getResource(req, req.params.resourceId, function(error, resource) {
         return res.sendApiResponse( error, resource);
