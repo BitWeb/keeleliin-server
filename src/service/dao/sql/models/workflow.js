@@ -33,6 +33,11 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: true,
             primaryKey: false
         },
+        purpose: {
+            type: DataTypes.TEXT,
+            allowNull: true,
+            primaryKey: false
+        },
         projectId: {
             type: DataTypes.INTEGER,
             allowNull: false,
@@ -41,6 +46,15 @@ module.exports = function(sequelize, DataTypes) {
                 key: 'id'
             },
             field: 'project_id'
+        },
+        userId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: 'user',
+                key: 'id'
+            },
+            field: 'user_id'
         },
         status: {
             type: DataTypes.STRING,
@@ -66,6 +80,11 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: true,
             field: 'datetime_created'
         },
+        datetimeUpdated: {
+            type: DataTypes.DATE,
+            allowNull: true,
+            field: 'datetime_updated'
+        },
         datetimeStart: {
             type: DataTypes.DATE,
             allowNull: true,
@@ -84,6 +103,9 @@ module.exports = function(sequelize, DataTypes) {
 
         classMethods: {
             associate: function(models) {
+
+                Workflow.belongsTo(models.User, {as: 'user', foreignKey: 'userId'});
+
                 Workflow.belongsTo(models.WorkflowDefinition, {
                         foreignKey:'workflowDefinitionId',
                         as: 'workflowDefinition'
@@ -108,9 +130,13 @@ module.exports = function(sequelize, DataTypes) {
             }
         },
         hooks: {
-            beforeCreate: function(resource, options, fn) {
-                resource.datetimeCreated = new Date();
-                fn(null, resource);
+            beforeCreate: function(item, options, fn) {
+                item.datetimeCreated = new Date();
+                fn(null, item);
+            },
+            beforeUpdate: function(item, options, fn) {
+                item.datetimeUpdated = new Date();
+                fn(null, item);
             }
         },
         instanceMethods: {

@@ -11,6 +11,7 @@ var workflowDaoService = require(__base + 'src/service/dao/workflowDaoService');
 var workflowDefinitionService = require(__base + 'src/service/workflowDefinitionService');
 var Workflow = require(__base + 'src/service/dao/sql').Workflow;
 var Resource = require(__base + 'src/service/dao/sql').Resource;
+var User = require(__base + 'src/service/dao/sql').User;
 var WorkflowServiceSubstep = require(__base + 'src/service/dao/sql').WorkflowServiceSubstep;
 var WorkflowServiceModel = require(__base + 'src/service/dao/sql').WorkflowService;
 var ServiceModel = require(__base + 'src/service/dao/sql').Service;
@@ -32,8 +33,10 @@ function WorkflowService() {
                         'id',
                         'name',
                         'description',
+                        'purpose',
                         'status',
                         'datetimeCreated',
+                        'datetimeUpdated',
                         'datetimeStart',
                         'datetimeEnd',
                         'projectId'
@@ -42,6 +45,16 @@ function WorkflowService() {
                         id: workflowId
                     },
                     include: [
+                        {
+                            model: User,
+                            as: 'user',
+                            attributes: [
+                                'id',
+                                'name',
+                                'displaypicture'
+                            ],
+                            required: false
+                        },
                         {
                             model: Resource,
                             as: 'inputResources',
@@ -191,7 +204,10 @@ function WorkflowService() {
 
         ], function (err, workflow) {
             if(err){
-                return cb(err);
+                return cb({
+                    code: 404,
+                    message: err
+                });
             }
             self.getWorkflowOverview(req, workflowId, cb);
         });
@@ -240,6 +256,9 @@ function WorkflowService() {
                         url: substep.workflowService.service.url
                     };
                     apiService.killRequest(dto, function (err, respBody) {
+                        if(err){
+                            return callback();
+                        }
                         logger.debug(respBody);
                         callback();
                     });

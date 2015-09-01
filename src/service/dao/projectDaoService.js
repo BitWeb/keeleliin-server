@@ -77,7 +77,8 @@ function ProjectDaoService() {
                     attributes: [
                         'id',
                         'name',
-                        'displaypicture'
+                        'displaypicture',
+                        'role'
                     ],
                     required: true
                 },

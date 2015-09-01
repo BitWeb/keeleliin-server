@@ -20,6 +20,7 @@ module.exports = function(req, res, next) {
             statusCode = res.statusCode
         }
 
+        res.status(statusCode);
 
         res.send({
             data: data,

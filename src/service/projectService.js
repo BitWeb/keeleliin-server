@@ -33,7 +33,7 @@ function ProjectService(){
 
         var userId = req.redisSession.data.userId;
         return projectDaoService.getUserProjectsList( userId, req.query, function (err, result) {
-//todo: can delete property
+
             if(err){
                 logger.error(err);
                 return cb(err);
@@ -115,7 +115,7 @@ function ProjectService(){
                     return callback(e);
                 });
             },
-            function addUserRelations( project, callback) {
+            function updateUserRelations( project, callback) {
                 self._updateProjectUserRelations(req, project, projectData.users, callback);
             }
         ], function (err, project) {
@@ -123,25 +123,32 @@ function ProjectService(){
         });
     };
 
-    this.updateCurrentUserProject = function(req, projectId, updateData, callback){
+    this.updateCurrentUserProject = function(req, projectId, updateData, cb){
 
         var userId = req.redisSession.data.userId;
-        projectDaoService.getUserProject( userId, projectId, function (err, project) {
-            if(err){
-                return callback( err );
+
+        async.waterfall([
+                function getProject(callback) {
+                    projectDaoService.getProject(projectId, callback);
+                },
+                function updateProject(project, callback) {
+                    project.updateAttributes(updateData, {fields:['name', 'description', 'purpose','accessStatus']}).then(function () {
+                        callback(null, project);
+                    }).catch(function (e) {
+                        return callback(e);
+                    });
+                },
+                function updateUserRelations( project, callback) {
+                    self._updateProjectUserRelations(req, project, updateData.users, callback);
+                }
+            ], function (err) {
+                if(err){
+                    logger.error(err);
+                    return cb(err);
+                }
+                return projectDaoService.getUserProject( userId, projectId, cb);
             }
-            if(updateData.name != undefined){
-                project.name = updateData.name;
-            }
-            if(updateData.description != undefined){
-                project.description = updateData.description;
-            }
-            project.save().then(function (updatedProject) {
-                return callback(null, updatedProject);
-            }).catch(function (error) {
-                return callback( error );
-            });
-        });
+        );
     };
 
     /**

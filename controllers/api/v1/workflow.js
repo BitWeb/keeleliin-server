@@ -37,7 +37,7 @@ router.post('/', function(req, res) {
     });
 });
 
-router.get('/:workflowId/run', function(req, res) {
+router.put('/:workflowId/run', function(req, res) {
     var workflowRunner = new WorkflowRunner();
     workflowRunner.run(req.params.workflowId, function(err, data){
         if(err){
