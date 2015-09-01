@@ -9,7 +9,7 @@ var config = require(__base + 'config');
 var ServiceForm = require(__base + 'src/form/serviceForm');
 
 router.get('/', function(req, res) {
-    serviceService.getServices(req, function(err, services) {
+    serviceService.getServicesList(req, function(err, services) {
 
         return res.sendApiResponse( err, services);
     });
@@ -40,6 +40,13 @@ router.post('/', function(req, res) {
     } else {
         return res.sendApiResponse(form.errors);
     }
+});
+
+router.put('/:serviceId/toggle-status', function(req, res) {
+
+    serviceService.toggleServiceStatus(req, req.params.serviceId, function(err, service) {
+        return res.sendApiResponse( err, service );
+    });
 });
 
 router.put('/:serviceId', function(req, res) {

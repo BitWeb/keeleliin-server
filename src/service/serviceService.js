@@ -104,16 +104,8 @@ function ServiceService() {
         });
     };
 
-    this.getServices = function(req, callback) {
-        var pagination = new PaginationUtil();
-        if (req.params.offset != undefined) {
-            pagination.offset = req.params.offset;
-        }
-        if (req.params.limit != undefined) {
-            pagination.limit = req.params.limit;
-        }
-
-        return serviceDaoService.findServices(pagination, callback);
+    this.getServicesList = function(req, callback) {
+        return serviceDaoService.getServicesList(callback);
     };
 
     this.getDependentServices = function(req, serviceId, callback) {
@@ -561,8 +553,28 @@ function ServiceService() {
             }
             return cb(null, serviceData);
         });
-
     };
+
+    this.toggleServiceStatus = function (req, serviceId, cb) {
+
+        async.waterfall([
+            function (callback) {
+                serviceDaoService.findService(serviceId, callback);
+            },
+            function (service, callback) {
+
+                if(service.isActive){
+                    service.isActive = false;
+                } else {
+                    service.isActive = true;
+                }
+
+                service.save().then(function () {
+                   callback(null, service);
+                });
+            }
+        ], cb);
+    }
 }
 
 module.exports = new ServiceService();

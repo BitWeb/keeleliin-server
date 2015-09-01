@@ -31,6 +31,20 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: false,
             defaultValue: false,
             field:'is_synchronous'
+        },
+        isActive: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: true,
+            field:'is_active'
+        },
+        createdAt: {
+            type: DataTypes.DATE,
+            field: 'created_at'
+        },
+        updatedAt: {
+            type: DataTypes.DATE,
+            field: 'updated_at'
         }
     }, {
         tableName: 'service',

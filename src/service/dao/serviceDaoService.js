@@ -11,22 +11,7 @@ function ServiceDaoService() {
 
     this.findService = function(serviceId, callback) {
         ServiceModel.find({
-            where: {id: serviceId},
-            include: [
-                {
-                    model: ServiceModelParam,
-                    as: 'serviceParams',
-                    order: ['order_num', 'ASC']
-                },
-                {
-                    model: ServiceInputType,
-                    as: 'serviceInputTypes'
-                },
-                {
-                    model: ServiceOutputType,
-                    as: 'serviceOutputTypes'
-                }
-            ]
+            where: {id: serviceId}
         }).then(function(service) {
             if (!service) {
                 return callback('Service not found.');
@@ -40,27 +25,15 @@ function ServiceDaoService() {
         });
     };
 
-    this.findServices = function(pagination, callback) {
+    this.getServicesList = function( callback ) {
 
-        ServiceModel.findAll({
-            include: [
-                {
-                    model: ServiceModelParam,
-                    as: 'serviceParams',
-                    order: ['orderNum', 'ASC']
-                },
-                {
-                    model: ServiceInputType,
-                    as: 'serviceInputTypes'
-                },
-                {
-                    model: ServiceOutputType,
-                    as: 'serviceOutputTypes'
-                }
-            ],
-            limit: pagination.limit,
-            offset: pagination.offset
-        }).then(function(services) {
+        var params = {
+            attributes: ['id', 'name', 'description', 'sid', 'createdAt', 'updatedAt', 'isActive'],
+            order: [['name', 'ASC']]
+        };
+
+        ServiceModel.findAll(params)
+            .then(function(services) {
             return callback(null, services);
         }).catch(function(error) {
             return callback({
