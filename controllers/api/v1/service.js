@@ -42,6 +42,17 @@ router.post('/', function(req, res) {
     }
 });
 
+router.put('/:serviceId', function(req, res) {
+    var form = new ServiceForm(req.body);
+    if (form.isValid()) {
+        serviceService.updateService(req, req.params.serviceId, req.body, function(err, responseData) {
+            return res.sendApiResponse( err, responseData);
+        });
+    } else {
+        return res.sendApiResponse(form.errors);
+    }
+});
+
 router.put('/:serviceId/toggle-status', function(req, res) {
 
     serviceService.toggleServiceStatus(req, req.params.serviceId, function(err, service) {
@@ -49,28 +60,6 @@ router.put('/:serviceId/toggle-status', function(req, res) {
     });
 });
 
-router.put('/:serviceId', function(req, res) {
-    var form = new ServiceForm(req.body);
-    if (form.isValid()) {
-        serviceService.saveService(req, req.params.serviceId, req.body, function(err, service) {
-            if (!service) {
-                res.status(404);
-            }
-
-            if (err) {
-                return res.sendApiResponse( err, service);
-            }
-
-            // Get service with persisted data
-            serviceService.getService(req, req.params.serviceId, function(err, service) {
-                return res.sendApiResponse( err, service);
-
-            });
-        });
-    } else {
-        return res.sendApiResponse(form.errors);
-    }
-});
 
 router.get('/get-dependent-services/:serviceId', function(req, res) {
     serviceService.getDependentServices(req, req.params.serviceId, function(err, services) {

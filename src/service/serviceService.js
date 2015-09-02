@@ -1,11 +1,12 @@
 /**
  * Created by taivo on 15.06.15.
  */
-
+var logger = require('log4js').getLogger('service_service');
 var PaginationUtil = require(__base + 'src/util/paginationUtil');
 var serviceDaoService = require(__base + 'src/service/dao/serviceDaoService');
 var ServiceModel = require(__base + 'src/service/dao/sql').Service;
 var ServiceModelParam = require(__base + 'src/service/dao/sql').ServiceParam;
+var ParamOption = require(__base + 'src/service/dao/sql').ParamOption;
 var ServiceOutputType = require(__base + 'src/service/dao/sql').ServiceOutputType;
 var ServiceInputType = require(__base + 'src/service/dao/sql').ServiceInputType;
 var ArrayUtils = require(__base + 'src/util/arrayUtils');
@@ -18,392 +19,388 @@ function ServiceService() {
 
     var self = this;
 
-    this.getService = function(req, serviceId, callback) {
-
-        return serviceDaoService.findService(serviceId, callback);
-    };
-
-    this.getServiceBySid = function(req, sid, callback) {
-
-        ServiceModel.find({where: {sid: sid}}).then(function(serviceModel) {
-            return callback(null, serviceModel);
-        }).catch(function(error) {
-            return callback({
-                message: error.message,
-                code: 500
-            });
-        });
-
-    };
-
-    this.getServiceParamsByIds = function(serviceParamIds, callback) {
-        var ids = serviceParamIds || [];
-
-        ServiceModelParam.findAll({where: {id: ids}}).then(function(serviceModelParams) {
-
-            return callback(null, serviceModelParams);
-        })
-    };
-
-    this.getServicesByIds = function(serviceIds, callback) {
-        var ids = serviceIds || [];
-        ServiceModel.findAll({ where: { id: ids }}).then(function(services) {
-
-            return callback(null, services);
-        });
-    };
-
-    this.getServiceOutputTypesByIds = function(serviceOutputTypeIds, callback) {
-        var ids = serviceOutputTypeIds || [];
-
-        ServiceOutputType.findAll({where: {id: ids}}).then(function(serviceOutputTypes) {
-
-            return callback(null, serviceOutputTypes);
-        });
-    };
-
-    this.getServiceModelParam = function(req, serviceModelParamId, callback) {
-        ServiceModelParam.find({
-            where: {id: serviceModelParamId}
-        }).then(function(serviceModelParam) {
-            if (!serviceModelParam) {
-                return callback('Service model param not found (id: ' + serviceModelParamId + ')');
-            }
-            return callback(null, serviceModelParam);
-        });
-    };
-
-    this.getServiceInputType = function(req, serviceInputTypeId, callback) {
-        ServiceInputType.find({
-            where: {id: serviceInputTypeId}
-        }).then(function(serviceInputType) {
-            if (!serviceInputType) {
-                return callback('Service input type not found (id: ' + serviceInputTypeId + ')');
-            }
-            return callback(null, serviceInputType);
-        });
-    };
-
-    this.getServiceOutputType = function(req, serviceOutputTypeId, callback) {
-        ServiceOutputType.find({
-            where: {id: serviceOutputTypeId}
-        }).then(function(serviceOutputType) {
-            if (!serviceOutputType) {
-                return callback('Service output type not found (id: ' + serviceOutputTypeId + ')');
-            }
-            return callback(null, serviceOutputType);
-        });
-    };
-
-    this.getServiceInputTypesByIds = function(serviceInputTypeIds, callback) {
-        var ids = serviceInputTypeIds || [];
-
-        ServiceInputType.findAll({where: {id: ids}}).then(function(serviceInputTypes) {
-
-            return callback(null, serviceInputTypes);
-        });
-    };
-
     this.getServicesList = function(req, callback) {
         return serviceDaoService.getServicesList(callback);
     };
 
-    this.getDependentServices = function(req, serviceId, callback) {
-        self.getService(req, serviceId, function(err, service) {
-            if (err) {
-                return callback(err);
+    this.getServiceEditData = function (req, serviceId, cb) {
+
+        serviceDaoService.getServiceEditData(serviceId, function (err, data) {
+            if(err){
+                return cb(err);
             }
 
-            service.getServiceOutputTypes().then(function(serviceOutputTypes) {
-                var resourceTypeIds = [];
-                serviceOutputTypes.forEach(function(serviceOutputType) {
-                    resourceTypeIds.push(serviceOutputType.resourceTypeId);
-                });
-
-                return self._getServicesByInputResourceTypes(req, resourceTypeIds, serviceId, callback);
-            });
+            //map parentservices to simple list
+            var dataJSON = data.toJSON();
+            var parentServicesList = [];
+            for(i in dataJSON.parentServices){
+                parentServicesList.push( dataJSON.parentServices[i].id );
+            }
+            dataJSON.parentServices = parentServicesList;
+            return cb(null, dataJSON);
         });
     };
 
-    this._getServicesByInputResourceTypes = function(req, resourceTypeIds, excludeServiceId, callback) {
+    this.toggleServiceStatus = function (req, serviceId, cb) {
 
-        return serviceDaoService.findServicesByInputResourceTypes(resourceTypeIds, excludeServiceId, callback);
+        async.waterfall([
+            function (callback) {
+                serviceDaoService.findService(serviceId, callback);
+            },
+            function (serviceInstance, callback) {
+
+                if(serviceInstance.isActive){
+                    serviceInstance.isActive = false;
+                } else {
+                    serviceInstance.isActive = true;
+                }
+
+                serviceInstance.save().then(function () {
+                    callback(null, serviceInstance);
+                });
+            }
+        ], cb);
     };
+
+    this.updateService = function(req, serviceId, serviceData, cb) {
+
+        async.waterfall([
+            function getService( callback ) {
+                self.getService( serviceId, callback);
+            },
+            function(serviceInstance, callback) {
+                serviceInstance.updateAttributes(serviceData, {fields:['name', 'description', 'url','sid','isSynchronous','isActive']}).then(function() {
+                    return callback(null, serviceInstance);
+                }).catch(function(error) {
+                    return callback(error);
+                });
+            },
+            function(serviceInstance, callback) {
+                self._updateServiceRelations(req, serviceData, serviceInstance, callback);
+            }
+        ], function (err, serviceInstance) {
+            if(err){
+                logger.error(err);
+                return cb(err);
+            }
+            self.getServiceEditData(req, serviceInstance.id, cb);
+        });
+    };
+
+    this.getService = function( serviceId, callback) {
+        return serviceDaoService.findService(serviceId, callback);
+    };
+
 
     this.createService = function(req, serviceData, cb) {
         var service = null;
         async.waterfall([
             function(callback) {
-                ServiceModel.create(serviceData).then(function(serviceModel) {
+                ServiceModel.create(serviceData, {fields:['name', 'description', 'url','sid','isSynchronous','isActive']}).then(function(serviceModel) {
                     service = serviceModel;
-                    return callback(null, serviceModel);
+                    return callback();
                 }).catch(function(error) {
-                    return callback(error);
+                    return callback(error.message);
                 });
             },
-
-            function(serviceModel, callback) {
-                self._addServiceParamValues(req, serviceData, serviceModel, callback);
-            },
-
-            function(serviceModel, callback) {
-                self._addServiceInputTypes(req, serviceData, serviceModel, callback);
-            },
-
-            function(serviceModel, callback) {
-                self._addServiceOutputTypes(req, serviceData, serviceModel, callback);
+            function(callback) {
+                self._updateServiceRelations(req, serviceData, service, callback);
             }
         ], function(error, serviceModel) {
-            if (error && service) {
 
+            if(error){
+                logger.error(error);
+            }
+
+            if (error && service) {
                 // Rollback, manually removing incomplete service
                 // There exists transaction implementation, but too tedious to use it for creating service
                 ServiceModel.destroy({where: {id: service.id}}).then(function() {
                     return cb(error);
                 }).catch(function(error) {
-                    return cb(error, serviceModel);
+                    return cb(error.message, serviceModel);
                 });
             } else {
                 return cb(error, serviceModel);
             }
-
-
         });
     };
 
-    this.saveService = function(req, serviceId, serviceData, cb) {
-        self.getService(req, serviceId, function(err, serviceModel) {
-            if (err) {
-                return cb(err);
-            }
-
-            async.waterfall([
-                function(callback) {
-                    serviceModel.updateAttributes(serviceData).then(function(serviceModel) {
-                        return callback(null, serviceModel);
-                    }).catch(function(error) {
-                        return callback(error);
-                    });
-                },
-
-                function(serviceModel, callback) {
-                    self._addServiceParamValues(req, serviceData, serviceModel, callback);
-                },
-
-                function(serviceModel, callback) {
-                    self._addServiceInputTypes(req, serviceData, serviceModel, callback);
-                },
-
-                function(serviceModel, callback) {
-                    self._addServiceOutputTypes(req, serviceData, serviceModel, callback);
-                }
-            ], cb);
-        });
-    };
-
-    this._addServiceParamValues = function(req, serviceData, service, cb) {
+    this._updateServiceRelations = function (req, serviceData, serviceInstance, cb) {
         async.waterfall([
             function(callback) {
-                var ids = [];
-                service.getServiceParams().then(function(serviceParams) {
-                    serviceParams.forEach(function(serviceParam) {
-                        ids.push(serviceParam.id);
-                    });
+                self._updateServiceParamValues(req, serviceData, serviceInstance, callback);
+            },
+            function(serviceInstance, callback) {
+                self._updateServiceInputTypes(req, serviceData, serviceInstance, callback);
+            },
+            function(serviceInstance, callback) {
+                self._updateServiceOutputTypes(req, serviceData, serviceInstance, callback);
+            },
+            function(serviceInstance, callback) {
+                self._updateServiceParentServices(req, serviceData, serviceInstance, callback);
+            }
+        ], cb);
+    };
 
-                    return callback(null, ids);
+    this._updateServiceParamValues = function(req, serviceData, serviceInstance, cb) {
+
+        var existingParamsIds = [];
+        var updatedParamsIds = [];
+
+        async.waterfall([
+            function getExistingParams(callback) {
+                serviceInstance.getServiceParams().then(function(existingParams) {
+                    existingParamsIds = existingParams.map(function (item) {
+                        return item.id;
+                    });
+                    logger.debug('found ' + existingParams.length + ' existing params: ');
+                    return callback(null, existingParams);
                 });
             },
+            function updateOrAddParams(existingParams, callback ) {
+                logger.debug('Update or add params: ', serviceData.serviceParams);
+                serviceData.serviceParams = serviceData.serviceParams ? serviceData.serviceParams : [];
 
-            function(ids, callback) {
-                var addedIds = [],
-                    orderNum = 0;
+                async.eachSeries(serviceData.serviceParams, function(serviceParamData, innerCallback) {
+                    logger.debug('Update data: ', serviceParamData);
 
-                if (serviceData.serviceParams == undefined) {
-                    return callback(null, service, ids, addedIds);
-                }
-
-                async.eachSeries(serviceData.serviceParams, function(serviceParam, innerCallback) {
-                    self.getServiceModelParam(req, serviceParam.id, function(err, serviceModelParam) {
-                        serviceParam.serviceId = service.id;
-                        serviceParam.orderNum = orderNum;
-
-                        if (serviceModelParam) {
-                            addedIds.push(serviceModelParam.id);
-                            serviceModelParam.updateAttributes(serviceParam).then(function(serviceModelParam) {
-                                orderNum++;
-                                return innerCallback();
-                            }).catch(function(err) {
-                                return innerCallback(err.message);
-                            });
-                        } else {
-                            serviceModelParam = ServiceModelParam.build(serviceParam);
-                            service.addServiceParam(serviceModelParam).then(function(serviceModelParam) {
-                                return innerCallback();
-                            }).catch(function(err) {
-                                return innerCallback(err.message);
-                            });
-                        }
+                    var existingParam = ArrayUtils.find(existingParams, function (item) {
+                       return item.id == serviceParamData.id
                     });
 
-                }, function(err) {
-                    if (err) {
-                        return callback(err);
-                    }
-                    return callback(null, service, ids, addedIds);
-                });
+                    self._updateOrCreateServiceParam(req, existingParam, serviceParamData, serviceInstance, function (err, serviceParam) {
+                       if(err){
+                           return innerCallback(err);
+                       }
+                        updatedParamsIds.push( serviceParam.id );
+                        innerCallback();
+                    });
+                }, callback);
             },
-
-            function removeServiceParams(service, ids, addedIds, callback) {
-                var removableIds = ArrayUtils.arrayDiff(ids, addedIds);
+            function removeServiceDeletedParams(callback) {
+                var removableIds = ArrayUtils.arrayDiff(existingParamsIds, updatedParamsIds);
                 if (removableIds.length > 0) {
-                    ServiceModelParam.destroy({where: {id: ids}}).then(function() {
-                        return callback(null, service);
+                    ServiceModelParam.destroy({where: {id: removableIds}}).then(function() {
+                        return callback(null, serviceInstance);
                     }).catch(function(error) {
-
                         return callback(error);
                     });
                 } else {
-                    return callback(null, service);
+                    return callback(null, serviceInstance);
                 }
             }
         ], cb);
     };
 
-    this._addServiceInputTypes = function(req, serviceData, service, cb) {
-        async.waterfall([
-            function(callback) {
-                var ids = [];
-                service.getServiceInputTypes().then(function(serviceInputTypes) {
-                    serviceInputTypes.forEach(function(serviceInputType) {
-                        ids.push(serviceInputType.id);
-                    });
-                });
+    this._updateOrCreateServiceParam = function ( req, serviceParam, serviceParamData, serviceInstance, cb) {
 
-                return callback(null, ids);
+        if(!serviceParam){
+            serviceParam = ServiceModelParam.build(serviceParamData, {fields:['type', 'key', 'value','isEditable','description']});
+        }
+
+        serviceInstance.addServiceParam(serviceParam).then(function() {
+            logger.debug('New param added');
+            return self._updateServiceParamOptions( serviceParam, serviceParamData, cb);
+        }).catch(function(err) {
+            //logger.error(err);
+            return cb(err);
+        });
+    };
+
+    this._updateServiceParamOptions = function ( serviceParam, serviceParamData, cb ) {
+
+        logger.debug('Update or create param options: ', serviceParamData);
+        var existingOptionsIds = [];
+        var updatedOptionsIds = [];
+        var optionsData = serviceParamData.paramOptions ? serviceParamData.paramOptions : [];
+
+        async.waterfall([
+            function getExisting(callback) {
+                serviceParam.getParamOptions().then(function (options) {
+                    existingOptionsIds = options.map(function (item) {
+                        return item.id;
+                    });
+                    callback(null, options);
+                });
+            },
+            function updateOrCreate(existingOptions, callback) {
+
+                async.eachSeries(optionsData, function (optionData, innerCallback) {
+                    logger.debug('Update or create option: ', optionData);
+                    if(optionData.id){
+                        var existingOption = ArrayUtils.find(existingOptions, function (item) {
+                            return item.id == optionData.id;
+                        });
+                        existingOption.updateAttributes(optionData, {fields: ['label', 'value']}).then(function () {
+                            updatedOptionsIds.push(existingOption.id);
+                            return innerCallback();
+                        }).catch(function (err) {
+                            return innerCallback(err.message);
+                        });
+                    } else {
+                        var optionInstance = ParamOption.build(optionData, {fields: ['label', 'value']});
+                        serviceParam.addParamOption(optionInstance).then(function () {
+                            updatedOptionsIds.push(optionInstance.id);
+                            return innerCallback();
+                        }).catch(function (err) {
+                            return innerCallback(err.message);
+                        });
+                    }
+                }, callback);
+            },
+            function deleteRemovedOptions(callback) {
+
+                var removableIds = ArrayUtils.arrayDiff(existingOptionsIds, updatedOptionsIds);
+                if (removableIds.length > 0) {
+                    ParamOption.destroy({where: {id: removableIds}}).then(function() {
+                        return callback(null);
+                    }).catch(function(error) {
+                        return callback(error);
+                    });
+                } else {
+                    return callback(null);
+                }
+            }
+        ], function (err) {
+            cb(err, serviceParam);
+        });
+    };
+
+    this._updateServiceInputTypes = function(req, serviceData, serviceInstance, cb) {
+
+        var existingTypesIds = [];
+        var addedTypesIds = [];
+
+        logger.error(serviceData);
+
+
+        async.waterfall([
+            function getExisting(callback) {
+                serviceInstance.getServiceInputTypes().then(function(serviceInputTypes) {
+                    existingTypesIds = serviceInputTypes.map(function (item) {
+                        return item.id;
+                    });
+                    return callback(null, serviceInputTypes);
+                });
             },
 
-            function(ids, callback) {
-                var addedIds = [];
-
-                if (serviceData.serviceInputTypes == undefined) {
-                    return callback(null, service, ids, addedIds);
-                }
+            function update(existingTypes, callback ) {
 
                 async.eachSeries(serviceData.serviceInputTypes, function(serviceInputTypeData, innerCallback) {
 
-                    self.getServiceInputType(req, serviceInputTypeData.id, function(err, serviceInputType) {
-                        serviceInputTypeData.serviceId = service.id;
+                    var inputType;
 
-                        if (serviceInputType) {
-                            addedIds.push(serviceInputType.id);
-                            serviceInputType.updateAttributes(serviceInputTypeData).then(function(serviceInputType) {
-                                return innerCallback();
-                            }).catch(function(error) {
-                                return innerCallback(error.message);
-                            })
-                        } else {
-
-                            serviceInputType = ServiceInputType.build(serviceInputTypeData);
-                            service.addServiceInputType(serviceInputType).then(function(serviceInputType) {
-                                return innerCallback();
-                            }).catch(function(error) {
-                                return innerCallback(error.message);
-                            });
-                        }
-
-                    });
-
-                }, function(error) {
-                    if (error) {
-                        return callback(error);
+                    if(serviceInputTypeData.id){
+                        inputType = ArrayUtils.find(existingTypes, function (item) {
+                            return item.id == serviceInputTypeData.id
+                        });
                     }
 
-                    return callback(null, service, ids, addedIds);
-                });
-            },
+                    logger.error(serviceInputTypeData);
 
-            function(serviceModel, ids, addedIds, callback) {
-                var removableIds = ArrayUtils.arrayDiff(ids, addedIds);
+                    if(inputType){
+                        inputType.updateAttributes(serviceInputTypeData, {fields: ['key','doParallel','sizeLimit','sizeUnit','isList','resourceTypeId']}).then(function () {
+                            addedTypesIds.push(inputType.id);
+                            innerCallback();
+                        }).catch(function (err) {
+                            innerCallback(err.message);
+                        });
+                    } else {
+                        inputType = ServiceInputType.build(serviceInputTypeData, {fields: ['key','doParallel','sizeLimit','sizeUnit','isList','resourceTypeId']});
+                        serviceInstance.addServiceInputType(inputType).then(function () {
+                            addedTypesIds.push(inputType.id);
+                            innerCallback();
+                        }).catch(function (err) {
+                            innerCallback(err.message);
+                        });
+                    }
+                }, callback);
+            },
+            function removeDeleted( callback ) {
+                var removableIds = ArrayUtils.arrayDiff(existingTypesIds, addedTypesIds);
                 if (removableIds.length > 0) {
                     ServiceInputType.destroy({
                         where: {id: removableIds}
                     }).then(function() {
-                        return callback(null, serviceModel);
+                        return callback(null, serviceInstance);
                     }).catch(function(error) {
                         return callback(error);
                     });
                 } else {
-                    return callback(null, serviceModel);
+                    return callback(null, serviceInstance);
                 }
             }
         ], cb);
     };
 
-    this._addServiceOutputTypes = function(req, serviceData, service, cb) {
+    this._updateServiceOutputTypes = function(req, serviceData, serviceInstance, cb) {
+
+        var existingTypesIds = [];
+        var addedTypesIds = [];
+
         async.waterfall([
             function(callback) {
-                service.getServiceOutputTypes().then(function(serviceOutputTypes) {
-                    var ids = [];
-                    serviceOutputTypes.forEach(function(serviceOutputType) {
-                       ids.push(serviceOutputType.id);
+                serviceInstance.getServiceOutputTypes().then(function(serviceOutputTypes) {
+                    existingTypesIds = serviceOutputTypes.map(function (item) {
+                        return item.id;
                     });
-                    return callback(null, ids);
+
+                    return callback(null, serviceOutputTypes);
                 });
             },
 
-            function(ids, callback) {
-                var addedIds = [];
-                if (serviceData.serviceOutputTypes == undefined) {
-                    return callback(null, service, ids, addedIds);
-                }
+            function(existingTypes, callback) {
 
                 async.eachSeries(serviceData.serviceOutputTypes, function(serviceOutputTypeData, innerCallback) {
 
-                    self.getServiceOutputType(req, serviceOutputTypeData.id, function(err, serviceOutputType) {
-                        serviceOutputTypeData.serviceId = service.id;
+                    var outputType;
 
-                        if (serviceOutputType) {
-                            addedIds.push(serviceOutputType.id);
-                            serviceOutputType.updateAttributes(serviceOutputTypeData).then(function(serviceOutputType) {
-
-                                return innerCallback();
-                            }).catch(function(error) {
-
-                                return innerCallback(error);
-                            });
-                        } else {
-                            serviceOutputType = ServiceOutputType.build(serviceOutputTypeData);
-                            service.addServiceOutputType(serviceOutputType).then(function() {
-
-                                return innerCallback();
-                            }).catch(function(error) {
-
-                                return innerCallback(error);
-                            });
-                        }
-                    });
-                }, function(err) {
-                    if (err) {
-                        return callback(err);
+                    if(serviceOutputTypeData.id){
+                        outputType = ArrayUtils.find(existingTypes, function (item) {
+                            return item.id == serviceOutputTypeData.id
+                        });
                     }
-                    return callback(null, service, ids, addedIds);
-                });
+
+                    if(outputType){
+                        outputType.updateAttributes(serviceOutputTypeData, {fields: ['key','resourceTypeId']}).then(function () {
+                            addedTypesIds.push(outputType.id);
+                            innerCallback();
+                        }).catch(function (err) {
+                            innerCallback(err.message);
+                        });
+                    } else {
+                        outputType = ServiceOutputType.build(serviceOutputTypeData, {fields: ['key','resourceTypeId']});
+                        serviceInstance.addServiceOutputType(outputType).then(function () {
+                            addedTypesIds.push(outputType.id);
+                            innerCallback();
+                        }).catch(function (err) {
+                            innerCallback(err.message);
+                        });
+                    }
+                }, callback);
             },
-            function(serviceModel, ids, addedIds, callback) {
-                var removableIds = ArrayUtils.arrayDiff(ids, addedIds);
+            function( callback ) {
+                var removableIds = ArrayUtils.arrayDiff(existingTypesIds, addedTypesIds);
                 if (removableIds.length > 0) {
                     ServiceOutputType.destroy({
                         where: {id: removableIds}
                     }).then(function() {
-                        return callback(null, serviceModel);
+                        return callback(null, serviceInstance);
                     }).catch(function(error) {
                         return callback(error);
                     });
                 } else {
-                    return callback(null, serviceModel);
+                    return callback(null, serviceInstance);
                 }
             }
         ], cb);
+    };
+
+
+
+    this._updateServiceParentServices = function(req, serviceData, service, cb) {
+        cb(null, service);
     };
 
     this.installService = function(req, sid, serviceData, callback) {
@@ -430,6 +427,20 @@ function ServiceService() {
             });
         });
     };
+
+    this.getServiceBySid = function(req, sid, callback) {
+
+        ServiceModel.find({where: {sid: sid}}).then(function(serviceModel) {
+            return callback(null, serviceModel);
+        }).catch(function(error) {
+            return callback({
+                message: error.message,
+                code: 500
+            });
+        });
+    };
+
+
 
     this._composeServiceDataFromInstallServiceData = function(sid, installData, cb) {
 
@@ -555,30 +566,28 @@ function ServiceService() {
         });
     };
 
-    this.getServiceEditData = function (req, serviceId, cb) {
-        serviceDaoService.getServiceEditData(serviceId, cb);
+    this.getDependentServices = function(req, serviceId, callback) {
+        self.getService(req, serviceId, function(err, service) {
+            if (err) {
+                return callback(err);
+            }
+
+            service.getServiceOutputTypes().then(function(serviceOutputTypes) {
+                var resourceTypeIds = [];
+                serviceOutputTypes.forEach(function(serviceOutputType) {
+                    resourceTypeIds.push(serviceOutputType.resourceTypeId);
+                });
+
+                return self._getServicesByInputResourceTypes(req, resourceTypeIds, serviceId, callback);
+            });
+        });
     };
 
-    this.toggleServiceStatus = function (req, serviceId, cb) {
+    this._getServicesByInputResourceTypes = function(req, resourceTypeIds, excludeServiceId, callback) {
 
-        async.waterfall([
-            function (callback) {
-                serviceDaoService.findService(serviceId, callback);
-            },
-            function (service, callback) {
+        return serviceDaoService.findServicesByInputResourceTypes(resourceTypeIds, excludeServiceId, callback);
+    };
 
-                if(service.isActive){
-                    service.isActive = false;
-                } else {
-                    service.isActive = true;
-                }
-
-                service.save().then(function () {
-                   callback(null, service);
-                });
-            }
-        ], cb);
-    }
 }
 
 module.exports = new ServiceService();

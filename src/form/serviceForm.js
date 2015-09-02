@@ -25,6 +25,10 @@ var ServiceForm = function(data) {
             required: false,
             allowEmpty: true,
             inputFilter: {
+                id: {
+                    required: false,
+                    allowEmpty: true
+                },
                 resourceTypeId: {
                     required: true,
                     allowEmpty: false
@@ -44,6 +48,10 @@ var ServiceForm = function(data) {
                 isList: {
                     required: false,
                     allowEmpty: false
+                },
+                doParallel: {
+                    required: false,
+                    allowEmpty: true
                 }
             }
         },
@@ -51,20 +59,28 @@ var ServiceForm = function(data) {
             required: false,
                 allowEmpty: true,
                 inputFilter: {
-                resourceTypeId: {
-                    required: true,
-                    allowEmpty: false
-                },
-                key: {
-                    required: true,
-                    allowEmpty: false
-                }
+                    id: {
+                        required: false,
+                        allowEmpty: true
+                    },
+                    resourceTypeId: {
+                        required: true,
+                        allowEmpty: false
+                    },
+                    key: {
+                        required: true,
+                        allowEmpty: false
+                    }
             }
         },
         serviceParams: {
             required: false,
             allowEmpty: false,
             inputFilter: {
+                id: {
+                    required: false,
+                    allowEmpty: true
+                },
                 type: {
                     required: true,
                     allowEmpty: false
@@ -80,6 +96,28 @@ var ServiceForm = function(data) {
                 description: {
                     required: false,
                     allowEmpty: true
+                },
+                isEditable: {
+                    required: false,
+                    allowEmpty: true
+                },
+                paramOptions: {
+                    required: false,
+                    allowEmpty: true,
+                    inputFilter: {
+                        id: {
+                            required: false,
+                            allowEmpty: true
+                        },
+                        label: {
+                            required: true,
+                            allowEmpty: false
+                        },
+                        value: {
+                            required: false,
+                            allowEmpty: true
+                        }
+                    }
                 }
             }
         }

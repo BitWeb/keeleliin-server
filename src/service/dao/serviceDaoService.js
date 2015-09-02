@@ -62,6 +62,12 @@ function ServiceDaoService() {
                     as: 'serviceOutputTypes',
                     attributes: ['id', 'key', 'resourceTypeId'],
                     required: false
+                },
+                {
+                    model: ServiceModel,
+                    as: 'parentServices',
+                    attributes: [ 'id' ],
+                    required: false
                 }
             ]
         }).then(function(service) {
