@@ -300,14 +300,14 @@ function ServiceService() {
                     logger.error(serviceInputTypeData);
 
                     if(inputType){
-                        inputType.updateAttributes(serviceInputTypeData, {fields: ['key','doParallel','sizeLimit','sizeUnit','isList','resourceTypeId']}).then(function () {
+                        inputType.updateAttributes(serviceInputTypeData, {fields: ['key','doParallel','sizeLimit','sizeUnit','resourceTypeId']}).then(function () {
                             addedTypesIds.push(inputType.id);
                             innerCallback();
                         }).catch(function (err) {
                             innerCallback(err.message);
                         });
                     } else {
-                        inputType = ServiceInputType.build(serviceInputTypeData, {fields: ['key','doParallel','sizeLimit','sizeUnit','isList','resourceTypeId']});
+                        inputType = ServiceInputType.build(serviceInputTypeData, {fields: ['key','doParallel','sizeLimit','sizeUnit','resourceTypeId']});
                         serviceInstance.addServiceInputType(inputType).then(function () {
                             addedTypesIds.push(inputType.id);
                             innerCallback();
