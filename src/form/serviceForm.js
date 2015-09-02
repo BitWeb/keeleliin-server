@@ -45,10 +45,6 @@ var ServiceForm = function(data) {
                     required: false,
                     allowEmpty: true
                 },
-                isList: {
-                    required: false,
-                    allowEmpty: false
-                },
                 doParallel: {
                     required: false,
                     allowEmpty: true
