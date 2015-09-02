@@ -203,7 +203,6 @@ function ServiceService() {
             logger.debug('New param added');
             return self._updateServiceParamOptions( serviceParam, serviceParamData, cb);
         }).catch(function(err) {
-            //logger.error(err);
             return cb(err);
         });
     };
@@ -272,9 +271,6 @@ function ServiceService() {
         var existingTypesIds = [];
         var addedTypesIds = [];
 
-        logger.error(serviceData);
-
-
         async.waterfall([
             function getExisting(callback) {
                 serviceInstance.getServiceInputTypes().then(function(serviceInputTypes) {
@@ -296,8 +292,6 @@ function ServiceService() {
                             return item.id == serviceInputTypeData.id
                         });
                     }
-
-                    logger.error(serviceInputTypeData);
 
                     if(inputType){
                         inputType.updateAttributes(serviceInputTypeData, {fields: ['key','doParallel','sizeLimit','sizeUnit','resourceTypeId']}).then(function () {
@@ -399,8 +393,18 @@ function ServiceService() {
 
 
 
-    this._updateServiceParentServices = function(req, serviceData, service, cb) {
-        cb(null, service);
+    this._updateServiceParentServices = function(req, serviceData, serviceInstance, cb) {
+
+        ServiceModel.findAll({ where: {id: serviceData.parentServices}}).then(function (parentServices) {
+                serviceInstance.setParentServices( parentServices).then(function () {
+                    cb(null, serviceInstance);
+                }).catch(function (err) {
+                    cb(err.message);
+                });
+            })
+            .catch(function (err) {
+                cb(err.message);
+            });
     };
 
     this.installService = function(req, sid, serviceData, callback) {
