@@ -16,6 +16,15 @@ module.exports = function(sequelize, DataTypes) {
                 key: 'id'
             },
             field: 'user_id'
+        },
+        resourceId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: 'resource',
+                key: 'id'
+            },
+            field: 'resource_id'
         }
     }, {
         tableName: 'resource_user',
@@ -25,7 +34,7 @@ module.exports = function(sequelize, DataTypes) {
 
         classMethods: {
             associate: function(models) {
-                ResourceUser.belongsTo(models.Resource);
+                ResourceUser.belongsTo(models.Resource, {as: 'resource', foreignKey: 'resourceId'});
             }
         }
     });

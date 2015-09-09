@@ -1,5 +1,6 @@
 var scheduler = require('node-schedule');
 var workflowService = require(__base + 'src/service/workflowService');
+var workflowDaoService = require(__base + 'src/service/dao/workflowDaoService');
 var notificationService = require(__base + 'src/service/notificationService');
 var NotificationType = require(__base + 'src/service/dao/sql').NotificationType;
 var async = require('async');
@@ -28,7 +29,7 @@ var WorkflowChecker = function() {
                 });
             },
             function(notificationType, callback) {
-                workflowService.getWorkflowsRunning(function(error, workflows) {
+                workflowDaoService.getRunningWorkflows(function(error, workflows) {
                     if (error) {
                         return callback(error);
                     }

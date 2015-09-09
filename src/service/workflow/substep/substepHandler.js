@@ -213,7 +213,6 @@ function SubStepHandler(project, workflow){
             function (fileName, callback) {
                 var data = {
                     filename: outputPath,
-                    fileType: Resource.fileTypes.FILE,
                     resourceTypeId: resourceType.id,
                     originalName: fileName,
                     name: fileName,

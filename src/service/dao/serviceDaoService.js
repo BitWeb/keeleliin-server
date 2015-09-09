@@ -101,6 +101,70 @@ function ServiceDaoService() {
         });
     };
 
+    this.getServicesDetailedList = function( callback ) {
+
+        var params = {
+            attributes: [
+                'id',
+                'name',
+                'description',
+                'isSynchronous',
+                'isActive'
+            ],
+            include: [
+                {
+                    model: ServiceModelParam,
+                    as: 'serviceParams',
+                    attributes: ['id','type','key','value','isEditable','description'],
+                    required: false,
+                    include: [{
+                        model: ParamOption,
+                        as: 'paramOptions',
+                        attributes: ['id','value','label'],
+                        required: false
+                    }]
+                },
+                {
+                    model: ServiceModel,
+                    as: 'childServices',
+                    attributes: ['id'],
+                    required: false
+                },
+                {
+                    model: ServiceModel,
+                    as: 'parentServices',
+                    attributes: ['id'],
+                    required: false
+                },
+                {
+                    model: ServiceInputType,
+                    as: 'serviceInputTypes',
+                    attributes: ['id','resourceTypeId','key'],
+                    required: false
+                },
+                {
+                    model: ServiceOutputType,
+                    as: 'serviceOutputTypes',
+                    attributes: ['id','resourceTypeId','key'],
+                    required: false
+                }
+            ],
+            order: [
+                ['name', 'ASC']
+            ]
+        };
+
+        ServiceModel.findAll(params)
+            .then(function(services) {
+                return callback(null, services);
+            }).catch(function(error) {
+                return callback({
+                    message: error.message,
+                    code: 500
+                });
+            });
+    };
+
     this.findServicesByInputResourceTypes = function(resourceTypeIds, excludeServiceId, callback) {
         ServiceModel.findAll({
             include: [

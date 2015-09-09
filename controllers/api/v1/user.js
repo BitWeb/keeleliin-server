@@ -11,9 +11,6 @@ var PaginationParameters = require(__base + 'src/util/paginationParameters');
 var userService = require('../../../src/service/userService');
 var userDaoService = require('../../../src/service/dao/userDaoService');
 
-var entuDao = require('../../../src/service/dao/entu/daoService');
-
-
 router.get('/', authMiddleware, function( req, res ) {
     userService.getCurrentUser(req, function (error, user) {
         if(error){
@@ -47,20 +44,20 @@ router.get('/logout', function( req, res ) {
     });
 });
 
-router.get('/list', function( req, res ) {
+router.get('/list', authMiddleware, function( req, res ) {
     var paginationParameters = new PaginationParameters(url.parse(req.url, true).query);
     userDaoService.getUsersWithCount(paginationParameters, function (err, users) {
         res.sendApiResponse( err, users );
     });
 });
 
-router.get('/details/:userId', function(req, res) {
+router.get('/:userId/details',authMiddleware, function(req, res) {
     userService.getUser(req, req.params.userId, function(err, user) {
         res.sendApiResponse(err, user);
     });
 });
 
-router.put('/details/:userId', function(req, res) {
+router.put('/:userId/details', authMiddleware, function(req, res) {
     userService.saveUser(req, req.params.userId, req.body, function(err, user) {
         res.sendApiResponse(err, user);
     });

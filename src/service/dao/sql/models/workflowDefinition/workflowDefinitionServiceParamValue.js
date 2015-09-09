@@ -12,14 +12,15 @@ module.exports = function(sequelize, DataTypes) {
             primaryKey: true,
             autoIncrement: true
         },
-        //workflow_definition_service_id: {
-        //    type: DataTypes.INTEGER,
-        //    allowNull: false,
-        //    references: {
-        //        model: 'workflow_definition_service',
-        //        key: 'id'
-        //    }
-        //},
+        definitionServiceId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: 'workflow_definition_service',
+                key: 'id'
+            },
+            field: 'workflow_definition_service_id'
+        },
         serviceParamId: {
             type: DataTypes.INTEGER,
             allowNull: false,
@@ -41,8 +42,14 @@ module.exports = function(sequelize, DataTypes) {
 
         classMethods: {
             associate: function(models) {
-                WorkflowDefinitionServiceParamValue.belongsTo(models.WorkflowDefinitionService);
-                WorkflowDefinitionServiceParamValue.belongsTo(models.ServiceParam, {foreignKey: 'service_param_id', as: 'service_param'});
+                WorkflowDefinitionServiceParamValue.belongsTo(models.WorkflowDefinitionService, {
+                    foreignKey: 'definitionServiceId',
+                    as: 'definitionService'}
+                );
+                WorkflowDefinitionServiceParamValue.belongsTo(models.ServiceParam, {
+                    foreignKey: 'serviceParamId',
+                    as: 'serviceParam'})
+                ;
             }
         }
     });

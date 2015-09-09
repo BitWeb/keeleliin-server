@@ -15,13 +15,12 @@ router.get('/', function(req, res) {
 });
 
 router.use('/user', require(__base + 'controllers/api/v1/user'));
-//router.use('/project',authMiddleware , require(__base + 'controllers/api/v1/project'));
-router.use('/project', require(__base + 'controllers/api/v1/project'));
-
-router.use('/resource', require(__base + 'controllers/api/v1/resource'));
-router.use('/service', /* authMiddleware,*/ require(__base + 'controllers/api/v1/service'));
-router.use('/notification', /* authMiddleware,*/ require(__base + 'controllers/api/v1/notification'));
-router.use('/workflow', /* authMiddleware,*/ require(__base + 'controllers/api/v1/workflow'));
-router.use('/workflow-definition', /* authMiddleware,*/ require(__base + 'controllers/api/v1/workflowDefinition'));
+router.use('/project', authMiddleware, require(__base + 'controllers/api/v1/project'));
+router.use('/resource', authMiddleware, require(__base + 'controllers/api/v1/resource'));
+router.use('/service', authMiddleware, require(__base + 'controllers/api/v1/service'));
+router.use('/notification', authMiddleware, require(__base + 'controllers/api/v1/notification'));
+router.use('/workflow', authMiddleware, require(__base + 'controllers/api/v1/workflow'));
+router.use('/workflow-definition', authMiddleware, require(__base + 'controllers/api/v1/workflowDefinition'));
+router.use('/resource-type', authMiddleware, require(__base + 'controllers/api/v1/resourceType'));
 
 module.exports = router;

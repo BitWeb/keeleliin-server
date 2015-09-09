@@ -15,7 +15,8 @@ var User = require(__base + 'src/service/dao/sql').User;
 var WorkflowServiceSubstep = require(__base + 'src/service/dao/sql').WorkflowServiceSubstep;
 var WorkflowServiceModel = require(__base + 'src/service/dao/sql').WorkflowService;
 var ServiceModel = require(__base + 'src/service/dao/sql').Service;
-var ArrayUtils = require(__base + 'src/util/arrayUtils');
+var workflowBuilder = require(__base + 'src/service/workflow/workflowBuilder');
+var WorkflowRunner = require(__base + 'src/service/workflow/workflowRunner');
 
 var apiService = require('./workflow/service/apiService');
 
@@ -23,142 +24,29 @@ function WorkflowService() {
 
     var self = this;
 
-    this.getWorkflowOverview = function(req, workflowId, cb) {
-        async.waterfall([
-            function overviewQuery(callback) {
+    this.getWorkflowOverview = function ( req, id, callback ) {
+        workflowDaoService.getWorkflowOverview( id, callback );
+    };
 
-                Workflow.find({
-                    as: 'workflow',
-                    attributes: [
-                        'id',
-                        'name',
-                        'description',
-                        'purpose',
-                        'status',
-                        'datetimeCreated',
-                        'datetimeUpdated',
-                        'datetimeStart',
-                        'datetimeEnd',
-                        'projectId'
-                    ],
-                    where: {
-                        id: workflowId
-                    },
-                    include: [
-                        {
-                            model: User,
-                            as: 'user',
-                            attributes: [
-                                'id',
-                                'name',
-                                'displaypicture'
-                            ],
-                            required: false
-                        },
-                        {
-                            model: Resource,
-                            as: 'inputResources',
-                            attributes: [
-                                'id',
-                                'name',
-                                'fileType',
-                                'createdAt'
-                            ],
-                            required: false
-                        }, {
-                            model: WorkflowServiceModel,
-                            as: 'workflowServices',
-                            attributes: [
-                                'id',
-                                'status',
-                                'orderNum',
-                                'log',
-                                'datetimeStart',
-                                'datetimeEnd'
-                            ],
-                            where: {},
-                            required: false,
-                            include: [
-                                {
-                                    model: ServiceModel,
-                                    as: 'service',
-                                    attributes: [
-                                        'id',
-                                        'name'
-                                    ],
-                                    required: false
-                                },
-                                {
-                                    model: WorkflowServiceSubstep,
-                                    as: 'subSteps',
-                                    attributes: [
-                                        'id',
-                                        'status',
-                                        'log',
-                                        'datetimeStart',
-                                        'datetimeEnd'
-                                    ],
-                                    where: {},
-                                    required: false,
-                                    include: [
-                                        {
-                                            model: Resource,
-                                            as: 'inputResources',
-                                            where: {},
-                                            attributes: [
-                                                'id',
-                                                'name',
-                                                'fileType',
-                                                'createdAt'],
-                                            required: false
-                                        },
-                                        {
-                                            model: Resource,
-                                            as: 'outputResources',
-                                            where: {},
-                                            attributes: [
-                                                'id',
-                                                'name',
-                                                'fileType',
-                                                'createdAt'
-                                            ],
-                                            required: false
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    ]
-                }).then(function (item) {
-                    if (!item) {
-                        return callback('Töövoogu ei leitud');
-                    }
-                    return callback(null, item);
-                }).catch(function (err) {
-                    logger.error(err);
-                    callback(err);
-                });
-            },
-            function sortServices(overview, callback) {
-
-                overview.workflowServices = ArrayUtils.sort(overview.workflowServices, 'orderNum');
-                callback(null, overview)
+    this.getWorkflowDefinitionOverview = function ( req, id, callback ) {
+        workflowDaoService.getWorkflowDefinitionOverview( id, function (err, overview) {
+            if(err){
+               logger.error(err);
+                callback(err);
             }
-        ], function (err, overview) {
-            cb(err, overview);
+            callback(err, overview);
         });
     };
 
-    this.getWorkflowsRunning = function(cb) {
+    this.runWorkflow = function (req, workflowId, callback) {
 
-        Workflow.findAll({
-            where: {
-                status: Workflow.statusCodes.RUNNING
+        workflowBuilder.create( workflowId, function (err, workflow) {
+            if(err){
+                return callback(callback);
             }
-        }).then(function(workflows) {
-            return cb(null, workflows);
-        }).catch(function(error) {
-            return cb(error);
+
+            var workflowRunner = new WorkflowRunner();
+            workflowRunner.run(workflow.id, callback);
         });
     };
 
@@ -270,14 +158,9 @@ function WorkflowService() {
         });
     };
 
-    this.getWorkflowServiceParamValues = function(req, workflowServiceId, callback) {
-        return workflowDaoService.findWorkflowServiceParamValues(workflowServiceId, callback);
-    };
 
     this.getProjectWorkflowsList = function(req, projectId, callback) {
-
         logger.debug('Get project workflows list');
-
         projectService.getProject(req, projectId, function(err, project) {
             if (err) {
                 return callback(err);
@@ -291,22 +174,17 @@ function WorkflowService() {
                     if(item.workflowServices.length > 0){
                         progress = Math.round((item.workflowServices.filter(function(value){return value.status == Workflow.statusCodes.FINISHED;}).length * 100) / item.workflowServices.length);
                     }
+                    if(item.status == Workflow.statusCodes.INIT){
+                        progress = 0;
+                    }
 
-                    var dtoItem = {
-                        id: item.id,
-                        name: item.name,
-                        status: item.status,
-                        datetimeCreated: item.datetimeCreated,
-                        datetimeStart: item.datetimeStart,
-                        datetimeEnd: item.datetimeEnd,
-                        progress: progress
-                    };
+                    var dtoItem = item.dataValues;
+                    dtoItem.progress = progress;
                     dto.push(dtoItem);
                 }
                 return callback(err, dto);
             });
         });
-
     };
 
 

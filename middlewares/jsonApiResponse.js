@@ -13,7 +13,10 @@ module.exports = function(req, res, next) {
 
         if (err) {
             errorMessage = (err.message !== undefined ? err.message : err);
-            statusCode = (err.code !== undefined ? err.code : null);
+            statusCode = (err.code ? err.code : null);
+            if(res.statusCode == 200){
+                statusCode = 520;
+            }
         }
 
         if(statusCode == null){

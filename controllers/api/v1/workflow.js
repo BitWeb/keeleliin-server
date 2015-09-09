@@ -5,10 +5,20 @@ var logger = require('log4js').getLogger('workflow_controller');
 var express = require('express');
 var router = express.Router();
 var workflowService = require(__base + 'src/service/workflowService');
+var workflowDefinitionService = require(__base + 'src/service/workflowDefinitionService');
 
-var WorkflowBuilder = require('./../../../src/service/workflow/workflowBuilder');
-var WorkflowRunner = require('./../../../src/service/workflow/workflowRunner');
+/**
+ * Uue töövoo defineerimine
+ */
+router.post('/define', function (req, res) {
+    workflowDefinitionService.defineNewWorkflow(req, req.body, function(err, workflow) {
+        return res.sendApiResponse( err, workflow);
+    });
+});
 
+/**
+ * Töövoo vaade
+ */
 router.get('/:workflowId', function(req, res) {
     workflowService.getWorkflowOverview(req, req.params.workflowId, function(err, overview) {
         if (err) return res.status(403).send({errors: err});
@@ -16,34 +26,54 @@ router.get('/:workflowId', function(req, res) {
     });
 });
 
-router.put('/:workflowId/cancel', function(req, res) {
-    workflowService.setWorkflowStatusCanceled(req, req.params.workflowId, function(err, workflow) {
+/**
+ * Definitsiooni lisamise vaade
+ */
+router.get('/:workflowId/definition', function(req, res) {
+    workflowService.getWorkflowDefinitionOverview(req, req.params.workflowId, function(err, overview) {
+        if (err) return res.status(403).send({errors: err});
+        return res.send(overview);
+    });
+});
+
+/**
+ * Definitsiooni teenuste uuendamine
+ */
+router.put('/:workflowId/definition/services', function(req, res) {
+    workflowDefinitionService.updateDefinitionServices(req, req.params.workflowId, req.body, function(err, overview) {
+        if (err) return res.status(403).send({errors: err});
+        return res.send(overview);
+    });
+});
+
+/**
+ * Uue töövoo definitsiooni uuendamine
+ */
+/*router.put('/:workflowId/update-definition', function (req, res) {
+    workflowDefinitionService.updateDefinition(req, req.params.workflowId, req.body, function(err, workflow) {
         return res.sendApiResponse( err, workflow);
     });
-});
+});*/
 
-router.get('/service/:workflowServiceId/params', function(req, res) {
-
-    workflowService.getWorkflowServiceParamValues(req, req.params.workflowServiceId, function(err, workflowServiceParamValues) {
-
-        return res.sendApiResponse( err, workflowServiceParamValues);
-    });
-});
-
-router.post('/', function(req, res) {
-    var workflowBuilder = new WorkflowBuilder();
-    workflowBuilder.create( req.body, function (err, workflow) {
-        return res.sendApiResponse( err, workflow);
-    });
-});
-
+/**
+ * Käivitab töövoo
+ */
 router.put('/:workflowId/run', function(req, res) {
-    var workflowRunner = new WorkflowRunner();
-    workflowRunner.run(req.params.workflowId, function(err, data){
+
+    workflowService.runWorkflow(req, req.params.workflowId, function (err, data) {
         if(err){
             res.status(403);
         }
         return res.sendApiResponse( err, data);
+    });
+});
+
+/**
+ * Katkestab töövoo
+ */
+router.put('/:workflowId/cancel', function(req, res) {
+    workflowService.setWorkflowStatusCanceled(req, req.params.workflowId, function(err, workflow) {
+        return res.sendApiResponse( err, workflow);
     });
 });
 

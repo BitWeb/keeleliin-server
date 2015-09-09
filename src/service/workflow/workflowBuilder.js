@@ -2,179 +2,63 @@
  * Created by priit on 30.06.15.
  */
 var logger = require('log4js').getLogger('workflow_instance_builder');
-
-var projectDaoService = require(__base + 'src/service/dao/projectDaoService');
-var workflowDefinitionDaoService = require(__base + 'src/service/dao/workflowDefinitionDaoService');
-var resourceDaoService = require(__base + 'src/service/dao/resourceDaoService');
-
 var WorkflowDefinition = require(__base + 'src/service/dao/sql').WorkflowDefinition;
 var Workflow = require(__base + 'src/service/dao/sql').Workflow;
 var WorkflowService = require(__base + 'src/service/dao/sql').WorkflowService;
 var WorkflowServiceParamValue = require(__base + 'src/service/dao/sql').WorkflowServiceParamValue;
 var async = require('async');
 
-
-/*workflowService.getWorkflowOverview(req, req.params.workflowId, function(err, overview) {
- if (err) return res.status(403).send({errors: err});
- return res.send(overview);
- });*/
-
-
-
 function WorkflowBuilder(){
     var self = this;
 
-    var project;
-    var workflowDefinition;
-    var initResourceIds;
-    var workflow;
-
-    this.create = function (data, cb) {
-
-        logger.debug('Init data: ' +  JSON.stringify(data));
-
-        var projectId = data.projectId;
-        var workflowDefinitionId = data.workflowDefinitionId;
-        initResourceIds = data.resources;
+    this.create = function (workflowId, cb) {
 
         async.waterfall([
-            function getProject(callback) {
-                projectDaoService.getProject(projectId, function (err, data) {
-                    if(err) return callback(err);
-                    project = data;
-
-                    if(!project){
-                        return callback('Project not found');
+            function (callback) {
+                Workflow.find({where:{id:workflowId}}).then(function (workflow) {
+                    if(!workflow){
+                        callback('Töövoogu ei leitud');
                     }
-
-
-                    logger.info('Got project: ' + data.id);
-                    callback();
+                    callback(null, workflow);
                 });
             },
-            function getWorkflowDefinition(callback) {
-                workflowDefinitionDaoService.getWorkflowDefinition(workflowDefinitionId, function (err, data) {
-                    if(err) return callback(err);
-                    workflowDefinition = data;
-                    logger.info('Got definition: ' + data.id);
-                    callback();
-                });
-            }],
-            function(err){
-                if(err){
-                    logger.debug(err);
-                    return cb(err);
+            function (workflow, callback) {
+                if(workflow.status != Workflow.statusCodes.INIT){
+                    return callback('Töövoog ei ole INIT staatusega!');
                 }
-                self.createWorkflow(cb);
-        });
-    };
-
-    this.createWorkflow = function (cb) {
-
-        var workflowData = {
-            projectId: project.id,
-            workflowDefinitionId: workflowDefinition.id
-        };
-
-        async.waterfall([
-            function (callback) {
-                Workflow.build(workflowData).save().then(function (item) {
-                    if(!item) return cb('Err');
-                    logger.info('Workflow created: ' + item.id);
-                    workflow = item;
-                    callback();
-                }).catch(function (err) {
-                    callback(err.message);
+                callback(null, workflow);
+            },
+            function getWorkflowDefinition(workflow, callback) {
+                workflow.getWorkflowDefinition().then(function (workflowDefinition) {
+                    self.setServices(workflow, workflowDefinition, callback)
                 });
-            },
-            function (callback) {
-                self.setServices(callback);
-            },
-            function (callback) {
-                self._setResources(callback);
             }
-        ], function (err) {
-            cb(err, workflow);
-        });
-    };
-
-    this._setResources = function (cb) {
-        async.eachSeries(
-            initResourceIds,
-            function (resourceId, callback) {
-                logger.info('Add init resource: ' + resourceId);
-                resourceDaoService.getResource(resourceId, function (err, resource) {
-                    if(err) return callback(err);
-                    logger.info('Got resource: ' + resource.id);
-                    self._setResource(resource, function (err) {
-                        logger.info('Back from resource: ' + resource.id);
-                        callback(err);
-                    });
-                });
-            }, function(err){
+            ],
+            function(err, workflow){
                 if(err){
                     logger.error(err);
+                    return cb(err);
                 }
-                logger.debug('Resources are set');
-                cb(err);
-            }
-        );
-    };
-
-    this._setResource = function (resource, cb) {
-        async.waterfall([
-            function (callback) {
-                workflow.hasInputResource(resource).then(function (result) {
-                    if(result == false){
-                        workflow.addInputResource(resource).then(function () {
-                            callback();
-                        }).catch(function (err) {
-                            return callback(err.message);
-                        });
-                    } else {
-                        callback();
-                    }
-                }).catch(function (err) {
-                    return callback(err.message);
-                });
-            },
-            function (callback) {
-                project.hasResource(resource).then(function (result) {
-                    if(result == false){
-                        project.addResource(resource).then(function () {
-                            callback();
-                        }).catch(function (err) {
-                            return callback(err.message);
-                        });
-                    } else {
-                        callback();
-                    }
-                }).catch(function (err) {
-                    return callback(err.message);
-                });
-            }
-        ], function (err) {
-            logger.debug('Resource is set');
-            cb(err);
+                cb(null, workflow);
         });
     };
 
-    this.setServices = function (cb) {
+    this.setServices = function (workflow, workflowDefinition, cb) {
 
-        workflowDefinition.getWorkflowServices().then(function (definitionServices) {
+        workflowDefinition.getDefinitionServices().then(function (definitionServices) {
             logger.info('Got definition services: ' + definitionServices.length);
-            self.copyDefinitionServicesToServices(definitionServices, cb);
+            self.copyDefinitionServicesToServices(definitionServices, workflow, cb);
         }).catch(function (err) {
             cb(err.message);
         });
     };
 
-    this.copyDefinitionServicesToServices = function(definitionServices, cb){
+    this.copyDefinitionServicesToServices = function(definitionServices, workflow, cb){
 
         async.each(definitionServices,
             function (definitionService, callback) {
                 logger.info('Copy definition service id: ' + definitionService.id);
-                self.copyDefinitionService(definitionService, callback);
+                self.copyDefinitionService(definitionService, workflow, callback);
             }, function(err){
                 if(err){
                     logger.error('Definition services copy failed');
@@ -182,12 +66,12 @@ function WorkflowBuilder(){
                     return cb(err);
                 }
                 logger.debug('Definition services copied');
-                cb();
+                cb( null, workflow);
             }
         );
     };
 
-    this.copyDefinitionService = function (definitionService, cb) {
+    this.copyDefinitionService = function (definitionService, workflow, cb) {
 
         var data = {
             serviceId: definitionService.serviceId,
@@ -235,4 +119,4 @@ function WorkflowBuilder(){
     }
 }
 
-module.exports = WorkflowBuilder;
+module.exports = new WorkflowBuilder();

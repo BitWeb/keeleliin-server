@@ -21,6 +21,15 @@ module.exports = function(sequelize, DataTypes) {
             },
             field: 'service_id'
         },
+        workflowDefinitionId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: 'workflow_definition',
+                key: 'id'
+            },
+            field: 'workflow_definition_id'
+        },
         orderNum: {
             type: DataTypes.INTEGER,
             allowNull: false,
@@ -35,8 +44,9 @@ module.exports = function(sequelize, DataTypes) {
 
         classMethods: {
             associate: function(models) {
-                WorkflowDefinitionService.belongsTo(models.WorkflowDefinition);
-                WorkflowDefinitionService.hasMany(models.WorkflowDefinitionServiceParamValue, { foreignKey: 'workflow_definition_service_id', as: 'paramValues', onDelete: 'cascade'});
+                WorkflowDefinitionService.belongsTo(models.Service, { foreignKey: 'serviceId', as: 'service' });
+                WorkflowDefinitionService.belongsTo(models.WorkflowDefinition, { foreignKey: 'workflowDefinitionId', as: 'workflowDefinition' });
+                WorkflowDefinitionService.hasMany(models.WorkflowDefinitionServiceParamValue, { foreignKey: 'definitionServiceId', as: 'paramValues', onDelete: 'cascade'});
             }
         }
     });

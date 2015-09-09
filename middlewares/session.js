@@ -8,6 +8,7 @@ var RedisSession = require('../src/service/dao/redis/models/redisSession');
 module.exports = function (req, res, next) {
 
     var token = req.body.token || req.query.token || req.headers['x-access-token'];
+    logger.trace('got token: ', token);
 
     req.redisSession = new RedisSession( token, function () {
         next();

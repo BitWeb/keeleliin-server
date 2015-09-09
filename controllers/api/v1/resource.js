@@ -8,25 +8,18 @@ var resourceService = require('../../../src/service/resourceService');
 var fs = require('fs');
 var config = require(__base + 'config');
 
-router.get('/', function(req, res) {
-
-    resourceService.getResources(req, function(error, resources) {
-        return res.sendApiResponse( error, resources);
-    });
-});
-
+/**
+ * Teenuse lisamise vaade
+ */
 router.get('/types', function(req, res) {
     resourceService.getResourceTypesList(req, function(error, types) {
         return res.sendApiResponse( error, types);
     });
 });
 
-router.get('/:resourceId', function(req, res) {
-    resourceService.getResource(req, req.params.resourceId, function(error, resource) {
-        return res.sendApiResponse( error, resource);
-    });
-});
-
+/**
+ * Kusagil ressursside puus
+ */
 router.get('/download/:resourceId', function(req, res) {
     resourceService.getResource(req, req.params.resourceId, function(error, resource) {
         if (error || !resource) {
@@ -39,6 +32,52 @@ router.get('/download/:resourceId', function(req, res) {
     });
 });
 
+/**
+ * Ressursi üleslaadimine
+ */
+router.post('/upload', function(req, res) {
+    resourceService.createResourceFromUpload(req, function(err, resource) {
+        return res.sendApiResponse(err, resource);
+    });
+});
+
+/**
+* Ressursside nimekiri
+ */
+router.get('/', function(req, res) {
+    resourceService.getResources(req, function(error, resources) {
+        return res.sendApiResponse( error, resources);
+    });
+});
+
+/**
+ * Ressursi info
+ */
+router.get('/:resourceId', function(req, res) {
+    resourceService.getResource(req, req.params.resourceId, function(error, resource) {
+        return res.sendApiResponse( error, resource);
+    });
+});
+
+/**
+ * Ressursi info vorm
+ */
+router.put('/:resourceId', function(req, res) {
+    resourceService.updateResource(req, req.params.resourceId, req.body, function(error, resource) {
+        return res.sendApiResponse( error, resource);
+    });
+});
+
+/**
+ * Ressursi kustutamise vorm
+ */
+router.delete('/:resourceId', function(req, res) {
+    resourceService.deleteResource(req, req.params.resourceId, req.body, function(error, resource) {
+        return res.sendApiResponse( error, resource);
+    });
+});
+
+//todo
 router.get('/download/concat/:resourceIds', function(req, res) {
     resourceService.getConcatedResourcePath(req, req.params.resourceIds, function(error, concatPath) {
         if (error) {
@@ -55,12 +94,7 @@ router.get('/download/concat/:resourceIds', function(req, res) {
     });
 });
 
-router.post('/:projectId?', function(req, res) {
-    resourceService.createResource(req, function(err, resource) {
-        return res.sendApiResponse(err, resource);
-    });
-});
-
+//todo
 router.get('/projectId/:projectId/published', function(req, res) {
 
     resourceService.getResourcesPublished(req, req.params.projectId, function(err, resources) {

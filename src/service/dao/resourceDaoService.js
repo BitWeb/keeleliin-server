@@ -27,7 +27,7 @@ function ResourceDaoService() {
             " LEFT JOIN project_has_resource AS phr ON ( phr.resource_id = resource.id ) " +
             " LEFT JOIN project AS project ON ( phr.project_id = project.id ) " +
             " LEFT JOIN workflow AS workflow ON ( workflow.project_id = project.id )" +
-            " WHERE workflow.id IS NULL " +
+            " WHERE resource.deleted_at IS NULL AND workflow.id IS NULL " +
             (query.projectId ?  (" AND project.id = " + query.projectId ) : "") +
             (query.workflowId ?  (" AND workflow.id = " + query.workflowId ) : "");
 
@@ -46,7 +46,7 @@ function ResourceDaoService() {
             " LEFT JOIN workflow AS workflow ON ( workflow.id = outputWfService.workflow_id ) " +
             " LEFT JOIN project_has_resource AS phr ON ( phr.resource_id = resource.id ) " +
             " LEFT JOIN project AS project ON ( project.id = phr.project_id ) " +
-            " WHERE workflow.project_id = project.id " +
+            " WHERE resource.deleted_at IS NULL AND workflow.project_id = project.id " +
             (query.projectId ?  (" AND project.id = " + query.projectId ) : "") +
             (query.workflowId ?  (" AND workflow.id = " + query.workflowId ) : "");
 
@@ -64,7 +64,7 @@ function ResourceDaoService() {
             " LEFT JOIN workflow AS workflow ON ( workflow.id = workflowInput.workflow_id ) " +
             " LEFT JOIN project_has_resource AS phr ON ( phr.resource_id = resource.id ) " +
             " LEFT JOIN project AS project ON ( project.id = phr.project_id ) " +
-            " WHERE workflow.project_id = project.id " +
+            " WHERE resource.deleted_at IS NULL AND workflow.project_id = project.id " +
             (query.projectId ?  (" AND project.id = " + query.projectId ) : "") +
             (query.workflowId ?  (" AND workflow.id = " + query.workflowId ) : "");
 
@@ -142,7 +142,7 @@ function ResourceDaoService() {
             "LEFT JOIN workflow AS workflow ON ( workflow.id = outputWfService.workflow_id ) " +
             "LEFT JOIN project_has_resource AS phr ON (phr.resource_id = resource.id) " +
             "LEFT JOIN project AS project ON (phr.project_id = project.id) " +
-            "WHERE phr.project_id = :projectId OR resource_user.user_id = :userId OR resource.is_public = :isPublic " +
+            "WHERE ( phr.project_id = :projectId OR resource_user.user_id = :userId OR resource.is_public = :isPublic) AND resource.deleted_at IS NULL " +
             "GROUP BY resource.id";
 
         // Adding project info would require making separate query, because in this single query,

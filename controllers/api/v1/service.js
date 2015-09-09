@@ -8,13 +8,27 @@ var serviceService = require(__base + 'src/service/serviceService');
 var config = require(__base + 'config');
 var ServiceForm = require(__base + 'src/form/serviceForm');
 
+/**
+ * Teenuste grid list
+ */
 router.get('/', function(req, res) {
     serviceService.getServicesList(req, function(err, services) {
-
         return res.sendApiResponse( err, services);
     });
 });
 
+/**
+ * Töövoo lisamise teenuste nimekiri
+ */
+router.get('/detailed', function(req, res) {
+    serviceService.getServicesDetailedList(req, function(err, services) {
+        return res.sendApiResponse( err, services);
+    });
+});
+
+/**
+ * Teenuse muutmise vaade
+ */
 router.get('/:serviceId', function(req, res) {
     serviceService.getServiceEditData(req ,req.params.serviceId, function(err, service) {
         if (!service) {
@@ -24,6 +38,9 @@ router.get('/:serviceId', function(req, res) {
     });
 });
 
+/**
+ * Teenuse lisamise vaade
+ */
 router.post('/', function(req, res) {
     var form = new ServiceForm(req.body);
     if (form.isValid()) {
@@ -42,6 +59,9 @@ router.post('/', function(req, res) {
     }
 });
 
+/**
+ * Teenuse muutmise vaade
+ */
 router.put('/:serviceId', function(req, res) {
     var form = new ServiceForm(req.body);
     if (form.isValid()) {
@@ -53,6 +73,9 @@ router.put('/:serviceId', function(req, res) {
     }
 });
 
+/**
+ * Teenuste list
+ */
 router.put('/:serviceId/toggle-status', function(req, res) {
 
     serviceService.toggleServiceStatus(req, req.params.serviceId, function(err, service) {
@@ -60,13 +83,7 @@ router.put('/:serviceId/toggle-status', function(req, res) {
     });
 });
 
-
-router.get('/get-dependent-services/:serviceId', function(req, res) {
-    serviceService.getDependentServices(req, req.params.serviceId, function(err, services) {
-        return res.sendApiResponse( err, services);
-    });
-});
-
+//todo ?
 router.post('/install/sid/:sid/apiKey/:apiKey', function(req, res) {
     if (config.apiKey == req.params.apiKey) {
         serviceService.installService(req, req.params.sid, req.body, function(error, serviceModel) {
@@ -78,7 +95,6 @@ router.post('/install/sid/:sid/apiKey/:apiKey', function(req, res) {
             code: 401
         });
     }
-
 });
 
 module.exports = router;

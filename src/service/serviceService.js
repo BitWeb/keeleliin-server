@@ -23,6 +23,31 @@ function ServiceService() {
         return serviceDaoService.getServicesList(callback);
     };
 
+    this.getServicesDetailedList = function(req, callback) {
+        return serviceDaoService.getServicesDetailedList(function (err, data) {
+            if(err){
+                return callback(err);
+            }
+
+            var result = [];
+            for(i in data){
+                var item = data[i];
+                var itemJSON = item.toJSON();
+
+                itemJSON.childServices = itemJSON.childServices.map(function (serviceItem) {
+                    return serviceItem.id;
+                });
+                itemJSON.parentServices = itemJSON.parentServices.map(function (serviceItem) {
+                    return serviceItem.id;
+                });
+
+                result.push(itemJSON);
+            }
+
+            callback( null, result);
+        });
+    };
+
     this.getServiceEditData = function (req, serviceId, cb) {
 
         serviceDaoService.getServiceEditData(serviceId, function (err, data) {
@@ -391,8 +416,6 @@ function ServiceService() {
         ], cb);
     };
 
-
-
     this._updateServiceParentServices = function(req, serviceData, serviceInstance, cb) {
 
         ServiceModel.findAll({ where: {id: serviceData.parentServices}}).then(function (parentServices) {
@@ -444,8 +467,6 @@ function ServiceService() {
         });
     };
 
-
-
     this._composeServiceDataFromInstallServiceData = function(sid, installData, cb) {
 
         var serviceData = {
@@ -468,7 +489,6 @@ function ServiceService() {
                         value: param.value
                     });
                 }
-
                 callback();
             },
             function(callback) {
@@ -570,27 +590,7 @@ function ServiceService() {
         });
     };
 
-    this.getDependentServices = function(req, serviceId, callback) {
-        self.getService(req, serviceId, function(err, service) {
-            if (err) {
-                return callback(err);
-            }
 
-            service.getServiceOutputTypes().then(function(serviceOutputTypes) {
-                var resourceTypeIds = [];
-                serviceOutputTypes.forEach(function(serviceOutputType) {
-                    resourceTypeIds.push(serviceOutputType.resourceTypeId);
-                });
-
-                return self._getServicesByInputResourceTypes(req, resourceTypeIds, serviceId, callback);
-            });
-        });
-    };
-
-    this._getServicesByInputResourceTypes = function(req, resourceTypeIds, excludeServiceId, callback) {
-
-        return serviceDaoService.findServicesByInputResourceTypes(resourceTypeIds, excludeServiceId, callback);
-    };
 
 }
 

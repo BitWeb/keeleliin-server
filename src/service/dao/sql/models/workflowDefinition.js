@@ -5,6 +5,11 @@
 
 module.exports = function(sequelize, DataTypes) {
 
+    var editStatuses = {
+        EDIT: 'edit',
+        LOCKED: 'locked'
+    };
+
     var WorkflowDefinition = sequelize.define("WorkflowDefinition", {
         id: {
             type: DataTypes.INTEGER,
@@ -57,6 +62,13 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: false,
             defaultValue: true,
             field: 'is_public'
+        },
+        editStatus: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            primaryKey: false,
+            field: 'edit_status',
+            defaultValue: editStatuses.EDIT
         }
     }, {
         tableName: 'workflow_definition',
@@ -66,7 +78,7 @@ module.exports = function(sequelize, DataTypes) {
 
         classMethods: {
             associate: function(models) {
-                WorkflowDefinition.hasMany(models.WorkflowDefinitionService, { as: 'workflowServices' , foreignKey: {name: 'workflow_definition_id', allowNull: true}});
+                WorkflowDefinition.hasMany(models.WorkflowDefinitionService, { as: 'definitionServices' , foreignKey: 'workflowDefinitionId' });
                 WorkflowDefinition.hasMany(models.Workflow, {as: 'workflows', foreignKey: 'workflowDefinitionId'});
                 WorkflowDefinition.belongsToMany(models.Project, {
                     through: 'project_workflow_definition',
@@ -98,6 +110,8 @@ module.exports = function(sequelize, DataTypes) {
             }
         }
     });
+
+    WorkflowDefinition.editStatuses = editStatuses;
 
     return WorkflowDefinition;
 };

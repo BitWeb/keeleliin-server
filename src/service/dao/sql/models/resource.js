@@ -6,31 +6,11 @@
 
 module.exports = function(sequelize, DataTypes) {
 
-    var fileTypes = {
-        FOLDER  : 'FOLDER',
-        FILE    : 'FILE'
-    };
-
     var Resource = sequelize.define("Resource", {
         id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true
-        },
-        parentFolderId: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-            references: {
-                model: 'resource',
-                key: 'id'
-            },
-            field: 'parent_folder_id'
-        },
-        fileType: {
-            type: DataTypes.STRING,
-            defaultValue: fileTypes.FILE,
-            allowNull: false,
-            field: 'file_type'
         },
         resourceTypeId: {
             type: DataTypes.INTEGER,
@@ -50,22 +30,24 @@ module.exports = function(sequelize, DataTypes) {
             },
             field: 'workflow_service_substep_id'
         },
-        filename: {
+
+        filename: { //asukoht failisysteemis
             type: DataTypes.STRING,
             allowNull: true,
             primaryKey: false
         },
-        originalName: {
+        originalName: { //faili nimikasutaja arvutis
             type: DataTypes.STRING,
             allowNull: false,
             primaryKey: false,
             field: 'original_name'
         },
-        name: {
+        name: { //kasutaja antud uus nimi või faili nimi arvutis
             type: DataTypes.STRING,
             allowNull: false,
             primaryKey: false
         },
+
         corporaName: {
             type: DataTypes.STRING,
             allowNull: true,
@@ -104,7 +86,11 @@ module.exports = function(sequelize, DataTypes) {
         },
         updatedAt: {
             type: DataTypes.DATE,
-            field: 'updatedAt'
+            field: 'updated_at'
+        },
+        deletedAt: {
+            type: DataTypes.DATE,
+            field: 'deleted_at'
         },
         isPublic: {
             type: DataTypes.BOOLEAN,
@@ -114,7 +100,7 @@ module.exports = function(sequelize, DataTypes) {
         }
     }, {
         tableName: 'resource',
-        timestamps: false,
+        timestamps: true,
         paranoid: true,
         underscored: true,
 
@@ -130,13 +116,6 @@ module.exports = function(sequelize, DataTypes) {
                     otherKey: 'project_id',
                     as: 'projects'
                 });
-                Resource.hasMany(models.Resource, {
-                    foreignKey: 'parentFolderId',
-                    as: 'resourceFiles'
-                });
-                Resource.belongsTo(models.Resource, {
-                    foreignKey: 'parentFolderId',
-                    as: 'parentFolder' });
                 Resource.belongsToMany(models.WorkflowDefinition, {
                     through: 'workflow_definition_has_input_resource',
                     foreignKey: 'resource_id',
@@ -163,7 +142,7 @@ module.exports = function(sequelize, DataTypes) {
                 );
 
                 Resource.hasMany(models.ResourceUser, {
-                    as: 'users', foreignKey: 'resource_id'
+                    as: 'users', foreignKey: 'resourceId'
                 });
             }
         },
@@ -179,8 +158,6 @@ module.exports = function(sequelize, DataTypes) {
             }
         }
     });
-
-    Resource.fileTypes = fileTypes;
 
     return Resource;
 };
