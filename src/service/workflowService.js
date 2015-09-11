@@ -185,7 +185,30 @@ function WorkflowService() {
         });
     };
 
+    this.getWorkflowSettings = function (req, workflowId, cb) {
 
+        Workflow.find({
+            where: {id: workflowId},
+            attributes:['id','name','description','purpose']
+        }).then(function (item) {
+            cb(null, item);
+        }).catch(function (err) {
+            cb(err.message);
+        });
+    };
+
+    this.updateWorkflowSettings = function (req, workflowId, data, cb) {
+
+        Workflow.find({
+            where: {id: workflowId}
+        }).then(function (item) {
+            item.updateAttributes(data, {fields:['name', 'description', 'purpose']}).then(function () {
+                cb(null, item);
+            });
+        }).catch(function (err) {
+            cb(err.message);
+        });
+    };
 }
 
 module.exports = new WorkflowService();

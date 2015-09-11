@@ -164,9 +164,6 @@ function WorkflowDefinitionService() {
                     });
                 },
                 function saveParams(definitionService, callback) {
-
-                    logger.error(serviceData.paramValues);
-
                     self._addServiceParams(definitionService, serviceData.paramValues, callback);
                 }
             ],

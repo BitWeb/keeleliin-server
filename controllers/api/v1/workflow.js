@@ -47,15 +47,6 @@ router.put('/:workflowId/definition/services', function(req, res) {
 });
 
 /**
- * Uue töövoo definitsiooni uuendamine
- */
-/*router.put('/:workflowId/update-definition', function (req, res) {
-    workflowDefinitionService.updateDefinition(req, req.params.workflowId, req.body, function(err, workflow) {
-        return res.sendApiResponse( err, workflow);
-    });
-});*/
-
-/**
  * Käivitab töövoo
  */
 router.put('/:workflowId/run', function(req, res) {
@@ -76,5 +67,24 @@ router.put('/:workflowId/cancel', function(req, res) {
         return res.sendApiResponse( err, workflow);
     });
 });
+
+/**
+ * Sättete modali sisu
+ */
+router.get('/:workflowId/settings', function(req, res) {
+    workflowService.getWorkflowSettings(req, req.params.workflowId, function(err, settings) {
+        return res.sendApiResponse( err, settings);
+    });
+});
+
+/**
+ * Sättete uuendamine
+ */
+router.put('/:workflowId/settings', function(req, res) {
+    workflowService.updateWorkflowSettings(req, req.params.workflowId, req.body, function(err, settings) {
+        return res.sendApiResponse( err, settings);
+    });
+});
+
 
 module.exports = router;

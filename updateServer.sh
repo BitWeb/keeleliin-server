@@ -14,11 +14,6 @@ ssh -t root@dev.bitweb.ee "
     forever restartall
     echo 'List forever'
     forever list
-
-
-
-
-
     "
 
     # forever start /var/www/bitweb.ee/keeleliin.bitweb.ee/wrapper/morph_tagger/app.js
