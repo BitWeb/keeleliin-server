@@ -5,16 +5,21 @@ var express = require('express');
 var router = express.Router();
 var logger = require('log4js').getLogger('project_controller');
 var workflowService = require(__base + 'src/service/workflowService');
-
 var projectService = require('../../../src/service/projectService');
 
-router.get('/', function(req, res) {
 
+/**
+ * Kasutaja projektide nimekiri
+ */
+router.get('/', function(req, res) {
     projectService.getCurrentUserProjectsList(req, function (err, projects) {
         return res.sendApiResponse(err, projects);
     });
 });
 
+/**
+ * Projekti vaade
+ */
 router.get('/:id', function(req, res) {
 
     projectService.getCurrentUserProject(req, req.params.id, function (error, project) {
@@ -26,8 +31,10 @@ router.get('/:id', function(req, res) {
     });
 });
 
+/**
+ * Projekti sättete muutmine
+ */
 router.put('/:id', function(req, res) {
-
     projectService.updateCurrentUserProject(req, req.params.id, req.body, function (error, project) {
         if(error && !project){
             res.status(404);
@@ -37,15 +44,19 @@ router.put('/:id', function(req, res) {
     });
 });
 
+/**
+ * Uue projekti lisamine
+ */
 router.post('/', function(req, res) {
-
     projectService.createCurrentUserProject(req, req.body, function (error, project) {
         return res.sendApiResponse(error, project);
     });
 });
 
+/**
+ * Projekti kustutamine
+ */
 router.delete('/:id', function(req, res) {
-
     projectService.deleteCurrentUserProject(req, req.params.id, function (error) {
         if(error){
             res.status(400);
@@ -54,24 +65,13 @@ router.delete('/:id', function(req, res) {
     });
 });
 
+/**
+ * Projekti vaate töövoogude nimekiri
+ */
 router.get('/:projectId/workflows', function(req, res) {
 
     workflowService.getProjectWorkflowsList(req, req.params.projectId, function(error, workflows) {
         return res.sendApiResponse(error, workflows);
-    });
-});
-
-router.post('/:projectId/addUser', function(req, res) {
-
-    projectService.addProjectUser(req, req.params.projectId, req.body, function(err, project) {
-        return res.sendApiResponse(err, project);
-    });
-});
-
-router.post('/:projectId/removeUser', function(req, res) {
-
-    projectService.removeProjectUser(req, req.params.projectId, req.body, function(err, project) {
-        return res.sendApiResponse(err, project);
     });
 });
 

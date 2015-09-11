@@ -9,15 +9,6 @@ var fs = require('fs');
 var config = require(__base + 'config');
 
 /**
- * Teenuse lisamise vaade
- */
-router.get('/types', function(req, res) {
-    resourceService.getResourceTypesList(req, function(error, types) {
-        return res.sendApiResponse( error, types);
-    });
-});
-
-/**
  * Kusagil ressursside puus
  */
 router.get('/download/:resourceId', function(req, res) {
@@ -27,8 +18,7 @@ router.get('/download/:resourceId', function(req, res) {
             return res.sendApiResponse( 'Resource not found' );
         }
 
-        res.setHeader('Content-disposition', 'attachment; filename='+resource.name);
-        res.download(config.resources.location + resource.filename);
+        res.download(config.resources.location + resource.filename, resourceService.getDownloadName(resource));
     });
 });
 

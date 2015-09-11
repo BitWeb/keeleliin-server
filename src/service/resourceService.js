@@ -3,30 +3,24 @@
  */
 var logger = require('log4js').getLogger('resource_service');
 var fs = require('fs');
-var urlHelper = require('url');
 var resourceDaoService = require('./dao/resourceDaoService');
 var Resource = require(__base + 'src/service/dao/sql').Resource;
 var ResourceType = require(__base + 'src/service/dao/sql').ResourceType;
 var Workflow = require(__base + 'src/service/dao/sql').Workflow;
-
 var path = require('path');
 var async = require('async');
-var http = require('http');
 var config = require(__base + 'config');
 var formidable = require('formidable');
 var projectService = require(__base + 'src/service/projectService');
 var uniqid = require('uniqid');
 var FileUtil = require('../util/fileUtil');
 var ObjectUtils = require('../util/objectUtils');
-var userService = require('./userService');
-
 
 function ResourceService() {
 
     var self = this;
 
     this.getResource = function(req, resourceId, callback) {
-
         Resource.find({ where: {id: resourceId }}).then(function(resource) {
             return callback(null, resource);
         }).catch(function(error) {
@@ -140,12 +134,12 @@ function ResourceService() {
                 },
                 function getProject(callback) {
 
-                    if(fields.workflowId){
+                    if(fields.workflowId) {
                         Workflow.find({where: {id: fields.workflowId}}).then(function (workflowItem) {
-                           workflow = workflowItem;
-                           if(!workflow){
-                               return callback('Workflow not found');
-                           }
+                            workflow = workflowItem;
+                            if (!workflow) {
+                                return callback('Workflow not found');
+                            }
                             workflow.getProject().then(function (projectItem) {
                                 project = projectItem;
                                 callback();
@@ -154,6 +148,12 @@ function ResourceService() {
                             });
                         }).catch(function (err) {
                             callback(err.message);
+                        });
+
+                    } else if(fields.projectId) {
+                        projectService.getProject(req, fields.projectId, function (err, projectItem) {
+                            project = projectItem;
+                            callback( err );
                         });
                     } else {
                         callback('Project not found');
@@ -183,7 +183,7 @@ function ResourceService() {
                         return callback(err.message);
                     });
                 },
-                function checkFoeWorkflow(callback) {
+                function checkForWorkflow(callback) {
                     if(workflow){
                         workflow.addInputResource(resource).then(function () {
                             callback()
@@ -274,25 +274,6 @@ function ResourceService() {
             });
     };
 
-    this.createResourceType = function(resourceTypeData, callback) {
-        ResourceType.create(resourceTypeData).then(function(resourceType) {
-            return callback(null, resourceType);
-        }).catch(function(error) {
-            return callback(error);
-        });
-    };
-
-    this.getResourceTypesList = function (req, callback) {
-        ResourceType.findAll().then(function (data) {
-            callback(null, data);
-        }).catch(function (err) {
-            callback({
-                code: 500,
-                message: err.message
-            });
-        });
-    };
-
     this.deleteResource = function (req, resourceId, options, callback) {
 
         async.waterfall(
@@ -322,7 +303,21 @@ function ResourceService() {
                 callback( err );
             }
         );
-    }
+    };
+
+    this.getDownloadName = function ( resource ) {
+
+        if(path.extname(resource.name)){
+            return resource.name;
+        }
+        if(path.extname(resource.originalName)){
+            return resource.name + path.extname(resource.originalName);
+        }
+        if(path.extname(resource.filename)){
+            return resource.name + path.extname(resource.filename);
+        }
+        return resource.name + '.txt';
+    };
 }
 
 module.exports = new ResourceService();

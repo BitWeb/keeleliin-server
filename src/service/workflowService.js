@@ -6,9 +6,7 @@ var logger = require('log4js').getLogger('workflow_service');
 
 var async = require('async');
 var projectService = require(__base + 'src/service/projectService');
-var resourceService = require(__base + 'src/service/resourceService');
 var workflowDaoService = require(__base + 'src/service/dao/workflowDaoService');
-var workflowDefinitionService = require(__base + 'src/service/workflowDefinitionService');
 var Workflow = require(__base + 'src/service/dao/sql').Workflow;
 var Resource = require(__base + 'src/service/dao/sql').Resource;
 var User = require(__base + 'src/service/dao/sql').User;

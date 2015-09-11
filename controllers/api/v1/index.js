@@ -22,5 +22,6 @@ router.use('/notification', authMiddleware, require(__base + 'controllers/api/v1
 router.use('/workflow', authMiddleware, require(__base + 'controllers/api/v1/workflow'));
 router.use('/workflow-definition', authMiddleware, require(__base + 'controllers/api/v1/workflowDefinition'));
 router.use('/resource-type', authMiddleware, require(__base + 'controllers/api/v1/resourceType'));
+router.use('/meta', require(__base + 'controllers/api/v1/meta'));
 
 module.exports = router;

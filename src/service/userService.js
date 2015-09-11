@@ -54,7 +54,6 @@ function UserService() {
                     if (userResult.error) {
                         return callback(userResult.error);
                     }
-
                     var entuUser = userResult.result.user;
                     request.redisSession.data.entuSessionKey = entuUser.session_key;
                     request.redisSession.data.entuUserId = entuUser.user_id;
@@ -64,7 +63,7 @@ function UserService() {
             },
             function getLocalUser(entuUser, callback) {
                 logger.debug('Get local user');
-                userDaoService.getUserByEntuId(entuUser.user_id, function (err, user) {
+                userDaoService.getUserByEntuId(entuUser.id, function (err, user) {
                     if (err) {
                         return callback(err);
                     }
@@ -92,16 +91,10 @@ function UserService() {
                 };
 
                 entuDaoService.getEntity( entuUser.id, meta, function (err, entity) {
-
                     if(err){
                        return callback(err);
                     }
-
-                    logger.debug(entity);
-
                     var result = entity.result;
-
-
                     callback(err, result, user)
                 });
             },
@@ -132,7 +125,7 @@ function UserService() {
     this._createUserFromEntuUser = function (entuUser, cb) {
 
         var userParams = {
-            entuId: entuUser.user_id,
+            entuId: entuUser.id,
             email: entuUser.email,
             name: entuUser.name
         };
@@ -172,14 +165,10 @@ function UserService() {
 
     this.getCurrentUser = function (request, cb) {
         var userId = request.redisSession.data.userId;
-        userId = userId ? userId: 1; //todo remove
-
-
         return userDaoService.findById(userId, cb);
     };
 
     this.getUser = function(req, userId, cb) {
-
         return userDaoService.findById(userId, cb);
     };
 

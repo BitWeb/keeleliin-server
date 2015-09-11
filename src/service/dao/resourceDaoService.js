@@ -2,7 +2,6 @@
  * Created by taivo on 11.06.15.
  */
 var logger = require('log4js').getLogger('resource_dao_service');
-
 var Resource = require(__base + 'src/service/dao/sql').Resource;
 var Project = require(__base + 'src/service/dao/sql').Project;
 var Workflow = require(__base + 'src/service/dao/sql').Workflow;
@@ -20,13 +19,17 @@ function ResourceDaoService() {
             " resource.created_at as created_at, " +
             " project.id AS project_id, " +
             " project.name AS project_name, " +
-            " null as workflow_id, " +
+            " workflow.id as workflow_id, " +
             " NULL as workflow_name, " +
             " 'input' AS context_type " +
             " FROM resource as resource " +
             " LEFT JOIN project_has_resource AS phr ON ( phr.resource_id = resource.id ) " +
             " LEFT JOIN project AS project ON ( phr.project_id = project.id ) " +
-            " LEFT JOIN workflow AS workflow ON ( workflow.project_id = project.id )" +
+            " LEFT JOIN workflow_has_input_resource AS workflow_hir ON ( workflow_hir.resource_id = resource.id )" +
+            " LEFT JOIN workflow_service_substep_has_input_resource AS wss_hir ON ( wss_hir.resource_id = resource.id )" +
+            " LEFT JOIN workflow_service_substep AS wss ON ( wss_hir.workflow_service_substep_id = wss.id OR wss.id = resource.workflow_service_substep_id )" +
+            " LEFT JOIN workflow_service AS ws ON ( ws.id = wss.workflow_service_id )" +
+            " LEFT JOIN workflow AS workflow ON ( workflow.project_id = project.id AND ( workflow_hir.workflow_id = workflow.id OR ws.workflow_id = workflow.id) )" +
             " WHERE resource.deleted_at IS NULL AND workflow.id IS NULL " +
             (query.projectId ?  (" AND project.id = " + query.projectId ) : "") +
             (query.workflowId ?  (" AND workflow.id = " + query.workflowId ) : "");
@@ -71,6 +74,9 @@ function ResourceDaoService() {
         //Exclude some sub queries
         var queries = [];
         if(!query.workflowId || query.type != 'output'){
+
+            logger.trace( resourceHasNoWorkflow );
+
             queries.push( resourceHasNoWorkflow );
         }
         if(query.type != 'input'){
@@ -107,6 +113,10 @@ function ResourceDaoService() {
             " ORDER BY id; ";
 
         sequelize.query( totalQuery, { type: sequelize.QueryTypes.SELECT}).then(function (resources) {
+
+            logger.debug( resources );
+
+
             return callback(null, resources);
         }).catch(function (err) {
             logger.error(err.message);

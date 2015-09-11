@@ -34,7 +34,11 @@ function ResourceTypeService() {
         });
     };
 
-    this.createResourceType = function(req, resourceTypeData, callback) {
+    this.addResourceType = function(req, resourceTypeData, callback) {
+        self.createResourceType(resourceTypeData, callback);
+    };
+
+    this.createResourceType = function(resourceTypeData, callback) {
         ResourceType.create(resourceTypeData, {fields: ['name','value', 'splitType']}).then(function(resourceType) {
             return callback(null, resourceType);
         }).catch(function(error) {

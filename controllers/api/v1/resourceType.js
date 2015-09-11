@@ -8,7 +8,7 @@ var resourceTypeService = require(__base + 'src/service/resourceTypeService');
 var config = require(__base + 'config');
 
 /**
- * Ressursi tüüpide grid list
+ * Ressursi tüüpide grid list & teenuse lisamise vaade
  */
 router.get('/', function(req, res) {
     resourceTypeService.getResourceTypesList(req, function(err, data) {
@@ -32,7 +32,7 @@ router.get('/:id', function(req, res) {
  * Ressursi tüübi lisamise vaade
  */
 router.post('/', function(req, res) {
-    resourceTypeService.createResourceType(req, req.body, function(err, item) {
+    resourceTypeService.addResourceType(req, req.body, function(err, item) {
         return res.sendApiResponse( err, item);
     });
 });

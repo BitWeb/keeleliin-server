@@ -7,11 +7,13 @@ var serviceDaoService = require(__base + 'src/service/dao/serviceDaoService');
 var ServiceModel = require(__base + 'src/service/dao/sql').Service;
 var ServiceModelParam = require(__base + 'src/service/dao/sql').ServiceParam;
 var ParamOption = require(__base + 'src/service/dao/sql').ParamOption;
+var ResourceType = require(__base + 'src/service/dao/sql').ResourceType;
 var ServiceOutputType = require(__base + 'src/service/dao/sql').ServiceOutputType;
 var ServiceInputType = require(__base + 'src/service/dao/sql').ServiceInputType;
 var ArrayUtils = require(__base + 'src/util/arrayUtils');
 var async = require('async');
 var resourceService = require(__base + 'src/service/resourceService');
+var resourceTypeService = require(__base + 'src/service/resourceTypeService');
 var ServiceForm = require(__base + 'src/form/serviceForm');
 var sequelize = require(__base + 'src/service/dao/sql').sequelize;
 
@@ -500,9 +502,10 @@ function ServiceService() {
                             }
 
                             if (!resourceType) {
-                                resourceService.createResourceType({
+                                resourceTypeService.createResourceType({
                                     value: inputType.type,
-                                    name: inputType.type
+                                    name: inputType.type,
+                                    splitType: ResourceType.splitTypes.NONE
                                 }, function(error, resourceType) {
                                     if (error) {
                                         return innerCallback(error);
@@ -549,9 +552,10 @@ function ServiceService() {
                             }
 
                             if (!resourceType) {
-                                resourceService.createResourceType({
+                                resourceTypeService.createResourceType({
                                     value: outputType.type,
-                                    name: outputType.type
+                                    name: outputType.type,
+                                    splitType: ResourceType.splitTypes.NONE
                                 }, function(error, resourceType) {
                                     if (error) {
                                         return innerCallback(error);
