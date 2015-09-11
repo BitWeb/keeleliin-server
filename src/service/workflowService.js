@@ -12,6 +12,7 @@ var Resource = require(__base + 'src/service/dao/sql').Resource;
 var User = require(__base + 'src/service/dao/sql').User;
 var WorkflowServiceSubstep = require(__base + 'src/service/dao/sql').WorkflowServiceSubstep;
 var WorkflowServiceModel = require(__base + 'src/service/dao/sql').WorkflowService;
+var WorkflowDefinition = require(__base + 'src/service/dao/sql').WorkflowDefinition;
 var ServiceModel = require(__base + 'src/service/dao/sql').Service;
 var workflowBuilder = require(__base + 'src/service/workflow/workflowBuilder');
 var WorkflowRunner = require(__base + 'src/service/workflow/workflowRunner');
@@ -49,7 +50,6 @@ function WorkflowService() {
     };
 
     this.setWorkflowStatusCanceled = function (req, workflowId, cb) {
-
         async.waterfall([
             function getWorkflow( callback ) {
                 Workflow.find({
@@ -198,15 +198,41 @@ function WorkflowService() {
     };
 
     this.updateWorkflowSettings = function (req, workflowId, data, cb) {
+        async.waterfall([
+            function (callback) {
 
-        Workflow.find({
-            where: {id: workflowId}
-        }).then(function (item) {
-            item.updateAttributes(data, {fields:['name', 'description', 'purpose']}).then(function () {
-                cb(null, item);
-            });
-        }).catch(function (err) {
-            cb(err.message);
+                Workflow.find({
+                    where: {id: workflowId}
+                }).then(function (workflow) {
+                    if(!workflow){
+                        return callback('Töövoogu ei leitud');
+                    }
+                    callback(null, workflow);
+                }).catch(function (err) {
+                    callback(err.message);
+                });
+            },
+            function (workflow, callback) {
+                workflow.updateAttributes(data, {fields:['name', 'description', 'purpose']}).then(function () {
+                    callback(null, workflow);
+                });
+            },
+            function (workflow, callback) {
+                workflow.getWorkflowDefinition().then(function(definition){
+                    if(definition.editStatus == WorkflowDefinition.editStatuses.LOCKED){
+                        return callback(null, workflow);
+                    }
+
+                    definition.updateAttributes(data, {fields:['name', 'description', 'purpose']}).then(function () {
+                        return callback(null, workflow);
+                    });
+                });
+            }
+        ], function (err, workflow) {
+            if(err){
+                logger.error(err);
+            }
+            cb(err, workflow);
         });
     };
 }
