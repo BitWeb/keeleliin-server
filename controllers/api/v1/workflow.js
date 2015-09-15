@@ -7,6 +7,16 @@ var router = express.Router();
 var workflowService = require(__base + 'src/service/workflowService');
 var workflowDefinitionService = require(__base + 'src/service/workflowDefinitionService');
 
+
+/**
+ * Uue töövoo defineerimine
+ */
+router.post('/create', function (req, res) {
+    workflowDefinitionService.createNewWorkflow(req, req.body, function(err, workflow) {
+        return res.sendApiResponse( err, workflow);
+    });
+});
+
 /**
  * Uue töövoo defineerimine
  */
@@ -72,7 +82,7 @@ router.put('/:workflowId/cancel', function(req, res) {
  * Sättete modali sisu
  */
 router.get('/:workflowId/settings', function(req, res) {
-    workflowService.getWorkflowSettings(req, req.params.workflowId, function(err, settings) {
+    workflowDefinitionService.getWorkflowSettings(req, req.params.workflowId, function(err, settings) {
         return res.sendApiResponse( err, settings);
     });
 });
@@ -81,7 +91,7 @@ router.get('/:workflowId/settings', function(req, res) {
  * Sättete uuendamine
  */
 router.put('/:workflowId/settings', function(req, res) {
-    workflowService.updateWorkflowSettings(req, req.params.workflowId, req.body, function(err, settings) {
+    workflowDefinitionService.updateWorkflowSettings(req, req.params.workflowId, req.body, function(err, settings) {
         return res.sendApiResponse( err, settings);
     });
 });

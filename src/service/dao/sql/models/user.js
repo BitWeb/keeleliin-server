@@ -56,28 +56,32 @@ module.exports = function(sequelize, DataTypes) {
         updatedAt: {
             type: DataTypes.DATE,
             field: 'updated_at'
+        },
+        deletedAt: {
+            type: DataTypes.DATE,
+            field: 'deleted_at'
         }
     }, {
         tableName: 'user',
-        timestamps: false,
+        timestamps: true,
         paranoid: true,
         underscored: true,
 
         classMethods: {
             associate: function(models) {
-                User.belongsToMany(models.Project, {as: 'userProjects', through: models.ProjectUser, foreignKey: 'user_id'});
-                User.hasMany(models.Project,{as: 'projects', foreignKey: 'userId'});
-                User.hasMany(models.ProjectUser,{as: 'userProjectRelations', foreignKey: 'user_id'});
-            }
-        },
-        hooks: {
-            beforeCreate: function(resource, options, fn) {
-                resource.createdAt = new Date();
-                fn(null, resource);
-            },
-            beforeUpdate: function(resource, options, fn) {
-                resource.updatedAt = new Date();
-                fn(null, resource);
+                User.belongsToMany(models.Project, {
+                    as: 'userProjects',
+                    through: models.ProjectUser,
+                    foreignKey: 'userId'}
+                );
+                User.hasMany(models.Project,{
+                    as: 'projects',
+                    foreignKey: 'userId'}
+                );
+                User.hasMany(models.ProjectUser,{
+                    as: 'userProjectRelations',
+                    foreignKey: 'userId'}
+                );
             }
         }
     });

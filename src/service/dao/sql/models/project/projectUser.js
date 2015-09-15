@@ -29,7 +29,7 @@ module.exports = function(sequelize, DataTypes) {
         },
         updatedAt: {
             type: DataTypes.DATE,
-            field: 'updatedAt'
+            field: 'updated_at'
         }
     }, {
         tableName: 'project_user',

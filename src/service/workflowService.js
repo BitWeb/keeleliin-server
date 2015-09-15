@@ -14,6 +14,7 @@ var WorkflowServiceSubstep = require(__base + 'src/service/dao/sql').WorkflowSer
 var WorkflowServiceModel = require(__base + 'src/service/dao/sql').WorkflowService;
 var WorkflowDefinition = require(__base + 'src/service/dao/sql').WorkflowDefinition;
 var ServiceModel = require(__base + 'src/service/dao/sql').Service;
+var WorkflowDefinitionUser = require(__base + 'src/service/dao/sql').WorkflowDefinitionUser;
 var workflowBuilder = require(__base + 'src/service/workflow/workflowBuilder');
 var WorkflowRunner = require(__base + 'src/service/workflow/workflowRunner');
 
@@ -185,56 +186,7 @@ function WorkflowService() {
         });
     };
 
-    this.getWorkflowSettings = function (req, workflowId, cb) {
 
-        Workflow.find({
-            where: {id: workflowId},
-            attributes:['id','name','description','purpose']
-        }).then(function (item) {
-            cb(null, item);
-        }).catch(function (err) {
-            cb(err.message);
-        });
-    };
-
-    this.updateWorkflowSettings = function (req, workflowId, data, cb) {
-        async.waterfall([
-            function (callback) {
-
-                Workflow.find({
-                    where: {id: workflowId}
-                }).then(function (workflow) {
-                    if(!workflow){
-                        return callback('Töövoogu ei leitud');
-                    }
-                    callback(null, workflow);
-                }).catch(function (err) {
-                    callback(err.message);
-                });
-            },
-            function (workflow, callback) {
-                workflow.updateAttributes(data, {fields:['name', 'description', 'purpose']}).then(function () {
-                    callback(null, workflow);
-                });
-            },
-            function (workflow, callback) {
-                workflow.getWorkflowDefinition().then(function(definition){
-                    if(definition.editStatus == WorkflowDefinition.editStatuses.LOCKED){
-                        return callback(null, workflow);
-                    }
-
-                    definition.updateAttributes(data, {fields:['name', 'description', 'purpose']}).then(function () {
-                        return callback(null, workflow);
-                    });
-                });
-            }
-        ], function (err, workflow) {
-            if(err){
-                logger.error(err);
-            }
-            cb(err, workflow);
-        });
-    };
 }
 
 module.exports = new WorkflowService();
