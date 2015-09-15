@@ -221,10 +221,10 @@ function Runner() {
 
             if( stepsCreated == 0 ){
                 if(fromSubStep){
-                    fromSubStep.log = 'Alamsammule järgnevale teenusele sobivaid sisendressursse ei leitud';
+                    fromSubStep.log = 'Teenusele sobivaid sisendressursse ei leitud';
                     return self._breakFromSubstep(fromSubStep, Workflow.statusCodes.ERROR)
                 }
-                workflowService.log = 'Järgnevale teenusele sobivaid sisendressursse ei leitud';
+                workflowService.log = 'Teenusele sobivaid sisendressursse ei leitud';
                 return self._breakFromService(workflowService, Workflow.statusCodes.ERROR);
             }
 

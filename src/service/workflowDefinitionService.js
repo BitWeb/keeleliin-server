@@ -400,6 +400,7 @@ function WorkflowDefinitionService() {
                 userService.getCurrentUser(req, callback);
             },
             function createDefinition(user, callback) {
+
                 var workflowDefinitionData = {
                     name : workflow.name,
                     description : workflow.description,
@@ -409,20 +410,17 @@ function WorkflowDefinitionService() {
                     accessStatus: WorkflowDefinition.accessStatuses.PRIVATE
                 };
 
-                var definition = WorkflowDefinition.create(
-                    workflowDefinitionData,
-                    {
-                        fields: ['name', 'description', 'purpose', 'projectId', 'userId', 'accessStatus']
-                    }
-                ).then(function () {
+                WorkflowDefinition.create(
+                    workflowDefinitionData, { fields: ['name', 'description', 'purpose', 'projectId', 'userId', 'accessStatus'] }
+                ).then(function ( definition ) {
                         callback(null, definition, user);
                     }).catch(function (err) {
                         callback(err.message);
                     });
-
             },
             function (definition, user, callback) {
                 definition.addWorkflowDefinitionUser( user, { role: WorkflowDefinitionUser.roles.OWNER }).then(function () {
+                    logger.debug('User added');
                     return callback(null, definition);
                 }).catch(function (e) {
                     return callback(e.message);
@@ -430,7 +428,7 @@ function WorkflowDefinitionService() {
             }
         ], function (err, definition) {
             if(err){
-                logger.error('Create error: ', err);
+                logger.error('Create from workflow error: ', err);
             }
             cb(err, definition);
         });

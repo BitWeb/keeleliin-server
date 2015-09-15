@@ -14,25 +14,34 @@ function WorkflowBuilder(){
     this.create = function (workflowId, cb) {
 
         async.waterfall([
-            function (callback) {
-                Workflow.find({where:{id:workflowId}}).then(function (workflow) {
-                    if(!workflow){
-                        callback('Töövoogu ei leitud');
+                function (callback) {
+                    Workflow.find({where:{id:workflowId}}).then(function (workflow) {
+                        if(!workflow){
+                            callback('Töövoogu ei leitud');
+                        }
+                        callback(null, workflow);
+                    });
+                },
+                function (workflow, callback) {
+                    if(workflow.status != Workflow.statusCodes.INIT){
+                        return callback('Töövoog ei ole INIT staatusega!');
                     }
                     callback(null, workflow);
-                });
-            },
-            function (workflow, callback) {
-                if(workflow.status != Workflow.statusCodes.INIT){
-                    return callback('Töövoog ei ole INIT staatusega!');
+                },
+                function getWorkflowDefinition(workflow, callback) {
+                    workflow.getWorkflowDefinition().then(function (workflowDefinition) {
+                        self.setServices(workflow, workflowDefinition, function (err, workflow) {
+                            callback(err, workflow, workflowDefinition);
+                        })
+                    });
+                },
+                function lockDefinition(workflow, workflowDefinition, callback) {
+                    workflowDefinition.updateAttributes({editStatus: WorkflowDefinition.editStatuses.LOCKED}).then(function () {
+                        callback(null, workflow);
+                    }).catch(function (err) {
+                        callback( err.message );
+                    });
                 }
-                callback(null, workflow);
-            },
-            function getWorkflowDefinition(workflow, callback) {
-                workflow.getWorkflowDefinition().then(function (workflowDefinition) {
-                    self.setServices(workflow, workflowDefinition, callback)
-                });
-            }
             ],
             function(err, workflow){
                 if(err){
