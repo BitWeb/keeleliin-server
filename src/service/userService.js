@@ -168,6 +168,15 @@ function UserService() {
         return userDaoService.findById(userId, cb);
     };
 
+    this.isAdmin = function (request, cb) {
+        self.getCurrentUser(request, function (err, user) {
+            if(user && user.role == User.roles.ROLE_ADMIN){
+                return cb(null, true);
+            }
+            return cb();
+        });
+    };
+
     this.getUser = function(req, userId, cb) {
         return userDaoService.findById(userId, cb);
     };

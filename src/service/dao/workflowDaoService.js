@@ -263,14 +263,9 @@ function WorkflowDaoService() {
                 'datetimeStart',
                 'datetimeEnd'
             ],
-            where: {projectId: projectId},
-            include: [
-                {
-                    model: WorkflowServiceModel,
-                    as: 'workflowServices',
-                    attributes: ['id', 'status']
-                }
-            ],
+            where: {
+                projectId: projectId
+            },
             required: false,
             raw: false
         }).then(function (workflows) {
@@ -283,6 +278,53 @@ function WorkflowDaoService() {
         });
     };
 
-};
+
+    this.getWorkflowsManagementList = function ( params, callback) {
+
+        var conditions = {
+            attributes: [
+                'id',
+                'name',
+                'status',
+                'datetimeCreated',
+                'datetimeStart',
+                'datetimeEnd'
+            ],
+            where: {},
+            include: [{
+                model: User,
+                as: 'user',
+                attributes: [
+                    'id',
+                    'name',
+                    'displaypicture',
+                    'email'
+                ],
+                required: true
+            }],
+            orderBy: [['id', 'DESC']]
+        };
+
+        if(params.perPage){
+            params.page = params.page ? params.page : 1;
+            conditions.limit = params.perPage;
+            if(params.page){
+                conditions.offset = params.perPage * (params.page - 1);
+            }
+        }
+
+        if(params.name){
+            conditions.where.name = {
+                $iLike: '%'+params.name+'%'
+            }
+        }
+
+        Workflow.findAndCountAll( conditions ).then(function (data) {
+            callback(null, data);
+        }).catch(function (err) {
+            callback(err.message);
+        });
+    };
+}
 
 module.exports = new WorkflowDaoService();

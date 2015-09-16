@@ -176,6 +176,22 @@ module.exports = function(sequelize, DataTypes) {
                 }).catch(function (err) {
                     cb(err);
                 });
+            },
+            getProgress: function(cb){
+                var self = this;
+                this.getWorkflowServices({attributes:['status']}).then(function (workflowServices) {
+                    var progress = 100;
+                    if(workflowServices.length > 0){
+                        progress = Math.round((workflowServices.filter(function(value){return value.status == statusCodes.FINISHED;}).length * 100) / workflowServices.length);
+                    }
+                    if(self.status == statusCodes.INIT){
+                        progress = 0;
+                    }
+                    cb(null, progress);
+
+                }).catch(function (err) {
+                    return cb(err.message);
+                });
             }
         }
     });

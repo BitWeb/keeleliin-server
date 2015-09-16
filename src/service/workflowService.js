@@ -17,7 +17,7 @@ var ServiceModel = require(__base + 'src/service/dao/sql').Service;
 var WorkflowDefinitionUser = require(__base + 'src/service/dao/sql').WorkflowDefinitionUser;
 var workflowBuilder = require(__base + 'src/service/workflow/workflowBuilder');
 var WorkflowRunner = require(__base + 'src/service/workflow/workflowRunner');
-
+var userService = require('./userService');
 var apiService = require('./workflow/service/apiService');
 
 function WorkflowService() {
@@ -158,35 +158,64 @@ function WorkflowService() {
     };
 
 
-    this.getProjectWorkflowsList = function(req, projectId, callback) {
+    this.getProjectWorkflowsList = function(req, projectId, cb) {
         logger.debug('Get project workflows list');
         projectService.getProject(req, projectId, function(err, project) {
             if (err) {
                 return callback(err);
             }
             workflowDaoService.getProjectWorkflowsList(project.id, function (err, workflows) {
-                var dto = [];
-                for(i in workflows){
-                    var item = workflows[i];
-
-                    var progress = 100;
-                    if(item.workflowServices.length > 0){
-                        progress = Math.round((item.workflowServices.filter(function(value){return value.status == Workflow.statusCodes.FINISHED;}).length * 100) / item.workflowServices.length);
+                async.map(workflows,
+                    function(workflow, innerCb){
+                        var resultItem = workflow.dataValues;
+                        workflow.getProgress(function (err, progress) {
+                            resultItem.progress = progress;
+                            innerCb(err, resultItem);
+                        });
+                    },
+                    function(err, result){
+                        cb(null, result);
                     }
-                    if(item.status == Workflow.statusCodes.INIT){
-                        progress = 0;
-                    }
-
-                    var dtoItem = item.dataValues;
-                    dtoItem.progress = progress;
-                    dto.push(dtoItem);
-                }
-                return callback(err, dto);
+                );
             });
         });
     };
 
+    this.getWorkflowsManagementList = function (req, params, cb) {
 
+        async.waterfall([
+                function isAdmin(callback) {
+                    userService.isAdmin(req, function (err, isAdmin) {
+                        if(!isAdmin){
+                            return callback('Tegemist ei ole admin kasutajaga');
+                        }
+                        callback();
+                    });
+                },
+                function (callback) {
+                    workflowDaoService.getWorkflowsManagementList( params, callback );
+                },
+                function (data, callback) {
+                    async.map(
+                        data.rows,
+                        function (row, innerCb) {
+                            row.getProgress(function (err, progress) {
+                                row.dataValues.progress = progress;
+                                innerCb(err, row);
+                            });
+                        },
+                        function (err, resultRows) {
+                        logger.debug(resultRows);
+                            data.rows = resultRows;
+                        callback(null, data);
+                    });
+                }
+            ],
+            function (err, data) {
+                cb(err, data);
+            }
+        );
+    };
 }
 
 module.exports = new WorkflowService();

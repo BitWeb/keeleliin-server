@@ -113,10 +113,7 @@ function ResourceDaoService() {
             " ORDER BY id; ";
 
         sequelize.query( totalQuery, { type: sequelize.QueryTypes.SELECT}).then(function (resources) {
-
-            logger.debug( resources );
-
-
+            logger.debug('Got resources: ' + resources.length );
             return callback(null, resources);
         }).catch(function (err) {
             logger.error(err.message);
