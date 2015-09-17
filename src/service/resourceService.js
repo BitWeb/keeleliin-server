@@ -20,6 +20,22 @@ function ResourceService() {
 
     var self = this;
 
+    this.getResourceInfo = function(req, resourceId, callback) {
+        Resource.find(
+            {
+                where: {
+                    id: resourceId
+                },
+                attributes: ['id','name','pid', 'description','resourceTypeId','originalName', 'createdAt']
+            }
+        ).then(function(resource) {
+            return callback(null, resource);
+        }).catch(function(error) {
+
+            return callback(error);
+        });
+    };
+
     this.getResource = function(req, resourceId, callback) {
         Resource.find({ where: {id: resourceId }}).then(function(resource) {
             return callback(null, resource);
@@ -36,7 +52,7 @@ function ResourceService() {
                 self.getResource(req, resourceId, callback);
             },
             function (resource, callback) {
-                resource.updateAttributes(data, {fields: ['name','description', 'resourceTypeId']}).then(function () {
+                resource.updateAttributes(data, {fields: ['name','pid','description', 'resourceTypeId']}).then(function () {
                     callback(null, resource);
                 }).catch(function (err) {
                     callback(err.message);

@@ -55,7 +55,11 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: false,
             primaryKey: false
         },
-
+        pid: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            primaryKey: false
+        },
         corporaName: {
             type: DataTypes.STRING,
             allowNull: true,

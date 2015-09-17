@@ -23,6 +23,15 @@ router.get('/download/:resourceId', function(req, res) {
 });
 
 /**
+ * Ressursi info
+ */
+router.get('/:resourceId', function(req, res) {
+    resourceService.getResourceInfo(req, req.params.resourceId, function(error, resource) {
+        return res.sendApiResponse( error, resource);
+    });
+});
+
+/**
  * Ressursi üleslaadimine
  */
 router.post('/upload', function(req, res) {
@@ -40,14 +49,7 @@ router.get('/', function(req, res) {
     });
 });
 
-/**
- * Ressursi info
- */
-router.get('/:resourceId', function(req, res) {
-    resourceService.getResource(req, req.params.resourceId, function(error, resource) {
-        return res.sendApiResponse( error, resource);
-    });
-});
+
 
 /**
  * Ressursi info vorm
