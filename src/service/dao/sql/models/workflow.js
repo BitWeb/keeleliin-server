@@ -15,8 +15,6 @@ var statusCodes = {
 
 module.exports = function(sequelize, DataTypes) {
 
-
-
     var Workflow = sequelize.define("Workflow", {
         id: {
             type: DataTypes.INTEGER,
@@ -116,7 +114,6 @@ module.exports = function(sequelize, DataTypes) {
                         as: 'project'
                     }
                 );
-
                 Workflow.hasMany(models.WorkflowService, {
                     foreignKey:'workflowId',
                     as: 'workflowServices'
@@ -127,6 +124,10 @@ module.exports = function(sequelize, DataTypes) {
                         as: 'inputResources'
                     }
                 );
+                Workflow.hasMany(models.Resource, {
+                    foreignKey:'workflowOutputId',
+                    as: 'outputResources'
+                });
             }
         },
         hooks: {

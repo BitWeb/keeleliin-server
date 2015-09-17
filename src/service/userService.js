@@ -200,12 +200,16 @@ function UserService() {
         });
     };
 
-    this.registerApiAccess = function(req, userId, callback) {
+    this.registerApiAccess = function(req, callback) {
+
+        var userId = req.redisSession.data.userId;
         self.getUser(req, userId, function(error, user) {
             if (error) {
                 return callback(error);
             }
-            return self.saveUser(req, user.id, {dateApiAccessed: new Date()}, callback);
+            return self.saveUser(req, user.id, {dateApiAccessed: new Date()}, function (err, user) {
+                callback(null, user.name + ' is alive');
+            });
         });
     };
 

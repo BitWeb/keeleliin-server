@@ -5,8 +5,9 @@ module.exports = function(sequelize, DataTypes) {
     var codes = {
         WORKFLOW_FINISHED : 'workflow-finished',
         WORKFLOW_STILL_RUNNING : 'workflow-still-running',
-        PROJECT_USER_ADDED : 'project-user-added',
-        WORKFLOW_ERROR : 'workflow-error'
+        WORKFLOW_ERROR : 'workflow-error',
+
+        PROJECT_USER_ADDED : 'project-user-added'
     };
 
     var NotificationType = sequelize.define("NotificationType", {

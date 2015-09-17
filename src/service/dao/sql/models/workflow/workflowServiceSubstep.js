@@ -67,16 +67,20 @@ module.exports = function(sequelize, DataTypes) {
         classMethods: {
             associate: function(models) {
                 WorkflowServiceSubstep.belongsTo(models.WorkflowService, {
-                        foreignKey: 'workflowServiceId',
-                        as: 'workflowService'}
+                        as: 'workflowService',
+                        foreignKey: 'workflowServiceId'
+                    }
                 );
                 WorkflowServiceSubstep.hasMany(models.Resource, {
-                    as: 'outputResources'}
+                        as: 'outputResources',
+                        foreignKey: 'workflowServiceSubstepId'
+                    }
                 );
                 WorkflowServiceSubstep.belongsTo(models.WorkflowServiceSubstep, {
-                    foreignKey: 'prevSubstepId',
-                    as: 'prevSubstep'
-                });
+                        foreignKey: 'prevSubstepId',
+                        as: 'prevSubstep'
+                    }
+                );
                 WorkflowServiceSubstep.belongsToMany(models.Resource, {
                         through: 'workflow_service_substep_has_input_resource',
                         foreignKey: 'workflow_service_substep_id',

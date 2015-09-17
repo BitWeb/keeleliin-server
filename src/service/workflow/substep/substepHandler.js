@@ -93,12 +93,12 @@ function SubStepHandler(project, workflow){
             },
             function (response, callback) {
                 logger.debug('Response: ', response);
-                self.handleResponse(substep, dto, response, callback);
+                self._handleResponse(substep, dto, response, callback);
             }
         ], cb );
     };
 
-    this.handleResponse = function (substep, dto, response, cb){
+    this._handleResponse = function (substep, dto, response, cb){
 
         if(!response || !response.response){
             logger.error('TODO:: No valid response', response);
@@ -132,7 +132,7 @@ function SubStepHandler(project, workflow){
         setTimeout(function () {
             apiService.recheckRequest(dto, substep.serviceSession, function (error, response) {
                 if(error){return cb(error)}
-                self.handleResponse(substep, dto, response, cb);
+                self._handleResponse(substep, dto, response, cb);
             })
         }, response.response.recheckInterval * 1000);
     };
@@ -169,9 +169,9 @@ function SubStepHandler(project, workflow){
     };
 
     this._loadOutputResource = function (substep, fileData, dto,  callback) {
-        self.getSubstepOutputResourceType(substep, fileData, function (err, resourceType) {
+        self._getSubstepOutputResourceType(substep, fileData, function (err, resourceType) {
             if(err) return callback(null, substep); //SKIP if not used
-            var outputPath = self.getOutputResourcePath(substep, fileData);
+            var outputPath = self._getOutputResourcePath(substep, fileData);
             apiService.loadRequestResponse(dto, substep.serviceSession, fileData, outputPath, function (err) {
                 self._addSubstepOutputResource(substep, outputPath, fileData, resourceType, function (err) {
                     logger.debug('Output resource added: ' +  substep.id);
@@ -189,7 +189,7 @@ function SubStepHandler(project, workflow){
         }).catch(cb);
     };
 
-    this.getOutputResourcePath = function ( substep, fileData) {
+    this._getOutputResourcePath = function ( substep, fileData) {
 
         var rootLocation = config.resources.location;
         if (!fs.existsSync( rootLocation )) {
@@ -208,7 +208,7 @@ function SubStepHandler(project, workflow){
 
         async.waterfall([
             function (callback) {
-                self.getOutputResourceFilename(substep, fileData, resourceType, callback);
+                self._getOutputResourceFilename(substep, fileData, resourceType, callback);
             },
             function (fileName, callback) {
                 var data = {
@@ -241,7 +241,7 @@ function SubStepHandler(project, workflow){
         ], cb);
     };
 
-    this.getOutputResourceFilename = function (substep, fileData, resourceType, cb) {
+    this._getOutputResourceFilename = function (substep, fileData, resourceType, cb) {
 
         var sourceName;
         var name = FileUtil.normalizeFileName(fileData.fileName);
@@ -262,7 +262,7 @@ function SubStepHandler(project, workflow){
         ], cb);
     };
 
-    this.getSubstepOutputResourceType = function(substep, fileData, cb){
+    this._getSubstepOutputResourceType = function(substep, fileData, cb){
 
         async.waterfall([
             function (callback) {
@@ -290,6 +290,22 @@ function SubStepHandler(project, workflow){
             }
         ], cb );
     };
+
+
+    this.mapLastServiceSubstepResources = function (substep, callback) {
+
+        if(substep == null){
+            return callback();
+        }
+
+        substep.getOutputResources().then(function (resources) {
+            async.each(resources, function (resource, innerCb) {
+                resource.setWorkflowOutput(self.workflow).then(innerCb);
+            }, function (err) {
+               callback(err);
+            });
+        });
+    }
 }
 
 module.exports = SubStepHandler;

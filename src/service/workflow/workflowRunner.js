@@ -132,12 +132,19 @@ function Runner() {
                             }
                         });
                     } else {
-                        if(workflowService){
-                            return self.tryToCloseWorkflowFromWorkflowService(workflowService, callback);
-                        } else {
-                            logger.trace('Eelnevat töövoo teenust ei leitud');
-                            callback();
-                        }
+                        //No next service for given step => to mark resources ??
+
+                        substepHandler.mapLastServiceSubstepResources(subStep, function (err) {
+
+                            if(workflowService){
+                                return self.tryToCloseWorkflowFromWorkflowService(workflowService, callback);
+                            } else {
+                                logger.trace('Eelnevat töövoo teenust ei leitud'); //happens when no servoices in flow
+                                callback();
+                            }
+
+                        });
+
                     }
                 }
             ],

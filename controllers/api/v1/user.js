@@ -81,11 +81,13 @@ router.put('/:userId/details', authMiddleware, function(req, res) {
     });
 });
 
-//todo ?
-router.post('/register-api-access', function(req, res) {
-    var userId = req.redisSession.data.userId;
-    userService.registerApiAccess(req, userId, function(error, user) {
-        return res.sendApiResponse(error, user);
+/**
+ * Päringud peale sisselogimist
+ */
+router.post('/register-api-access', authMiddleware, function(req, res) {
+
+    userService.registerApiAccess(req, function(error, status) {
+        return res.sendApiResponse(error, status);
     });
 });
 

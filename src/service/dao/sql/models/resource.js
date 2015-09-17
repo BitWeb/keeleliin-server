@@ -30,7 +30,15 @@ module.exports = function(sequelize, DataTypes) {
             },
             field: 'workflow_service_substep_id'
         },
-
+        workflowOutputId: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            references: {
+                model: 'workflow',
+                key: 'id'
+            },
+            field: 'workflow_output_id'
+        },
         filename: { //asukoht failisysteemis
             type: DataTypes.STRING,
             allowNull: true,
@@ -140,21 +148,13 @@ module.exports = function(sequelize, DataTypes) {
                         as: 'outputSubsteps'
                     }
                 );
-
                 Resource.hasMany(models.ResourceUser, {
                     as: 'users', foreignKey: 'resourceId'
                 });
-            }
-        },
-
-        hooks: {
-            beforeCreate: function(resource, options, fn) {
-                resource.createdAt = new Date();
-                fn(null, resource);
-            },
-            beforeUpdate: function(resource, options, fn) {
-                resource.updatedAt = new Date();
-                fn(null, resource);
+                Resource.belongsTo(models.Workflow, {
+                    foreignKey: 'workflowOutputId',
+                    as: 'workflowOutput'
+                });
             }
         }
     });
