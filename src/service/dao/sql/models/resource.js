@@ -3,6 +3,9 @@
  */
 
 "use strict";
+var logger = require('log4js').getLogger('resource_model');
+var config = require(__base + 'config');
+var fs = require('fs');
 
 module.exports = function(sequelize, DataTypes) {
 
@@ -60,6 +63,12 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: true,
             primaryKey: false
         },
+        fileSize: {
+            type: DataTypes.INTEGER,
+            primaryKey: false,
+            allowNull: true,
+            field: 'file_size'
+        },
         corporaName: {
             type: DataTypes.STRING,
             allowNull: true,
@@ -115,6 +124,13 @@ module.exports = function(sequelize, DataTypes) {
         timestamps: true,
         paranoid: true,
         underscored: true,
+
+        hooks: {
+            beforeCreate: function(resource, options) {
+                var stats = fs.statSync(config.resources.location + resource.filename);
+                resource.fileSize = stats["size"];
+            }
+        },
 
         classMethods: {
             associate: function(models) {

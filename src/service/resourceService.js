@@ -26,7 +26,7 @@ function ResourceService() {
                 where: {
                     id: resourceId
                 },
-                attributes: ['id','name','pid', 'description','resourceTypeId','originalName', 'createdAt']
+                attributes: ['id','name','pid', 'description','resourceTypeId','originalName', 'createdAt', 'fileSize']
             }
         ).then(function(resource) {
             return callback(null, resource);
@@ -110,6 +110,7 @@ function ResourceService() {
         var project;
         var resourceFile;
         var fields;
+        var filename;
         var resource;
         var projectLocation;
 
@@ -176,11 +177,30 @@ function ResourceService() {
                     }
                 },
 
-                function createResource(callback) {
+                function renameFile( callback ) {
                     projectLocation = (project != null ? '/project_' + project.id : '');
+                    var resourceFileLocation = config.resources.location + projectLocation;
+                    filename = projectLocation + '/' + uniqid() + path.extname(resourceFile.name);
+                    if (!fs.existsSync(config.resources.location )) {
+                        fs.mkdirSync(config.resources.location);
+                    }
+                    if (!fs.existsSync(resourceFileLocation)) {
+                        fs.mkdirSync(resourceFileLocation);
+                    }
+
+                    fs.rename(resourceFile.path, config.resources.location + filename, function(err) {
+                        if (err) {
+                            logger.error(err);
+                            return callback(err);
+                        }
+                        return callback();
+                    });
+                },
+                function createResource(callback) {
+
                     var resourceData = {
                         resourceTypeId: resourceType.id,
-                        filename: projectLocation + '/' + uniqid() + path.extname(resourceFile.name),
+                        filename: filename,
                         originalName: path.basename(resourceFile.name),
                         name: resourceFile.name
                     };
@@ -207,23 +227,6 @@ function ResourceService() {
                     } else {
                         callback()
                     }
-                },
-                function renameFile( callback ) {
-                    var resourceFileLocation = config.resources.location + projectLocation;
-                    if (!fs.existsSync(config.resources.location )) {
-                        fs.mkdirSync(config.resources.location);
-                    }
-                    if (!fs.existsSync(resourceFileLocation)) {
-                        fs.mkdirSync(resourceFileLocation);
-                    }
-
-                    fs.rename(resourceFile.path, config.resources.location + resource.filename, function(err) {
-                        if (err) {
-                            logger.error(err);
-                            return callback(err);
-                        }
-                        return callback();
-                    });
                 }
             ],
             function (err) {
