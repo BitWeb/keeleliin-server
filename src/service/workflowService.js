@@ -7,6 +7,7 @@ var logger = require('log4js').getLogger('workflow_service');
 var async = require('async');
 var projectService = require(__base + 'src/service/projectService');
 var workflowDaoService = require(__base + 'src/service/dao/workflowDaoService');
+var resourceDaoService = require(__base + 'src/service/dao/resourceDaoService');
 var Workflow = require(__base + 'src/service/dao/sql').Workflow;
 var Resource = require(__base + 'src/service/dao/sql').Resource;
 var User = require(__base + 'src/service/dao/sql').User;
@@ -212,10 +213,65 @@ function WorkflowService() {
                 }
             ],
             function (err, data) {
+                if(err){
+                    logger.error(err);
+                }
                 cb(err, data);
             }
         );
     };
+
+    this.addResources = function(req, workflowId, data, callback){
+
+        async.waterfall([
+            function (callback) {
+                workflowDaoService.getWorkflow(workflowId, callback);
+            },
+            function (workflow, callback) {
+
+                if(workflow.status != Workflow.statusCodes.INIT){
+                    return callback('Töövoog ei ole init staatusega');
+                }
+                callback(null,workflow);
+            },
+            function (workflow, callback) {
+                workflow.getProject().then(function (project) {
+                    callback(null, workflow, project);
+                });
+            },
+            function (workflow, project, callback) {
+                async.eachLimit(data.resources, 10, function (resourceId, innerCallback) {
+                    if(!resourceId){
+                        return innerCallback();
+                    }
+                    resourceDaoService.getResource(resourceId, function (err, resource) {
+                        if(err){
+                            logger.error(err);
+                           return innerCallback();
+                        }
+                        workflow.addInputResource(resource).then(function () {
+                            project.addResource(resource).then(function () {
+                                innerCallback()
+                            }).catch(function (err) {
+                                logger.error(err);
+                                innerCallback()
+                            });
+                        }).catch(function (err) {
+                            logger.error(err);
+                            innerCallback()
+                        });
+                    });
+                }, function (err) {
+                    callback(err);
+                });
+            }
+        ], function (err) {
+            if(err){
+                logger.error(err);
+            }
+            callback(err);
+        })
+    }
 }
 
 module.exports = new WorkflowService();

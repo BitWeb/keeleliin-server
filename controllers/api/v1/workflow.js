@@ -98,4 +98,13 @@ router.put('/:workflowId/settings', function(req, res) {
     });
 });
 
+/**
+ * Olemasolevate ressurside lisamine
+ */
+router.put('/:workflowId/add-resources', function(req, res) {
+    workflowService.addResources(req, req.params.workflowId, req.body, function(err, data) {
+        return res.sendApiResponse( err, data );
+    });
+});
+
 module.exports = router;

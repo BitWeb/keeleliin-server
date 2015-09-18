@@ -13,7 +13,7 @@ function ResourceDaoService() {
 
     this.getResources = function(query, callback) {
 
-        //projektile lisatud ressursid
+        //projektile lisatud ressursid, mis ei ole selles projektis üegi töövoo sisendiks
         var resourceHasNoWorkflow =  " SELECT " +
             " resource.id, " +
             " resource.name, " +
@@ -35,6 +35,7 @@ function ResourceDaoService() {
             (query.projectId ?  (" AND project.id = " + query.projectId ) : "") +
             (query.workflowId ?  (" AND workflow.id = " + query.workflowId ) : "");
 
+        //töövoo väljundid
         var resourceIsOutput = " SELECT " +
             " resource.id, " +
             " resource.name, " +
@@ -52,6 +53,7 @@ function ResourceDaoService() {
             (query.projectId ?  (" AND project.id = " + query.projectId ) : "") +
             (query.workflowId ?  (" AND workflow.id = " + query.workflowId ) : "");
 
+        //töövoo alamsammude väljundid
         var resourceIsSubOutput = " SELECT " +
             " resource.id, " +
             " resource.name, " +
@@ -92,6 +94,26 @@ function ResourceDaoService() {
             (query.projectId ?  (" AND project.id = " + query.projectId ) : "") +
             (query.workflowId ?  (" AND workflow.id = " + query.workflowId ) : "");
 
+
+        //Avalikud või antud kasutajale jagatud ressursid
+        var publicOrShared = " SELECT " +
+            " resource.id, " +
+            " resource.name, " +
+            " resource.created_at as created_at, " +
+            " project.id AS project_id, " +
+            " project.name AS project_name, " +
+            " null as workflow_id, " +
+            " null as workflow_name, " +
+            " 'public' AS context_type " +
+            " FROM resource as resource " +
+            " LEFT JOIN resource_user AS rhu ON ( rhu.resource_id = resource.id AND rhu.user_id = " + query.userId + " ) " +
+            " JOIN project_has_resource AS phr ON ( phr.resource_id = resource.id ) " +
+            " JOIN project AS project ON ( project.id = phr.project_id ) " +
+            " WHERE ( rhu.user_id IS NOT NULL OR resource.is_public = TRUE ) AND " +
+            " resource.deleted_at IS NULL " +
+            (query.projectId ?  (" AND FALSE " ) : "") +
+            (query.workflowId ?  (" AND FALSE ") : "");
+
         //Exclude some sub queries
         var queries = [];
 
@@ -102,11 +124,13 @@ function ResourceDaoService() {
         } else if(query.type == 'middle'){
             queries.push(resourceIsSubOutput);
             queries.push(resourceHasNoWorkflow);
+            queries.push(publicOrShared);
         } else {
             queries.push( resourceIsWorkflowInput );
             queries.push( resourceIsOutput );
             queries.push(resourceIsSubOutput);
             queries.push(resourceHasNoWorkflow);
+            queries.push(publicOrShared);
         }
 
         var andConditions = [];

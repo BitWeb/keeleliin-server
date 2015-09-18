@@ -85,7 +85,11 @@ function ResourceService() {
     };
 
     this.getResources = function(req, callback) {
-        return resourceDaoService.getResources(req.query, function (err, resources) {
+
+        var query = req.query;
+        query.userId = req.redisSession.data.userId;
+
+        return resourceDaoService.getResources( query, function (err, resources) {
             if(err){
                 return callback(err);
             }
@@ -307,6 +311,9 @@ function ResourceService() {
                 },
                 function deleteFile(resource, callback) {
                     fs.unlink(config.resources.location + resource.filename, function (err) {
+                        if(err && err.code == 'ENOENT'){
+                            return callback(null, resource);
+                        }
                         callback(err, resource);
                     });
                 },
@@ -319,6 +326,9 @@ function ResourceService() {
                 }
             ],
             function (err) {
+                if(err){
+                    logger.error(err);
+                }
                 callback( err );
             }
         );

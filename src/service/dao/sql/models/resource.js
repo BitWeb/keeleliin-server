@@ -116,7 +116,7 @@ module.exports = function(sequelize, DataTypes) {
         isPublic: {
             type: DataTypes.BOOLEAN,
             allowNull: false,
-            defaultValue: true,
+            defaultValue: false,
             field: 'is_public'
         }
     }, {
