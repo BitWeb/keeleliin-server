@@ -84,27 +84,40 @@ function ResourceService() {
         });
     };
 
-    this.getResources = function(req, callback) {
+    this.getResources = function(req, cb) {
 
         var query = req.query;
-        query.userId = req.redisSession.data.userId;
 
-        return resourceDaoService.getResources( query, function (err, resources) {
-            if(err){
-                return callback(err);
-            }
-            async.mapSeries(resources, function (item, innerCb) {
-                async.setImmediate(function () {
-                    innerCb(null, ObjectUtils.snakeToCame(item));
+        async.waterfall([
+            function setQueryUserId(callback) {
+                if(query.workflowId){
+                    Workflow.findById(query.workflowId).then(function (workflow) {
+                        query.userId = workflow.userId;
+                        callback(null, query);
+                    });
+                } else {
+                    query.userId = req.redisSession.data.userId;
+                    callback(null, query);
+                }
+            },
+            function queryData(query, callback) {
+                return resourceDaoService.getResources( query, function (err, resources) {
+                    return callback(err, resources);
                 });
-            }, callback);
+            },
+            function mapData(resources, callback) {
+
+
+
+                async.mapSeries(resources, function (item, innerCb) {
+                    async.setImmediate(function () {
+                        innerCb(null, ObjectUtils.snakeToCame(item));
+                    });
+                }, callback);
+            }
+        ], function (err, data) {
+            cb(err, data);
         });
-    };
-
-    this.getResourcesPublished = function(req, projectId, callback) {
-        var userId = req.redisSession.data.userId;
-
-        return resourceDaoService.findResourcesPublished(projectId, userId, callback);
     };
 
     this.createResourceFromUpload = function(req, cb) {

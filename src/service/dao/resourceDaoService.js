@@ -13,19 +13,68 @@ function ResourceDaoService() {
 
     this.getResources = function(query, callback) {
 
+/*
+        Kasutaja
+        >Avalikud Ressursid
+        >Kasutajale Jagatud Ressursid
+        Projekt
+        >Töövoota Ressursid
+        >Töövoog
+        >>Sisendressursid
+        >>Väljundressursid
+        >>Töövoo teenus
+        >>>Sisendressursid
+        >>>Väljundressursid
+        */
+
+        var publicResources = " SELECT " +
+            " 'Avalik' as level_0," +
+            " null as level_1, " +
+            " null as level_2, " +
+            " resource.id as id, " +
+            " resource.name as name, " +
+            " 'public' AS context, " +
+            " null::INTEGER as project_id, " +
+            " null::INTEGER as workflow_id, " +
+            " null::INTEGER as service_id " +
+            " FROM resource as resource " +
+            " WHERE resource.is_public = TRUE AND" +
+            " resource.deleted_at IS NULL " +
+            (query.projectId ?  (" AND FALSE " ) : "") +
+            (query.workflowId ?  (" AND FALSE ") : "");
+
+        var sharedResources = " SELECT " +
+            " 'Jagatud' as level_0," +
+            " null as level_1, " +
+            " null as level_2, " +
+            " resource.id as id, " +
+            " resource.name as name, " +
+            " 'shared' AS context, " +
+            " null::INTEGER as project_id, " +
+            " null::INTEGER as workflow_id, " +
+            " null::INTEGER as service_id " +
+            " FROM resource AS resource " +
+            " LEFT JOIN resource_user AS ru ON ( ru.user_id = " + query.userId + " AND ru.resource_id = resource.id ) " +
+            " WHERE ru.id IS NOT NULL AND " +
+            " resource.deleted_at IS NULL " +
+            (query.projectId ?  (" AND FALSE " ) : "") +
+            (query.workflowId ?  (" AND FALSE ") : "");
+
         //projektile lisatud ressursid, mis ei ole selles projektis üegi töövoo sisendiks
-        var resourceHasNoWorkflow =  " SELECT " +
-            " resource.id, " +
-            " resource.name, " +
-            " resource.created_at as created_at, " +
-            " project.id AS project_id, " +
-            " project.name AS project_name, " +
-            " workflow.id as workflow_id, " +
-            " NULL as workflow_name, " +
-            " 'middle' AS context_type " +
+        var projectResourceHasNoWorkflow =  " SELECT " +
+            " project.name as level_0, " +
+            " null as level_1, " +
+            " null as level_2, " +
+            " resource.id as id, " +
+            " resource.name as name, " +
+            " 'project' AS context, " +
+            " project.id as project_id, " +
+            " null::INTEGER as workflow_id, " +
+            " null::INTEGER as service_id " +
             " FROM resource as resource " +
             " LEFT JOIN project_has_resource AS phr ON ( phr.resource_id = resource.id ) " +
             " LEFT JOIN project AS project ON ( phr.project_id = project.id ) " +
+            " JOIN project_user AS pu ON ( pu.project_id = project.id AND pu.user_id = " + query.userId + " ) " +
             " LEFT JOIN workflow_has_input_resource AS workflow_hir ON ( workflow_hir.resource_id = resource.id )" +
             " LEFT JOIN workflow_service_substep_has_input_resource AS wss_hir ON ( wss_hir.resource_id = resource.id )" +
             " LEFT JOIN workflow_service_substep AS wss ON ( wss_hir.workflow_service_substep_id = wss.id OR wss.id = resource.workflow_service_substep_id )" +
@@ -33,130 +82,123 @@ function ResourceDaoService() {
             " LEFT JOIN workflow AS workflow ON ( workflow.project_id = project.id AND ( workflow_hir.workflow_id = workflow.id OR ws.workflow_id = workflow.id) )" +
             " WHERE resource.deleted_at IS NULL AND workflow.id IS NULL " +
             (query.projectId ?  (" AND project.id = " + query.projectId ) : "") +
+            (query.workflowId ? " AND FALSE " : "");
+
+        //töövoo sisend
+        var workflowInputResources = " SELECT " +
+            " project.name as level_0, " +
+            " workflow.name as level_1, " +
+            " null as level_2, " +
+            " resource.id as id, " +
+            " resource.name as name, " +
+            " 'input' AS context, " +
+            " project.id as project_id, " +
+            " workflow.id as workflow_id, " +
+            " null::INTEGER as service_id " +
+            " FROM resource as resource " +
+            " JOIN workflow_has_input_resource as workflowInput ON ( workflowInput.resource_id = resource.id )" +
+            " JOIN workflow AS workflow ON ( workflow.id = workflowInput.workflow_id ) " +
+            " JOIN project_has_resource AS phr ON ( phr.resource_id = resource.id ) " +
+            " JOIN project AS project ON ( project.id = phr.project_id ) " +
+            " JOIN project_user AS pu ON ( pu.project_id = project.id AND pu.user_id = " + query.userId + " ) " +
+            " WHERE resource.deleted_at IS NULL AND workflow.project_id = project.id " +
+            (query.projectId ?  (" AND project.id = " + query.projectId ) : "") +
             (query.workflowId ?  (" AND workflow.id = " + query.workflowId ) : "");
 
         //töövoo väljundid
         var resourceIsOutput = " SELECT " +
-            " resource.id, " +
-            " resource.name, " +
-            " resource.created_at as created_at, " +
-            " project.id AS project_id, " +
-            " project.name AS project_name, " +
+            " project.name as level_0, " +
+            " workflow.name as level_1, " +
+            " null as level_2, " +
+            " resource.id as id, " +
+            " resource.name as name, " +
+            " 'output' AS context, " +
+            " project.id as project_id, " +
             " workflow.id as workflow_id, " +
-            " workflow.name as workflow_name, " +
-            " 'output' AS context_type " +
+            " null::INTEGER as service_id " +
             " FROM resource as resource " +
-            " LEFT JOIN workflow AS workflow ON ( workflow.id = resource.workflow_output_id ) " +
-            " LEFT JOIN project_has_resource AS phr ON ( phr.resource_id = resource.id ) " +
-            " LEFT JOIN project AS project ON ( project.id = phr.project_id ) " +
+            " JOIN workflow AS workflow ON ( workflow.id = resource.workflow_output_id ) " +
+            " JOIN project_has_resource AS phr ON ( phr.resource_id = resource.id ) " +
+            " JOIN project AS project ON ( project.id = phr.project_id ) " +
+            " JOIN project_user AS pu ON ( pu.project_id = project.id AND pu.user_id = " + query.userId + " ) " +
             " WHERE resource.deleted_at IS NULL AND workflow.project_id = project.id " +
             (query.projectId ?  (" AND project.id = " + query.projectId ) : "") +
             (query.workflowId ?  (" AND workflow.id = " + query.workflowId ) : "");
 
-        //töövoo alamsammude väljundid
-        var resourceIsSubOutput = " SELECT " +
-            " resource.id, " +
-            " resource.name, " +
-            " resource.created_at as created_at, " +
-            " project.id AS project_id, " +
-            " project.name AS project_name, " +
+        //töövoo alamsammude sisendid
+        var resourceIsSubInput = " SELECT " +
+            " project.name as level_0, " +
+            " workflow.name as level_1, " +
+            " service.name as level_2, " +
+            " resource.id as id, " +
+            " resource.name as name, " +
+            " 'middle_input' AS context, " +
+            " project.id as project_id, " +
             " workflow.id as workflow_id, " +
-            " workflow.name as workflow_name, " +
-            " 'middle' AS context_type " +
+            " inputWfService.id as service_id " +
             " FROM resource as resource " +
-            " LEFT JOIN workflow_service_substep as serviceSubstep ON ( serviceSubstep.id = resource.workflow_service_substep_id ) " +
-            " LEFT JOIN workflow_service AS outputWfService ON ( outputWfService.id = serviceSubstep.workflow_service_id ) " +
-            " LEFT JOIN workflow AS workflow ON ( workflow.id = outputWfService.workflow_id ) " +
-            " LEFT JOIN project_has_resource AS phr ON ( phr.resource_id = resource.id ) " +
-            " LEFT JOIN project AS project ON ( project.id = phr.project_id ) " +
+            " JOIN workflow_service_substep_has_input_resource AS wsshir ON ( wsshir.resource_id = resource.id ) " +
+            " JOIN workflow_service_substep as serviceSubstep ON ( wsshir.workflow_service_substep_id =  serviceSubstep.id ) " +
+            " JOIN workflow_service AS inputWfService ON ( inputWfService.id = serviceSubstep.workflow_service_id ) " +
+            " JOIN service AS service ON ( inputWfService.service_id = service.id ) " +
+            " JOIN workflow AS workflow ON ( workflow.id = inputWfService.workflow_id ) " +
+            " JOIN project_has_resource AS phr ON ( phr.resource_id = resource.id ) " +
+            " JOIN project AS project ON ( project.id = phr.project_id ) " +
+            " JOIN project_user AS pu ON ( pu.project_id = project.id AND pu.user_id = " + query.userId + " ) " +
             " WHERE resource.deleted_at IS NULL AND " +
-            " resource.workflow_output_id IS NULL AND " +
             " workflow.project_id = project.id " +
             (query.projectId ?  (" AND project.id = " + query.projectId ) : "") +
             (query.workflowId ?  (" AND workflow.id = " + query.workflowId ) : "");
 
-        //töövoo sisend
-        var resourceIsWorkflowInput = " SELECT " +
-            " resource.id, " +
-            " resource.name, " +
-            " resource.created_at as created_at, " +
-            " project.id AS project_id, " +
-            " project.name AS project_name, " +
+
+        //töövoo alamsammude väljundid
+        var resourceIsSubOutput = " SELECT " +
+            " project.name as level_0, " +
+            " workflow.name as level_1, " +
+            " service.name as level_2, " +
+            " resource.id as id, " +
+            " resource.name as name, " +
+            " 'middle_output' AS context, " +
+            " project.id as project_id, " +
             " workflow.id as workflow_id, " +
-            " workflow.name as workflow_name, " +
-            " 'input' AS context_type " +
+            " outputWfService.id as service_id " +
             " FROM resource as resource " +
-            " LEFT JOIN workflow_has_input_resource as workflowInput ON ( workflowInput.resource_id = resource.id )" +
-            " LEFT JOIN workflow AS workflow ON ( workflow.id = workflowInput.workflow_id ) " +
-            " LEFT JOIN project_has_resource AS phr ON ( phr.resource_id = resource.id ) " +
-            " LEFT JOIN project AS project ON ( project.id = phr.project_id ) " +
-            " WHERE resource.deleted_at IS NULL AND workflow.project_id = project.id " +
+            " LEFT JOIN workflow_service_substep as serviceSubstep ON ( serviceSubstep.id = resource.workflow_service_substep_id ) " +
+            " LEFT JOIN workflow_service AS outputWfService ON ( outputWfService.id = serviceSubstep.workflow_service_id ) " +
+            " JOIN service AS service ON ( outputWfService.service_id = service.id ) " +
+            " JOIN workflow AS workflow ON ( workflow.id = outputWfService.workflow_id ) " +
+            " JOIN project_has_resource AS phr ON ( phr.resource_id = resource.id ) " +
+            " JOIN project AS project ON ( project.id = phr.project_id ) " +
+            " JOIN project_user AS pu ON ( pu.project_id = project.id AND pu.user_id = " + query.userId + " ) " +
+            " WHERE resource.deleted_at IS NULL AND " +
+            " workflow.project_id = project.id " +
             (query.projectId ?  (" AND project.id = " + query.projectId ) : "") +
             (query.workflowId ?  (" AND workflow.id = " + query.workflowId ) : "");
 
-
-        //Avalikud või antud kasutajale jagatud ressursid
-        var publicOrShared = " SELECT " +
-            " resource.id, " +
-            " resource.name, " +
-            " resource.created_at as created_at, " +
-            " project.id AS project_id, " +
-            " project.name AS project_name, " +
-            " null as workflow_id, " +
-            " null as workflow_name, " +
-            " 'public' AS context_type " +
-            " FROM resource as resource " +
-            " LEFT JOIN resource_user AS rhu ON ( rhu.resource_id = resource.id AND rhu.user_id = " + query.userId + " ) " +
-            " JOIN project_has_resource AS phr ON ( phr.resource_id = resource.id ) " +
-            " JOIN project AS project ON ( project.id = phr.project_id ) " +
-            " WHERE ( rhu.user_id IS NOT NULL OR resource.is_public = TRUE ) AND " +
-            " resource.deleted_at IS NULL " +
-            (query.projectId ?  (" AND FALSE " ) : "") +
-            (query.workflowId ?  (" AND FALSE ") : "");
-
-        //Exclude some sub queries
         var queries = [];
-
-        if(query.type == 'input'){
-            queries.push( resourceIsWorkflowInput );
-        } else if(query.type == 'output'){
-            queries.push( resourceIsOutput );
-        } else if(query.type == 'middle'){
-            queries.push(resourceIsSubOutput);
-            queries.push(resourceHasNoWorkflow);
-            queries.push(publicOrShared);
-        } else {
-            queries.push( resourceIsWorkflowInput );
-            queries.push( resourceIsOutput );
-            queries.push(resourceIsSubOutput);
-            queries.push(resourceHasNoWorkflow);
-            queries.push(publicOrShared);
-        }
-
-        var andConditions = [];
-        if(query.type){
-            andConditions.push("context_type = '"+query.type+"'");
-        }
-        var whereCondition = '';
-        if(andConditions.length > 0){
-            whereCondition = ' WHERE ' + andConditions.join(' AND ')
-        }
+        queries.push( publicResources );
+        queries.push( sharedResources );
+        queries.push( projectResourceHasNoWorkflow );
+        queries.push( workflowInputResources );
+        queries.push( resourceIsOutput );
+        queries.push( resourceIsSubInput );
+        queries.push( resourceIsSubOutput );
 
         var totalQuery = " SELECT " +
+            " level_0, " +
+            " level_1, " +
+            " level_2, " +
             " id, " +
             " name, " +
-            " created_at, " +
+            " context, " +
             " project_id, " +
-            " project_name, " +
             " workflow_id, " +
-            " workflow_name, " +
-            " context_type " +
-            " FROM ( " + queries.join(" UNION ALL ") + " ) as resource " +
-            whereCondition +
-            " ORDER BY id; ";
+            " service_id " +
+            " FROM ( " + queries.join(" UNION ALL ") + " ) as resource; ";
 
+        var start = new Date().getTime();
         sequelize.query( totalQuery, { type: sequelize.QueryTypes.SELECT}).then(function (resources) {
-            logger.debug('Got resources: ' + resources.length );
+            logger.debug('Got resources in : ', new Date().getTime() - start);
             return callback(null, resources);
         }).catch(function (err) {
             logger.error(err.message);
@@ -177,37 +219,6 @@ function ResourceDaoService() {
                 message: error.message,
                 code: 500
             });
-        });
-    };
-
-    this.findResourcesPublished = function(projectId, userId, callback) {
-        var query = "SELECT resource.id AS id, " +
-            "resource.name AS name, " +
-            "resource.created_at as created_at " +
-            "FROM resource " +
-            "LEFT JOIN resource_user ON (resource_user.resource_id = resource.id) " +
-            "LEFT JOIN workflow_has_input_resource as workflowInput ON ( workflowInput.resource_id = resource.id )" +
-            "LEFT JOIN workflow_service_substep as serviceSubstep ON ( serviceSubstep.id = resource.workflow_service_substep_id ) " +
-            "LEFT JOIN workflow_service AS outputWfService ON ( outputWfService.id = serviceSubstep.workflow_service_id ) " +
-            "LEFT JOIN workflow AS workflow ON ( workflow.id = outputWfService.workflow_id ) " +
-            "LEFT JOIN project_has_resource AS phr ON (phr.resource_id = resource.id) " +
-            "LEFT JOIN project AS project ON (phr.project_id = project.id) " +
-            "WHERE ( phr.project_id = :projectId OR resource_user.user_id = :userId OR resource.is_public = :isPublic) AND resource.deleted_at IS NULL " +
-            "GROUP BY resource.id";
-
-        // Adding project info would require making separate query, because in this single query,
-        // resources wouldn't be grouped if they belong to multiple projects -
-        // it'll return each row per project resource.
-        // TODO: exclude the project check if only published and shared resources for user are wanted
-
-        sequelize.query(query, {
-            replacements: {projectId: projectId, userId: userId, isPublic: true},
-            type: sequelize.QueryTypes.SELECT
-        }).then(function (resources) {
-            return callback(null, resources);
-        }).catch(function (err) {
-            logger.error(err.message);
-            return callback(err.message);
         });
     };
 }

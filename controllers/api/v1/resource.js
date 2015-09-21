@@ -86,12 +86,4 @@ router.get('/download/concat/:resourceIds', function(req, res) {
     });
 });
 
-//todo
-router.get('/projectId/:projectId/published', function(req, res) {
-
-    resourceService.getResourcesPublished(req, req.params.projectId, function(err, resources) {
-        return res.sendApiResponse(err, resources);
-    });
-});
-
 module.exports = router;
