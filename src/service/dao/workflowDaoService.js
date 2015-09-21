@@ -319,6 +319,10 @@ function WorkflowDaoService() {
             }
         }
 
+        if(params.status){
+            conditions.where.status = params.status;
+        }
+
         Workflow.findAndCountAll( conditions ).then(function (data) {
             callback(null, data);
         }).catch(function (err) {
