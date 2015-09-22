@@ -30,15 +30,40 @@ function NotificationDaoService() {
         });
     };
 
-    this.getNotificationsUnreadByUser = function(userId, callback) {
+    this.getLastNotificationsUnreadByUser = function(userId, callback) {
+
         Notification.findAll({
             where: {
                 toUserId: userId,
                 isRead: false
             },
+            attributes: [
+                'id',
+                'message',
+                'url',
+                'createdAt'
+            ],
+            limit: 5,
             order: 'created_at DESC'
         }).then(function(notifications) {
             return callback(null, notifications);
+        }).catch(function(error) {
+            return callback({
+                message: error.message,
+                code: 500
+            });
+        });
+    };
+
+    this.getNotificationsUnreadCountByUser = function(userId, callback) {
+
+        Notification.count({
+            where: {
+                toUserId: userId,
+                isRead: false
+            }
+        }).then(function(count) {
+            return callback(null, count);
         }).catch(function(error) {
             return callback({
                 message: error.message,

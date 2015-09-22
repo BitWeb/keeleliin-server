@@ -2,11 +2,16 @@
 
 module.exports = function(sequelize, DataTypes) {
 
+    var applicationContexts = {
+        PROJECT: 'project',
+        USER: 'user',
+        WORKFLOW: 'workflow'
+    };
+
     var codes = {
         WORKFLOW_FINISHED : 'workflow-finished',
         WORKFLOW_STILL_RUNNING : 'workflow-still-running',
         WORKFLOW_ERROR : 'workflow-error',
-
         PROJECT_USER_ADDED : 'project-user-added'
     };
 
@@ -16,48 +21,50 @@ module.exports = function(sequelize, DataTypes) {
             primaryKey: true,
             autoIncrement: true
         },
+        applicationContext: { //workflow, project, user
+            type: DataTypes.STRING,
+            field: 'application_context',
+            allowNull: false
+        },
+        code: { //workflow-still-running, workflow-finished, workflow-error, project-user-added
+            type: DataTypes.STRING,
+            field: 'code',
+            allowNull: false
+        },
         urlTemplate: {
             type: DataTypes.TEXT,
             field: 'url_template',
             allowNull: false
         },
-        message: {
+        messageTemplate: {
             type: DataTypes.TEXT,
-            field: 'message',
+            field: 'message_template',
             allowNull: false
         },
-        applicationContext: {
-            type: DataTypes.STRING,
-            field: 'application_context',
-            allowNull: false
-        },
-        code: {
-            type: DataTypes.STRING,
-            field: 'code',
-            allowNull: false
-        },
+
         isSendEmail: {
             type: DataTypes.BOOLEAN,
             field: 'is_send_email',
             allowNull: false,
             defaultValue: true
         },
+        mailSubjectTemplate: {
+            type: DataTypes.STRING,
+            field: 'mail_subject_template',
+            allowNull: true
+        },
+        mailBodyTemplate: {
+            type: DataTypes.STRING,
+            field: 'mail_body_template',
+            allowNull: true
+        },
         notifyPeriodDays: {
             type: DataTypes.INTEGER,
             field: 'notify_period_days',
             allowNull: false,
             defaultValue: 0
-        },
-        mailSubject: {
-            type: DataTypes.STRING,
-            field: 'mail_subject',
-            allowNull: true
-        },
-        mailTemplate: {
-            type: DataTypes.STRING,
-            field: 'mail_template',
-            allowNull: true
         }
+
     }, {
         tableName: 'notification_type',
         timestamps: false,
@@ -71,6 +78,7 @@ module.exports = function(sequelize, DataTypes) {
     });
 
     NotificationType.codes = codes;
+    NotificationType.applicationContexts = applicationContexts;
 
     return NotificationType;
 };

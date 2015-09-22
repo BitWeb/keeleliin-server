@@ -433,7 +433,7 @@ function Runner() {
 
                     self.canFinishWorkflow(function (err, success) {
                         if(err){
-                            self.finishWorkflow(Workflow.statusCodes.ERROR, function (err) {
+                            return self.finishWorkflow(Workflow.statusCodes.ERROR, function (err) {
                                 logger.trace('Töövoog lõpetati staatusega', success);
                                 return callback(err, false);
                             });
@@ -534,12 +534,15 @@ function Runner() {
             if (workflow.status == Workflow.statusCodes.ERROR) {
                 notificationTypeCode =  NotificationType.codes.WORKFLOW_ERROR;
             }
-            workflow.getWorkflowDefinition().then(function(workflowDefinition) {
-                notificationService.addNotification(workflowDefinition.userId, notificationTypeCode, workflow.id, function(error, notification) {
-                    // Do not cancel workflow runner if notification save fails
-                    cb();
-                });
+
+            notificationService.addNotification(workflow.userId, notificationTypeCode, workflow.id, function(error, notification) {
+                // Do not cancel workflow runner if notification save fails
+                if(error){
+                    logger.error(error);
+                }
+                cb();
             });
+
         });
     }
 }

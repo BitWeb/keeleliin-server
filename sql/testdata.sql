@@ -69,20 +69,51 @@ INSERT INTO service_has_parent_service(service_sibling_id, service_parent_id) SE
 INSERT INTO service_has_parent_service(service_sibling_id, service_parent_id) SELECT 8, 9 WHERE NOT EXISTS (SELECT 1 FROM service_has_parent_service WHERE service_sibling_id = 8 AND  service_parent_id = 9);
 INSERT INTO service_has_parent_service(service_sibling_id, service_parent_id) SELECT 1, 9 WHERE NOT EXISTS (SELECT 1 FROM service_has_parent_service WHERE service_sibling_id = 1 AND  service_parent_id = 9);
 
-INSERT INTO notification_type (url_template, application_context, message, is_send_email, code, notify_period_days, mail_subject, mail_template)
-SELECT 'http://someurl/id/{id}', 'workflow', 'Töövoog lõppes', TRUE, 'workflow-finished', 0, 'Töövoog lõppes', '<p>Vaata töövoogu <a href="{url}">siit</a>.</p>'
+
+INSERT INTO notification_type ( application_context, code, url_template, message_template, is_send_email, mail_subject_template, mail_body_template, notify_period_days )
+SELECT
+    'workflow',
+    'workflow-finished',
+    '{appUrl}/#/project/{projectId}/workflow/{workflowId}',
+    'Töövoog "{workflowName}" lõpetas',
+    TRUE,
+    'Töövoog "{workflowName}"lõpetas',
+    '<p>Vaata töövoogu <a href="{appUrl}/#/project/{projectId}/workflow/{workflowId}">siit</a>.</p>',
+    0
 WHERE NOT EXISTS (SELECT 1 FROM notification_type WHERE notification_type.code = 'workflow-finished');
 
-INSERT INTO notification_type (url_template, application_context, message, is_send_email, code, notify_period_days, mail_subject, mail_template)
-SELECT 'http://someurl/id/{id}', 'project', 'Sinuga on jagatud projekti', TRUE, 'project-user-added', 0, 'Sinuga on jagatud projekti', '<p>Vaata projekti <a href="{url}">siit</a>.</p>'
+INSERT INTO notification_type ( application_context, code, url_template, message_template, is_send_email, mail_subject_template, mail_body_template, notify_period_days )
+SELECT
+    'project',
+    'project-user-added',
+    '{appUrl}/#/project/{projectId}',
+    'Sinuga on jagatud projekti "{projectName}"',
+    TRUE,
+    'Sinuga on jagatud projekti',
+    '<p>Vaata projekti <a href="{appUrl}/#/project/{projectId}">siit</a>.</p>',
+    0
 WHERE NOT EXISTS (SELECT 1 FROM notification_type WHERE notification_type.code = 'project-user-added');
 
-INSERT INTO notification_type (url_template, application_context, message, is_send_email, code, notify_period_days, mail_subject, mail_template)
-SELECT 'http://someurl/id/{id}', 'workflow', 'Töövoo viga', TRUE, 'workflow-error', 0,
-'Töövoo viga', '<p>Vaata töövoogu <a href="{url}">siit</a>.</p>'
+INSERT INTO notification_type ( application_context, code, url_template, message_template, is_send_email, mail_subject_template, mail_body_template, notify_period_days )
+SELECT
+    'workflow',
+    'workflow-error',
+    '{appUrl}/#/project/{projectId}/workflow/{workflowId}',
+    'Töövoos "{workflowName}" tekkis viga',
+    TRUE,
+    'Töövoos "{workflowName}" tekkis viga',
+    '<p>Vaata veaga töövoogu <a href="{appUrl}/#/project/{projectId}/workflow/{workflowId}">siit</a>.</p>',
+    0
 WHERE NOT EXISTS (SELECT 1 FROM notification_type WHERE notification_type.code = 'workflow-error');
 
-INSERT INTO notification_type (url_template, application_context, message, is_send_email, code, notify_period_days, mail_subject, mail_template)
-SELECT 'http://someurl/id/{id}', 'workflow', 'Töövoog jookseb endiselt', TRUE, 'workflow-still-running', 7, 'Töövoog jookseb endiselt', '<p>Vaata töövoogu <a href="{url}">siit</a>.</p>'
+INSERT INTO notification_type ( application_context, code, url_template, message_template, is_send_email, mail_subject_template, mail_body_template, notify_period_days )
+SELECT
+    'workflow',
+    'workflow-still-running',
+    '{appUrl}/#/project/{projectId}/workflow/{workflowId}',
+    'Töövoog "{workflowName}" jookseb endiselt',
+    TRUE,
+    'Töövoog "{workflowName}" jookseb endiselt',
+    '<p>Vaata jooksvat töövoogu <a href="{appUrl}/#/project/{projectId}/workflow/{workflowId}">siit</a>.</p>',
+    0
 WHERE NOT EXISTS (SELECT 1 FROM notification_type WHERE notification_type.code = 'workflow-still-running');
-

@@ -26,14 +26,28 @@ module.exports = function(sequelize, DataTypes) {
             },
             field: 'to_user_id'
         },
-        url: {
-            type: DataTypes.TEXT,
-            field: 'url',
-            allowNull: false
-        },
         modelId: {
             type: DataTypes.INTEGER,
             field: 'model_id',
+            allowNull: true
+        },
+
+        url: {
+            type: DataTypes.TEXT,
+            allowNull: false
+        },
+        message: {
+            type: DataTypes.TEXT,
+            allowNull: false
+        },
+        mailSubject: {
+            type: DataTypes.STRING,
+            field: 'mail_subject',
+            allowNull: true
+        },
+        mailBody: {
+            type: DataTypes.STRING,
+            field: 'mail_body',
             allowNull: true
         },
         isRead: {

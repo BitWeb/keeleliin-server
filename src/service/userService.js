@@ -8,6 +8,7 @@ var Project = require(__base + 'src/service/dao/sql').Project;
 var User = require(__base + 'src/service/dao/sql').User;
 var ProjectUser = require(__base + 'src/service/dao/sql').ProjectUser;
 var entuDaoService = require('./dao/entu/daoService');
+var notificationService = require('./notificationService');
 
 var RedisSession = require( './dao/redis/models/redisSession');
 
@@ -208,7 +209,10 @@ function UserService() {
                 return callback(error);
             }
             return self.saveUser(req, user.id, {dateApiAccessed: new Date()}, function (err, user) {
-                callback(null, user.name + ' is alive');
+
+                notificationService.getCurrentUserNotificationsSummary(req, function(error, data) {
+                    callback( error, data );
+                });
             });
         });
     };

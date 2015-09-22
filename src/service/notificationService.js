@@ -1,10 +1,14 @@
 var notificationDaoService = require('./dao/notificationDaoService');
 var Notification = require(__base + 'src/service/dao/sql').Notification;
 var NotificationType = require(__base + 'src/service/dao/sql').NotificationType;
-var userService = require(__base + 'src/service/userService');
+
+var User = require(__base + 'src/service/dao/sql').User;
+var Project = require(__base + 'src/service/dao/sql').Project;
+var Workflow = require(__base + 'src/service/dao/sql').Workflow;
 var async = require('async');
 var mailService = require(__base + 'src/service/mailService');
 var logger = require('log4js').getLogger('notification_service');
+var config = require(__base + 'config');
 
 function NotificationService() {
 
@@ -12,53 +16,41 @@ function NotificationService() {
 
     var self = this;
 
-    this.getNotification = function(notificationId, callback) {
-        Notification.find({where: {id: notificationId}}).then(function(notification) {
-            if (!notification) {
-                return callback('Notification not found.')
+    this.getCurrentUserNotificationsSummary = function (req, cb) {
+
+        var userId = req.redisSession.data.userId;
+
+        async.waterfall(
+            [
+                function ( callback ) {
+                    notificationDaoService.getNotificationsUnreadCountByUser(userId, function (err, count) {
+                        var summary = {
+                            total: count
+                        };
+                        callback(err, summary);
+                    });
+                },
+                function ( summary, callback ) {
+                    notificationDaoService.getLastNotificationsUnreadByUser( userId, function (err, data) {
+                        summary.notifications = data;
+                        callback(err, summary);
+                    });
+                }
+            ],
+            function (err, summary ) {
+                if(err){
+                   logger.error(err);
+                }
+                cb( err, summary );
             }
-            return callback(null, notification);
-        }).catch(function(error) {
-            return callback({
-                message: error.message,
-                code: 500
-            });
-        });
-    };
-
-    this.getNotificationByUserAndCodeAndModel = function(userId, code, modelId, callback) {
-
-        return notificationDaoService.getNotificationByUserAndCodeAndModel(userId, code, modelId, callback);
-    };
-
-    this.getNotificationTypeByCode = function(code, callback) {
-        NotificationType.find({where: {code: code}}).then(function(notificationType) {
-            if (!notificationType) {
-                return callback('Notification type with code "' + code + '" not found.')
-            }
-            return callback(null, notificationType);
-        }).catch(function(error) {
-            return callback({
-                message: error.message,
-                code: 500
-            });
-        });
-    };
-
-    this.getNotificationsUnreadByUser = function(req, userId, callback) {
-        userService.getUser(req, userId, function(error, user) {
-            if (error) {
-                return callback(error);
-            }
-
-            notificationDaoService.getNotificationsUnreadByUser(user.id, callback);
-        });
+        );
     };
 
     this.addNotification = function(userId, code, modelId, cb) {
-        self.getNotificationByUserAndCodeAndModel(userId, code, modelId, function(error, notification) {
+        logger.debug('Add notification. user: ' + userId + ' code: ' + code + ' modelId: ' + modelId);
+        notificationDaoService.getNotificationByUserAndCodeAndModel(userId, code, modelId, function(error, notification) {
             if (error) {
-                logger.error('Add notification error: ' + error);
+                logger.error('Add notification error: ', error);
                 return cb(error);
             }
 
@@ -69,42 +61,42 @@ function NotificationService() {
             }
 
             async.waterfall([
-                function(callback) {
+                function getNotificationType(callback) {
                     self.getNotificationTypeByCode(code, function(error, notificationType) {
-                        if (error) {
-                            return callback(error);
-                        }
-
-                        var notification = Notification.build({
-                            notificationTypeId: notificationType.id,
-                            toUserId: userId,
-                            url: self._composeUrl(notificationType.urlTemplate, modelId),
-                            modelId: modelId
-                        });
-
-                        notification.save().then(function(notification) {
-                            return callback(null, notification);
-                        }).catch(function(error) {
-                            return callback({
-                                message: error.message,
-                                code: 500
-                            })
-                        })
+                        return callback(error, notificationType);
                     });
                 },
+                function createNotification(notificationType, callback ) {
 
-                function callback(notification, callback) {
-                    notification.getNotificationType().then(function(notificationType) {
-                        if (notificationType.isSendEmail) {
-                            return self._sendNotificationEmail(notification, notificationType, callback);
+                    var initData = {
+                        notificationTypeId: notificationType.id,
+                        toUserId: userId,
+                        modelId: modelId
+                    };
+
+                    self._composeNotificationTextValues(notificationType, initData, function (err, data) {
+                        if(err){
+                           return callback(err);
                         }
 
-                        return callback(null, notification);
+                        Notification.create(data).then(function( notification ) {
+                            return callback(null, notification, notificationType);
+                        }).catch(function(error) {
+                            logger.error('Create error', error);
+                            return callback( error.message )
+                        });
                     });
+                },
+                function sendEmail(notification, notificationType, callback) {
+
+                    if (notificationType.isSendEmail) {
+                        return self._sendNotificationEmail(notification, notificationType, callback);
+                    }
+                    return callback(null, notification);
                 }
             ], function(error, notification) {
                 if (error) {
-                    logger.error('Add notification error: ' + error);
+                    logger.error('Add notification error: ', error);
                 }
                 return cb(error, notification);
             });
@@ -112,35 +104,52 @@ function NotificationService() {
 
     };
 
-    this.readNotification = function(req, notificationId, callback) {
+    this.getNotification = function(req, notificationId, callback) {
 
-        self.getNotification(req, notificationId, function(error, notificiation) {
-            if (error) {
-                return callback(error);
+        Notification.findById( notificationId ).then(function(notification) {
+            if (!notification) {
+                return callback('Notification not found.')
             }
-
-            if (notificiation.isRead) {
-                // Is error even needed, return only object?
-                return callback('Notification is already read.', notificiation);
-            }
-
-            return self.saveNotification(req, notificiation.id, {isRead: true, dateRead: new Date()}, callback);
+            return callback(null, notification);
+        }).catch(function(error) {
+            logger.error('Get notification error', error);
+            return callback({
+                message: error.message,
+                code: 500
+            });
         });
     };
 
-    this.saveNotification = function(notificationId, notificationData, callback) {
-        self.getNotification(notificationId, function(error, notification) {
+    this.getNotificationTypeByCode = function(code, callback) {
+        NotificationType.find({where: {code: code}}).then(function(notificationType) {
+            if (!notificationType) {
+                return callback('Notification type with code "' + code + '" not found.')
+            }
+            return callback(null, notificationType);
+        }).catch(function(error) {
+            logger.error('Get notification by type error', error);
+            return callback({
+                message: error.message,
+                code: 500
+            });
+        });
+    };
+
+    this.readNotification = function(req, notificationId, callback) {
+
+        self.getNotification(req, notificationId, function(error, notification) {
             if (error) {
                 return callback(error);
             }
 
-            notification.updateAttributes(notificationData).then(function(notification) {
+            if (notification.isRead) {
                 return callback(null, notification);
-            }).catch(function(error) {
-                return callback({
-                    message: error.message,
-                    code: 500
-                });
+            }
+
+            notification.isRead = true;
+            notification.dateRead = new Date();
+            notification.save().then(function () {
+                return callback(null, notification);
             });
         });
     };
@@ -148,16 +157,16 @@ function NotificationService() {
     this._sendNotificationEmail = function(notification, notificationType, callback) {
 
         notification.getToUser().then(function(user) {
+
             var dateApiAccessed = user.dateApiAccessed;
             var now = new Date();
-            now.setMinutes(now.getMinutes() - TIME_SEND_MAIL_ENABLED_AFTER_API_ACCESS);
 
-            if (!dateApiAccessed || (now <= dateApiAccessed)) {
-                var url = self._composeUrl(notificationType.urlTemplate, notification.modelId);
+            if (!dateApiAccessed || ( (now.getTime() - 60000 * TIME_SEND_MAIL_ENABLED_AFTER_API_ACCESS) > dateApiAccessed.getTime() )) {
+
                 var mailOptions = {
                     to: [user.email],
-                    subject: notificationType.mailSubject,
-                    html: self._composeMailBody(notificationType.mailTemplate, url)
+                    subject: notification.mailSubject,
+                    html: notification.mailBody
                 };
 
                 mailService.sendMail(mailOptions, function(error, message) {
@@ -165,26 +174,115 @@ function NotificationService() {
                         return callback(error);
                     }
 
-                    return self.saveNotification(notification.id, {isEmailSent: true, dateSent: new Date()}, callback);
+                    notification.isEmailSent = true;
+                    notification.dateSent = new Date();
+                    notification.save().then(function () {
+                        return callback(null, notification);
+                    });
                 });
             } else {
+                logger.debug('Do not mail message');
                 return callback(null, notification);
             }
         });
-
     };
 
-    this._composeUrl = function(urlTemplate, modelId) {
+    this._composeNotificationTextValues = function (notificationType, notificationData, cb) {
 
-        return urlTemplate.replace(new RegExp('{id}', 'gi'), modelId);
+        var templates = {
+            url: notificationType.urlTemplate,
+            message: notificationType.messageTemplate,
+            mailSubject: notificationType.mailSubjectTemplate,
+            mailBody: notificationType.mailBodyTemplate
+        };
+
+        self._replaceInObjectValues(templates, '{appUrl}', config.appUrl);
+
+        async.parallel(
+            [
+                function isProjectNotification( callback ) {
+                    if(notificationType.applicationContext != NotificationType.applicationContexts.PROJECT){
+                        return callback();
+                    }
+                    self._replaceInObjectValues(templates, '{projectId}', notificationData.modelId);
+
+                    Project.findById( notificationData.modelId).then(function (project) {
+                        if(!project){
+                            return callback('Project not found');
+                        }
+                        self._replaceInObjectValues(templates, '{projectName}', project.name );
+                        callback();
+                    }).catch(function(err) {
+                        callback(err.message);
+                    });
+                },
+                function isUserNotification( callback ) {
+                    if(notificationType.applicationContext != NotificationType.applicationContexts.USER){
+                        return callback();
+                    }
+                    self._replaceInObjectValues(templates, '{userId}', notificationData.modelId);
+                    User.findById( notificationData.modelId).then(function (user) {
+                        if(!user){
+                            return callback('User not found');
+                        }
+                        self._replaceInObjectValues(templates, '{userName}', user.name );
+                        callback();
+                    }).catch(function(err) {
+                        callback(err.message);
+                    });
+                },
+                function isWorkflowNotification( callback ) {
+                    if(notificationType.applicationContext != NotificationType.applicationContexts.WORKFLOW){
+                        return callback();
+                    }
+                    self._replaceInObjectValues(templates, '{workflowId}', notificationData.modelId);
+
+                    Workflow.findById( notificationData.modelId).then(function (workflow) {
+                        if(!workflow){
+                            return callback('Workflow not found');
+                        }
+
+                        self._replaceInObjectValues(templates, '{workflowName}', workflow.name );
+                        self._replaceInObjectValues(templates, '{projectId}', workflow.projectId );
+
+                        workflow.getProject().then(function (project) {
+                            if(!project){
+                                return callback('Project not found');
+                            }
+                            self._replaceInObjectValues(templates, '{projectName}', project.name );
+                            callback();
+                        }).catch(function(err) {
+                            callback(err.message);
+                        });
+                    }).catch(function(err) {
+                        callback(err.message);
+                    });
+                }
+            ],
+            function (err) {
+                if(err){
+                    logger.error('Notification texts error: ', err);
+                    return cb(err);
+                }
+
+                for(i in templates){
+                    notificationData[i] = templates[i];
+                }
+                cb(err, notificationData);
+            }
+        );
     };
 
-
-    this._composeMailBody = function(mailTemplate, url) {
-
-        return mailTemplate.replace(new RegExp('{url}', 'gi'), url);
-    };
-
+    this._replaceInObjectValues = function (object, key, value) {
+        for(i in object){
+            var objectValue = object[i];
+            if(!objectValue){
+                continue;
+            }
+            object[i] = objectValue.replace(new RegExp( key, 'gi'), value);
+        }
+        return object;
+    }
 }
 
 module.exports = new NotificationService();

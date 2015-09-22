@@ -84,7 +84,7 @@ router.put('/:userId/details', authMiddleware, function(req, res) {
 /**
  * Päringud peale sisselogimist
  */
-router.post('/register-api-access', authMiddleware, function(req, res) {
+router.post('/heart-beat', authMiddleware, function(req, res) {
 
     userService.registerApiAccess(req, function(error, status) {
         return res.sendApiResponse(error, status);

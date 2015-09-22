@@ -28,13 +28,6 @@ router.get('/generate', function(req, res, next) {
     });
 });
 
-router.get('/test', function(req, res, next) {
-
-
-
-
-});
-
 
 
 module.exports = router;

@@ -5,6 +5,7 @@
 var config = {};
 
 config.port = 3000;
+config.appUrl = 'http://localhost:8001';
 config.apiKey = '';
 
 config.redis = {
