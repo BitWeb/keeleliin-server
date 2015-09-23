@@ -239,7 +239,7 @@ function ProjectService(){
                            logger.debug('New relation', newRelation);
 
                            var oldRelation = ArrayUtil.find(existingRelations, function (existingRelation) {
-                               existingRelation.userId == newRelation.userId;
+                               return existingRelation.userId == newRelation.userId;
                            });
 
                            if(!oldRelation && ObjectUtil.hasKeyValue(ProjectUser.roles, newRelation.role)){
@@ -250,6 +250,7 @@ function ProjectService(){
                                         return innerCb(err.message);
                                     }
                                     project.addProjectUser(user, {role: newRelation.role}).then(function () {
+                                        notificationService.addNotification(user.id, NotificationType.codes.PROJECT_USER_ADDED, project.id, function () {});
                                         return innerCb();
                                     }).catch(function (e) {
                                         return innerCb(e.message);
