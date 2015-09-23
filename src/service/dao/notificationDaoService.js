@@ -71,6 +71,38 @@ function NotificationDaoService() {
             });
         });
     };
+
+
+    this.getUserNotificationsList = function( userId, params, callback ){
+
+        var conditions = {
+            attributes: [
+                'id',
+                'message',
+                'url',
+                'isRead',
+                'createdAt'
+            ],
+            where: {
+                toUserId: userId
+            },
+            order: 'created_at DESC'
+        };
+
+        if(params.perPage){
+            params.page = params.page ? params.page : 1;
+            conditions.limit = params.perPage;
+            if(params.page){
+                conditions.offset = params.perPage * (params.page - 1);
+            }
+        }
+
+        Notification.findAndCountAll( conditions ).then(function (data) {
+            callback(null, data);
+        }).catch(function (err) {
+            callback(err.message);
+        });
+    };
 }
 
 module.exports = new NotificationDaoService();

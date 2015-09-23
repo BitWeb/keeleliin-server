@@ -46,6 +46,16 @@ function NotificationService() {
         );
     };
 
+    this.getNotificationsList = function (req, params, cb) {
+        var userId = req.redisSession.data.userId;
+        notificationDaoService.getUserNotificationsList( userId, params, function (err, data) {
+            if(err){
+                logger.error(err);
+            }
+            cb(err, data);
+        });
+    };
+
     this.addNotification = function(userId, code, modelId, cb) {
         logger.debug('Add notification. user: ' + userId + ' code: ' + code + ' modelId: ' + modelId);
         notificationDaoService.getNotificationByUserAndCodeAndModel(userId, code, modelId, function(error, notification) {
