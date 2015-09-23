@@ -219,6 +219,7 @@ function WorkflowDaoService() {
                     'serviceId',
                     'orderNum'
                 ],
+                order: "order_num ASC",
                 required: false,
                 include: [
                     {

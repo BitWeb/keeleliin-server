@@ -348,7 +348,7 @@ function WorkflowDefinitionService() {
                         }
 
                         if(workflowDefinition.editStatus != WorkflowDefinition.editStatuses.EDIT){
-                            return self._createDefinitionFromWorkflow(req, workflow, callback);
+                            return self._createDefinitionToWorkflow(req, workflow, callback);
                         }
                         return callback(null, workflowDefinition);
 
@@ -376,7 +376,11 @@ function WorkflowDefinitionService() {
                     });
                 },
                 function updateServices(workflowDefinition, callback) {
-                    async.each(selectedServicesData, function (selectedServiceData, innerCallback) {
+
+                    selectedServicesData = ArrayUtil.sort(selectedServicesData, 'orderNum');
+
+                    async.forEachOf(selectedServicesData, function (selectedServiceData, index, innerCallback) {
+                        selectedServiceData.orderNum = index;
                         self._saveWorkflowDefinitionService( workflowDefinition, selectedServiceData, innerCallback );
                     }, function (err) {
                         callback(err);
@@ -393,7 +397,7 @@ function WorkflowDefinitionService() {
         );
     };
 
-    this._createDefinitionFromWorkflow = function(req, workflow, cb){
+    this._createDefinitionToWorkflow = function(req, workflow, cb){
 
         async.waterfall([
             function getCurrentUser(callback) {
@@ -418,9 +422,16 @@ function WorkflowDefinitionService() {
                         callback(err.message);
                     });
             },
-            function (definition, user, callback) {
+            function addUser(definition, user, callback) {
                 definition.addWorkflowDefinitionUser( user, { role: WorkflowDefinitionUser.roles.OWNER }).then(function () {
                     logger.debug('User added');
+                    return callback(null, definition);
+                }).catch(function (e) {
+                    return callback(e.message);
+                });
+            },
+            function addWorkflow(definition, callback) {
+                workflow.setWorkflowDefinition(definition).then(function () {
                     return callback(null, definition);
                 }).catch(function (e) {
                     return callback(e.message);
@@ -444,7 +455,8 @@ function WorkflowDefinitionService() {
                         orderNum: serviceData.orderNum,
                         workflowDefinitionId: workflowDefinition.id
                     };
-                    var workflowDefinitionService = WorkflowDefinitionServiceModel.create(data).then(function (definitionService) {
+
+                    WorkflowDefinitionServiceModel.create(data).then(function (definitionService) {
                         callback(null, definitionService);
                     }).catch(function (err) {
                         callback( err.message );
