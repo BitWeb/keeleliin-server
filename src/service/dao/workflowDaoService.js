@@ -267,6 +267,7 @@ function WorkflowDaoService() {
             where: {
                 projectId: projectId
             },
+            order: 'datetime_created DESC',
             required: false,
             raw: false
         }).then(function (workflows) {

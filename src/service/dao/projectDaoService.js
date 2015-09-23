@@ -11,8 +11,6 @@ function ProjectDaoService() {
 
     var self = this;
 
-    var limit = 15;
-
     this.getUserProjectsList = function (userId, params, cb) {
 
         var sql = "SELECT " +
@@ -20,29 +18,31 @@ function ProjectDaoService() {
             " project.name as name, " +
             " project.description as description, " +
             " project.access_status as access_status, " +
-            " project.created_at as created_at " +
+            " project.created_at as created_at, " +
+            " project.updated_at as updated_at " +
             " FROM project as project" +
-            " LEFT JOIN project_user as pu ON (pu.project_id = project.id)" +
+            " JOIN project_user as pu ON (pu.project_id = project.id AND pu.user_id = " + userId + ")" +
             " ";
 
-        var where = " WHERE project.deleted_at IS NULL " +
-            " AND pu.user_id = " + userId + " ";
+        var where = " WHERE project.deleted_at IS NULL ";
 
         if(params.name){
             where += " AND project.name ILIKE '"+ params.name +"%'"
         }
 
         sql += where;
-        sql += " GROUP BY project.id, project.name, project.description, project.access_status, project.created_at ";
+        //sql += " GROUP BY project.id, project.name, project.description, project.access_status, project.created_at ";
 
         if(params.sort && params.order){
             sql += " ORDER BY project." + params.sort + " " + params.order + " ";
+        } else {
+            sql += " ORDER BY project.updated_at DESC ";
         }
 
         var countQuery = "SELECT COUNT(id) as total FROM ("+ sql +") as projects;";
 
-        if(params.page){
-            sql += " LIMIT "+ limit +" OFFSET " + ((params.page - 1) * limit) + " ";
+        if(params.page && params.perPage){
+            sql += " LIMIT "+ params.perPage +" OFFSET " + ((params.page - 1) * params.perPage) + " ";
         }
 
         sequelize.query( sql, { type: sequelize.QueryTypes.SELECT}).then(function (rows) {

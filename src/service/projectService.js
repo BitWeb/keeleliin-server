@@ -50,6 +50,7 @@ function ProjectService(){
                         name:  row.name,
                         description:  row.description,
                         createdAt:  row.created_at,
+                        updatedAt:  row.updated_at,
                         accessStatus:  row.access_status,
                         canDelete: false
                     };
