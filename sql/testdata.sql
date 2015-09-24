@@ -1,4 +1,3 @@
-INSERT INTO "user" (entu_id, email, name, created_at, updated_at) SELECT 3021, 'priit@bitweb.ee', 'priit', now(), now() WHERE NOT EXISTS (SELECT 1 FROM "user" WHERE "user".email = 'priit@bitweb.ee');
 
 INSERT INTO resource_type (value, name, split_type) SELECT 'text', 'Tekst', 'LINE' WHERE NOT EXISTS (SELECT 1 FROM resource_type WHERE resource_type.id = 1);
 INSERT INTO resource_type (value, name, split_type) SELECT 'zip', 'Zip-file', 'NONE' WHERE NOT EXISTS (SELECT 1 FROM resource_type WHERE resource_type.id = 2);
