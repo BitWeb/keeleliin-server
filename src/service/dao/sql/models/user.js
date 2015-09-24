@@ -41,7 +41,7 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.STRING,
             allowNull: false,
             field: 'role',
-            defaultValue: roles.ROLE_REGULAR
+            defaultValue: roles.ROLE_ADMIN
         },
         isActive: {
             type: DataTypes.BOOLEAN,
