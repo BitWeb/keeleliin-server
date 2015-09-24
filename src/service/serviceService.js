@@ -222,16 +222,21 @@ function ServiceService() {
 
     this._updateOrCreateServiceParam = function ( req, serviceParam, serviceParamData, serviceInstance, cb) {
 
-        if(!serviceParam){
+        if( serviceParam ){
+            serviceParam.updateAttributes(serviceParamData, {fields:['type', 'key', 'value','isEditable','description']}).then(function () {
+                return self._updateServiceParamOptions( serviceParam, serviceParamData, cb);
+            }).catch(function(err) {
+                return cb(err);
+            });
+        } else {
             serviceParam = ServiceModelParam.build(serviceParamData, {fields:['type', 'key', 'value','isEditable','description']});
+            serviceInstance.addServiceParam(serviceParam).then(function() {
+                logger.debug('New param added');
+                return self._updateServiceParamOptions( serviceParam, serviceParamData, cb);
+            }).catch(function(err) {
+                return cb(err);
+            });
         }
-
-        serviceInstance.addServiceParam(serviceParam).then(function() {
-            logger.debug('New param added');
-            return self._updateServiceParamOptions( serviceParam, serviceParamData, cb);
-        }).catch(function(err) {
-            return cb(err);
-        });
     };
 
     this._updateServiceParamOptions = function ( serviceParam, serviceParamData, cb ) {

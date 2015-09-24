@@ -5,13 +5,10 @@ var logger = require('log4js').getLogger('workflow_definition_service');
 var workflowDefinitionDaoService = require(__base + 'src/service/dao/workflowDefinitionDaoService');
 var userDaoService = require('./dao/userDaoService');
 var workflowDaoService = require(__base + 'src/service/dao/workflowDaoService');
-var WorkflowDefinitionServiceParamValue = require(__base + 'src/service/dao/sql').WorkflowDefinitionServiceParamValue;
 var WorkflowDefinition = require(__base + 'src/service/dao/sql').WorkflowDefinition;
 var Workflow = require(__base + 'src/service/dao/sql').Workflow;
 var WorkflowDefinitionServiceModel = require(__base + 'src/service/dao/sql').WorkflowDefinitionService;
 var WorkflowDefinitionUser = require(__base + 'src/service/dao/sql').WorkflowDefinitionUser;
-var projectService = require(__base + 'src/service/projectService');
-var serviceService = require(__base + 'src/service/serviceService');
 var async = require('async');
 var ArrayUtil = require(__base + 'src/util/arrayUtils');
 var ObjectUtil = require(__base + 'src/util/objectUtils');
@@ -452,6 +449,7 @@ function WorkflowDefinitionService() {
                 function createService(callback) {
                     var data = {
                         serviceId: serviceData.serviceId,
+                        serviceParamsValues: serviceData.serviceParamsValues,
                         orderNum: serviceData.orderNum,
                         workflowDefinitionId: workflowDefinition.id
                     };
@@ -461,30 +459,6 @@ function WorkflowDefinitionService() {
                     }).catch(function (err) {
                         callback( err.message );
                     });
-                },
-                function copyNotEditableParams(definitionService, callback) {
-                    definitionService.getService().then( function ( service ) {
-                        logger.debug('getServiceParams');
-                        service.getServiceParams({
-                            where: {isEditable: false }
-                        }).then(function (params) {
-
-                            var paramsMap = params.map(function (item) {
-                                return {
-                                    serviceParamId: item.id,
-                                    value: item.value
-                                }
-                            });
-                            self._addServiceParams(definitionService, paramsMap, callback);
-                        }).catch(function (err) {
-                            callback( err.message );
-                        });
-                    }).catch(function (err) {
-                        callback( err.message );
-                    });
-                },
-                function saveParams(definitionService, callback) {
-                    self._addServiceParams(definitionService, serviceData.paramValues, callback);
                 }
             ],
         function (err) {
@@ -492,31 +466,6 @@ function WorkflowDefinitionService() {
                 logger.error('_saveWorkflowDefinitionService  ', err);
             }
             cb(err);
-        });
-    };
-
-    this._addServiceParams = function (definitionService, paramsMap, cb) {
-
-        async.eachSeries(paramsMap, function (item, callback) {
-            definitionService.getParamValues({where: {
-                serviceParamId: item.serviceParamId
-            }}).then(function (excistingValues) {
-                if(excistingValues.length > 0){
-                    return callback();
-                }
-                var paramValue = WorkflowDefinitionServiceParamValue.build(item, ['serviceParamId', 'value']);
-                definitionService.addParamValue(paramValue).then(function () {
-                    return callback();
-                }).catch(function (err) {
-                    logger.error(paramsMap);
-                    callback( err.message );
-                });
-            });
-        }, function (err) {
-            if(err){
-                logger.error('_addServiceParams ', err);
-            }
-            cb(err, definitionService);
         });
     };
 

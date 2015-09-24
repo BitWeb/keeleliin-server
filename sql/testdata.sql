@@ -19,9 +19,9 @@ INSERT INTO service (sid, name, url, created_at, updated_at) SELECT 'uzip', 'Arh
     WHERE NOT EXISTS (SELECT 1 FROM service WHERE service.id = 7);
 INSERT INTO service (sid, name, url, created_at, updated_at) SELECT 'tok', 'Sõnestaja pipe', 'http://dev.bitweb.ee:3008/api/v1/', now(), now()
     WHERE NOT EXISTS (SELECT 1 FROM service WHERE service.id = 8);
-INSERT INTO service (sid, name, url, created_at, updated_at, is_synchronous) SELECT 'concat', 'Sünkroonne teksti konkateneerija', 'http://localhost:3009/api/v1/', now(), now(), TRUE
+INSERT INTO service (sid, name, url, created_at, updated_at, is_synchronous) SELECT 'concat', 'Sünkroonne teksti konkateneerija', 'http://dev.bitweb.ee:3009/api/v1/', now(), now(), TRUE
     WHERE NOT EXISTS (SELECT 1 FROM service WHERE service.id = 9);
-INSERT INTO service (sid, name, url, created_at, updated_at, is_synchronous) SELECT 'moyp', 'Morfoloogiline ühestaja pipe', 'http://localhost:3010/api/v1/', now(), now(), TRUE
+INSERT INTO service (sid, name, url, created_at, updated_at, is_synchronous) SELECT 'moyp', 'Morfoloogiline ühestaja pipe', 'http://dev.bitweb.ee:3010/api/v1/', now(), now(), TRUE
     WHERE NOT EXISTS (SELECT 1 FROM service WHERE service.id = 10);
 
 INSERT INTO service_param (service_id, key, value) SELECT 1, 'isAsync', '1' WHERE NOT EXISTS (SELECT 1 FROM service_param WHERE service_param.id = 1);

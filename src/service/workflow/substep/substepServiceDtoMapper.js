@@ -58,12 +58,19 @@ function SubstepServiceDtoMapper(){
             isAsync: 1 // Default value. Can be overwritten
         };
 
-        workflowService.getParamValues().then(function (paramValues) {
-            async.each(paramValues, function (paramValue, valueCallback) {
-                paramValue.getServiceParam().then(function (serviceParam) {
-                    dto.params[serviceParam.key] = paramValue.value;
-                    valueCallback();
-                });
+        var values = workflowService.serviceParamsValues;
+
+        service.getServiceParams().then(function (serviceParams) {
+            async.each(serviceParams, function (serviceParam, valueCallback) {
+
+                if(!values || !values[serviceParam.key] || serviceParam.isEditable == false ){
+                    dto.params[serviceParam.key] = serviceParam.value;
+                } else {
+                    dto.params[serviceParam.key] = values[serviceParam.key];
+                }
+
+                return valueCallback();
+
             }, function (err) {
                 callback(err, dto);
             });

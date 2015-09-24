@@ -33,8 +33,6 @@ db['WorkflowDefinitionUser'] = sequelize.import('./models/workflowDefinition/wor
 db['Workflow'] = sequelize.import('./models/workflow');
 db['WorkflowService'] = sequelize.import('./models/workflow/workflowService');
 db['WorkflowServiceSubstep'] = sequelize.import('./models/workflow/workflowServiceSubstep');
-db['WorkflowDefinitionServiceParamValue'] = sequelize.import('./models/workflowDefinition/workflowDefinitionServiceParamValue');
-db['WorkflowServiceParamValue'] = sequelize.import('./models/workflow/workflowServiceParamValue');
 
 
 Object.keys(db).forEach(function(modelName) {

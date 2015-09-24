@@ -58,6 +58,12 @@ module.exports = function (sequelize, DataTypes) {
             type: DataTypes.DATE,
             allowNull: true,
             field: 'datetime_end'
+        },
+        serviceParamsValues: {
+            type: DataTypes.JSON,
+            allowNull: true,
+            defaultValue: null,
+            field: 'service_params_values'
         }
     }, {
         tableName: 'workflow_service',
@@ -72,10 +78,6 @@ module.exports = function (sequelize, DataTypes) {
                 WorkflowService.hasMany(models.WorkflowServiceSubstep, {
                     foreignKey: 'workflowServiceId',
                     as: 'subSteps'
-                });
-                WorkflowService.hasMany(models.WorkflowServiceParamValue, {
-                    foreignKey: 'workflow_service_id',
-                    as: 'paramValues'
                 });
             }
         },

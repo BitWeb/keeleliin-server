@@ -3,7 +3,6 @@
  */
 var logger = require('log4js').getLogger('workflow_definition_dao_service');
 var WorkflowDefinition = require(__base + 'src/service/dao/sql').WorkflowDefinition;
-var WorkflowDefinitionServiceParamValue = require(__base + 'src/service/dao/sql').WorkflowDefinitionServiceParamValue;
 var WorkflowDefinitionUser = require(__base + 'src/service/dao/sql').WorkflowDefinitionUser;
 var sequelize = require(__base + 'src/service/dao/sql').sequelize;
 

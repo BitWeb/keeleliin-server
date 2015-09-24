@@ -7,7 +7,6 @@ var Project = require(__base + 'src/service/dao/sql').Project;
 var Workflow = require(__base + 'src/service/dao/sql').Workflow;
 var WorkflowDefinition = require(__base + 'src/service/dao/sql').WorkflowDefinition;
 var WorkflowDefinitionService = require(__base + 'src/service/dao/sql').WorkflowDefinitionService;
-var WorkflowDefinitionServiceParamValue = require(__base + 'src/service/dao/sql').WorkflowDefinitionServiceParamValue;
 
 var Resource = require(__base + 'src/service/dao/sql').Resource;
 var ServiceModel = require(__base + 'src/service/dao/sql').Service;
@@ -217,22 +216,11 @@ function WorkflowDaoService() {
                 attributes: [
                     'id',
                     'serviceId',
-                    'orderNum'
+                    'orderNum',
+                    'serviceParamsValues'
                 ],
                 order: "order_num ASC",
-                required: false,
-                include: [
-                    {
-                        model: WorkflowDefinitionServiceParamValue,
-                        as: 'paramValues',
-                        attributes: [
-                            'id',
-                            'serviceParamId',
-                            'value'
-                        ],
-                        required: false
-                    }
-                ]
+                required: false
             }).then(function ( definitionServices ) {
                 var definitionJson = definition.toJSON();
                 definitionJson.workflowDefinition.definitionServices = definitionServices.map(function (item) {

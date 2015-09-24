@@ -35,18 +35,23 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: false,
             defaultValue: 0,
             field: 'order_num'
+        },
+        serviceParamsValues: {
+            type: DataTypes.JSON,
+            allowNull: true,
+            defaultValue: null,
+            field: 'service_params_values'
         }
     }, {
         tableName: 'workflow_definition_service',
-        timestamps: true,
-        paranoid: true,
+        timestamps: false,
+        paranoid: false,
         underscored: true,
 
         classMethods: {
             associate: function(models) {
                 WorkflowDefinitionService.belongsTo(models.Service, { foreignKey: 'serviceId', as: 'service' });
                 WorkflowDefinitionService.belongsTo(models.WorkflowDefinition, { foreignKey: 'workflowDefinitionId', as: 'workflowDefinition' });
-                WorkflowDefinitionService.hasMany(models.WorkflowDefinitionServiceParamValue, { foreignKey: 'definitionServiceId', as: 'paramValues', onDelete: 'cascade'});
             }
         }
     });

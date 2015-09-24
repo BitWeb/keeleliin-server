@@ -55,7 +55,6 @@ function WorkflowBuilder(){
     this.setServices = function (workflow, workflowDefinition, cb) {
 
         workflowDefinition.getDefinitionServices().then(function (definitionServices) {
-            logger.info('Got definition services: ' + definitionServices.length);
             self.copyDefinitionServicesToServices(definitionServices, workflow, cb);
         }).catch(function (err) {
             cb(err.message);
@@ -66,16 +65,12 @@ function WorkflowBuilder(){
 
         async.each(definitionServices,
             function (definitionService, callback) {
-                logger.info('Copy definition service id: ' + definitionService.id);
                 self.copyDefinitionService(definitionService, workflow, callback);
             }, function(err){
                 if(err){
-                    logger.error('Definition services copy failed');
-                    logger.error(err);
-                    return cb(err);
+                    logger.error('Definition services copy failed', err);
                 }
-                logger.debug('Definition services copied');
-                cb( null, workflow);
+                cb( err, workflow);
             }
         );
     };
@@ -84,48 +79,17 @@ function WorkflowBuilder(){
 
         var data = {
             serviceId: definitionService.serviceId,
+            serviceParamsValues: definitionService.serviceParamsValues,
             workflowId: workflow.id,
             orderNum: definitionService.orderNum
         };
 
         WorkflowService.build(data).save().then(function (workflowService) {
-            self.copyDefinitionServiceParamValues(definitionService, workflowService, cb);
-        }).catch(cb);
+            cb(null, workflow);
+        }).catch(function (err) {
+            cb(err.message);
+        });
     };
-
-    this.copyDefinitionServiceParamValues = function (definitionService, workflowService, cb){
-        logger.info('Copy definition service param values from ' + workflowService.id +' to '+ definitionService.id);
-        async.waterfall([
-            function (callback) {
-                definitionService.getParamValues().then(function (values) {
-                        return callback(null, values)
-                    }).catch(function (err) {
-                        logger.error(err);
-                        callback(err);
-                    });
-            },
-            function (definitionValues, callback) {
-                logger.info('Param values to copy: ' + definitionValues.length);
-                async.each(definitionValues, function(item, itemCallback){
-                    self.copyDefinitionServiceParamValue(item, workflowService, itemCallback);
-                }, callback);
-            }
-        ], cb);
-    };
-
-    this.copyDefinitionServiceParamValue = function (definitionParamValue, workflowService, cb) {
-
-        logger.info('Copy definition param value: ' + definitionParamValue.id);
-        var data = {
-            workflowServiceId: workflowService.id,
-            serviceParamId: definitionParamValue.serviceParamId,
-            value: definitionParamValue.value
-        };
-
-        var workflowServiceParamValue = WorkflowServiceParamValue.build(data).save().then(function (item) {
-            cb(null, item);
-        }).catch(cb);
-    }
 }
 
 module.exports = new WorkflowBuilder();
