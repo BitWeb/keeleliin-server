@@ -53,11 +53,6 @@ module.exports = function(sequelize, DataTypes) {
             field: 'mail_subject_template',
             allowNull: true
         },
-        mailBodyTemplate: {
-            type: DataTypes.STRING,
-            field: 'mail_body_template',
-            allowNull: true
-        },
         notifyPeriodDays: {
             type: DataTypes.INTEGER,
             field: 'notify_period_days',

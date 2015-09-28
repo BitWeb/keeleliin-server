@@ -9,10 +9,11 @@ var async = require('async');
 var mailService = require(__base + 'src/service/mailService');
 var logger = require('log4js').getLogger('notification_service');
 var config = require(__base + 'config');
+var fs = require('fs');
 
 function NotificationService() {
 
-    var TIME_SEND_MAIL_ENABLED_AFTER_API_ACCESS = 5; // in minutes
+    var TIME_SEND_MAIL_ENABLED_AFTER_API_ACCESS = 1; // in minutes
 
     var self = this;
 
@@ -203,7 +204,7 @@ function NotificationService() {
             url: notificationType.urlTemplate,
             message: notificationType.messageTemplate,
             mailSubject: notificationType.mailSubjectTemplate,
-            mailBody: notificationType.mailBodyTemplate
+            mailBody: fs.readFileSync( __dirname + '/../../views/email_templates/' + notificationType.code + '.html').toString()
         };
 
         self._replaceInObjectValues(templates, '{appUrl}', config.appUrl);
@@ -289,6 +290,12 @@ function NotificationService() {
             if(!objectValue){
                 continue;
             }
+
+
+            logger.debug('Object Value: ', objectValue);
+            logger.debug('Key: ', key);
+            logger.debug('Value: ', value);
+
             object[i] = objectValue.replace(new RegExp( key, 'gi'), value);
         }
         return object;

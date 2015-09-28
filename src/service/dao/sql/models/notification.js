@@ -41,12 +41,12 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: false
         },
         mailSubject: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT,
             field: 'mail_subject',
             allowNull: true
         },
         mailBody: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT,
             field: 'mail_body',
             allowNull: true
         },
