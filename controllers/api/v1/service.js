@@ -88,7 +88,7 @@ router.put('/:serviceId/toggle-status', authMiddleware('admin'), function(req, r
  * Teenuse käivitamisel tehtav päring
  */
 router.post('/install', authMiddleware('guest'), function(req, res) {
-
+    logger.debug('Start install service');
     if (config.apiKey == req.body.apiKey) {
         serviceService.installService(req, req.body, function(error, serviceModel) {
             return res.sendApiResponse(error, serviceModel);
