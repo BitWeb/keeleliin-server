@@ -443,6 +443,7 @@ function ServiceService() {
             function checkIfInstalled(callback) {
                 ServiceModel.find({where: {sid: serviceData.sid}}).then(function(serviceModel) {
                     if(serviceModel){
+                        logger.trace('Service already installed');
                         return callback('Service already installed');
                     }
                     return callback();
@@ -451,6 +452,7 @@ function ServiceService() {
                 });
             },
             function (callback) {
+                logger.debug('Compose data');
                 self._composeServiceDataFromInstallServiceData( serviceData, function(error, data) {
                     if (error) {
                         return callback(error);
@@ -458,6 +460,7 @@ function ServiceService() {
 
                     var serviceForm = new ServiceForm(data);
                     if (serviceForm.isValid()) {
+                        logger.debug('Create service');
                         return self.createService(req, serviceForm.getData(), callback);
                     } else {
                         return callback(serviceForm.errors);
