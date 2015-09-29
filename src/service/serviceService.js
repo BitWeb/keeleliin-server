@@ -103,7 +103,7 @@ function ServiceService() {
                 });
             },
             function(serviceInstance, callback) {
-                self._updateServiceRelations(req, serviceData, serviceInstance, callback);
+                self._updateServiceRelations( serviceData, serviceInstance, callback);
             }
         ], function (err, serviceInstance) {
             if(err){
