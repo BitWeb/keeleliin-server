@@ -7,11 +7,12 @@ var router = express.Router();
 var serviceService = require(__base + 'src/service/serviceService');
 var config = require(__base + 'config');
 var ServiceForm = require(__base + 'src/form/serviceForm');
+var authMiddleware = require(__base + 'middlewares/auth');
 
 /**
  * Teenuste grid list
  */
-router.get('/', function(req, res) {
+router.get('/', authMiddleware('regular'), function(req, res) {
     serviceService.getServicesList(req, function(err, services) {
         return res.sendApiResponse( err, services);
     });
@@ -20,7 +21,7 @@ router.get('/', function(req, res) {
 /**
  * Töövoo lisamise teenuste nimekiri
  */
-router.get('/detailed', function(req, res) {
+router.get('/detailed', authMiddleware('regular'), function(req, res) {
     serviceService.getServicesDetailedList(req, function(err, services) {
         return res.sendApiResponse( err, services);
     });
@@ -29,7 +30,7 @@ router.get('/detailed', function(req, res) {
 /**
  * Teenuse muutmise vaade
  */
-router.get('/:serviceId', function(req, res) {
+router.get('/:serviceId', authMiddleware('regular'), function(req, res) {
     serviceService.getServiceEditData(req ,req.params.serviceId, function(err, service) {
         if (!service) {
             res.status(404);
@@ -41,7 +42,7 @@ router.get('/:serviceId', function(req, res) {
 /**
  * Teenuse lisamise vaade
  */
-router.post('/', function(req, res) {
+router.post('/', authMiddleware('quest'), function(req, res) {
     var form = new ServiceForm(req.body);
     if (form.isValid()) {
         serviceService.createService(req, req.body, function(err, service) {
@@ -62,7 +63,7 @@ router.post('/', function(req, res) {
 /**
  * Teenuse muutmise vaade
  */
-router.put('/:serviceId', function(req, res) {
+router.put('/:serviceId', authMiddleware('admin'), function(req, res) {
     var form = new ServiceForm(req.body);
     if (form.isValid()) {
         serviceService.updateService(req, req.params.serviceId, req.body, function(err, responseData) {
@@ -76,7 +77,7 @@ router.put('/:serviceId', function(req, res) {
 /**
  * Teenuste list
  */
-router.put('/:serviceId/toggle-status', function(req, res) {
+router.put('/:serviceId/toggle-status', authMiddleware('admin'), function(req, res) {
 
     serviceService.toggleServiceStatus(req, req.params.serviceId, function(err, service) {
         return res.sendApiResponse( err, service );
@@ -84,7 +85,7 @@ router.put('/:serviceId/toggle-status', function(req, res) {
 });
 
 //todo ?
-router.post('/install/sid/:sid/apiKey/:apiKey', function(req, res) {
+router.post('/install/sid/:sid/apiKey/:apiKey', authMiddleware('quest'), function(req, res) {
     if (config.apiKey == req.params.apiKey) {
         serviceService.installService(req, req.params.sid, req.body, function(error, serviceModel) {
             return res.sendApiResponse(error, serviceModel);

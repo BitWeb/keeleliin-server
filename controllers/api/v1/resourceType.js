@@ -6,11 +6,12 @@ var express = require('express');
 var router = express.Router();
 var resourceTypeService = require(__base + 'src/service/resourceTypeService');
 var config = require(__base + 'config');
+var authMiddleware = require(__base + 'middlewares/auth');
 
 /**
  * Ressursi tüüpide grid list & teenuse lisamise vaade
  */
-router.get('/', function(req, res) {
+router.get('/', authMiddleware('regular'), function(req, res) {
     resourceTypeService.getResourceTypesList(req, function(err, data) {
         return res.sendApiResponse( err, data);
     });
@@ -19,7 +20,7 @@ router.get('/', function(req, res) {
 /**
  * Ressursi tüübi muutmise vaade
  */
-router.get('/:id', function(req, res) {
+router.get('/:id', authMiddleware('admin'), function(req, res) {
     resourceTypeService.getResourceType(req ,req.params.id, function(err, item) {
         if (!item) {
             res.status(404);
@@ -31,7 +32,7 @@ router.get('/:id', function(req, res) {
 /**
  * Ressursi tüübi lisamise vaade
  */
-router.post('/', function(req, res) {
+router.post('/', authMiddleware('admin'), function(req, res) {
     resourceTypeService.addResourceType(req, req.body, function(err, item) {
         return res.sendApiResponse( err, item);
     });
@@ -40,7 +41,7 @@ router.post('/', function(req, res) {
 /**
  * Ressursi tüübi muutmise vaade
  */
-router.put('/:id', function(req, res) {
+router.put('/:id', authMiddleware('admin'), function(req, res) {
     resourceTypeService.updateResourceType(req, req.params.id, req.body, function(err, item) {
         return res.sendApiResponse( err, item);
     });
@@ -49,7 +50,7 @@ router.put('/:id', function(req, res) {
 /**
  * Ressursi tüübi kustutamine
  */
-router.delete('/:id', function(req, res) {
+router.delete('/:id', authMiddleware('admin'), function(req, res) {
     resourceTypeService.deleteResourceType(req, req.params.id, function(err) {
         return res.sendApiResponse( err);
     });

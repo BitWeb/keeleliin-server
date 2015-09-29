@@ -81,6 +81,7 @@ function UserService() {
             function updateSession(user, entuUser, callback) {
                 logger.debug('Update session');
                 request.redisSession.data.userId = user.id;
+                request.redisSession.data.role = user.role;
                 request.redisSession.save();
                 return callback(null, user, entuUser);
             },

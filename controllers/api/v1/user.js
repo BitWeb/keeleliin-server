@@ -14,7 +14,7 @@ var userDaoService = require('../../../src/service/dao/userDaoService');
 /**
  * Sisselogitud kasutaja
  */
-router.get('/', authMiddleware, function( req, res ) {
+router.get('/', authMiddleware('regular'), function( req, res ) {
     userService.getCurrentUser(req, function (error, user) {
         if(error){
             res.status(401);
@@ -26,7 +26,7 @@ router.get('/', authMiddleware, function( req, res ) {
 /**
  * Entu auth andmed
  */
-router.get('/login/:redirectUrl', function( req, res ) {
+router.get('/login/:redirectUrl', authMiddleware('guest'), function( req, res ) {
 
     if(req.redisSession.data.userId){
         userService.getCurrentUser(req, function ( error, user ) {
@@ -46,7 +46,7 @@ router.get('/login/:redirectUrl', function( req, res ) {
 /**
  * Logi välja
  */
-router.get('/logout', function( req, res ) {
+router.get('/logout', authMiddleware('guest'), function( req, res ) {
 
     userService.logout( req, function (err) {
         res.sendApiResponse( err, {success: true} );
@@ -54,9 +54,9 @@ router.get('/logout', function( req, res ) {
 });
 
 /**
- * Kasutajate haldus
+ * Kasutajate haldus && millegi jagamine
  */
-router.get('/list', authMiddleware, function( req, res ) {
+router.get('/list', authMiddleware('regular'), function( req, res ) {
     var paginationParameters = new PaginationParameters(url.parse(req.url, true).query);
     userDaoService.getUsersWithCount(paginationParameters, function (err, users) {
         res.sendApiResponse( err, users );
@@ -66,7 +66,7 @@ router.get('/list', authMiddleware, function( req, res ) {
 /**
  * Kasutaja muutmise vaade
  */
-router.get('/:userId/details',authMiddleware, function(req, res) {
+router.get('/:userId/details',authMiddleware('admin'), function(req, res) {
     userService.getUser(req, req.params.userId, function(err, user) {
         res.sendApiResponse(err, user);
     });
@@ -75,7 +75,7 @@ router.get('/:userId/details',authMiddleware, function(req, res) {
 /**
  * Kasutaja muutmise vaade
  */
-router.put('/:userId/details', authMiddleware, function(req, res) {
+router.put('/:userId/details', authMiddleware('admin'), function(req, res) {
     userService.saveUser(req, req.params.userId, req.body, function(err, user) {
         res.sendApiResponse(err, user);
     });
@@ -84,7 +84,7 @@ router.put('/:userId/details', authMiddleware, function(req, res) {
 /**
  * Päringud peale sisselogimist
  */
-router.post('/heart-beat', authMiddleware, function(req, res) {
+router.post('/heart-beat', authMiddleware('regular'), function(req, res) {
 
     userService.registerApiAccess(req, function(error, status) {
         return res.sendApiResponse(error, status);

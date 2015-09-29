@@ -1,8 +1,12 @@
 var express = require('express');
 var router = express.Router();
 var workflowDefinitionService = require(__base + 'src/service/workflowDefinitionService');
+var authMiddleware = require(__base + 'middlewares/auth');
 
-router.get('/', function(req, res) {
+/**
+ * Uue töövoo lisamine
+ */
+router.get('/', authMiddleware('regular'), function(req, res) {
     workflowDefinitionService.getCurrentUserWorkflowDefinitionsList(req, req.params, function(err, workflowDefinitions) {
         return res.sendApiResponse( err, workflowDefinitions);
     });

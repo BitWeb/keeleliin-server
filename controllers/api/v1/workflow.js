@@ -6,12 +6,12 @@ var express = require('express');
 var router = express.Router();
 var workflowService = require(__base + 'src/service/workflowService');
 var workflowDefinitionService = require(__base + 'src/service/workflowDefinitionService');
-
+var authMiddleware = require(__base + 'middlewares/auth');
 
 /**
  * Uue töövoo defineerimine
  */
-router.post('/create', function (req, res) {
+router.post('/create', authMiddleware('regular'), function (req, res) {
     workflowDefinitionService.createNewWorkflow(req, req.body, function(err, workflow) {
         return res.sendApiResponse( err, workflow);
     });
@@ -20,7 +20,7 @@ router.post('/create', function (req, res) {
 /**
  * Uue töövoo defineerimine
  */
-router.post('/define', function (req, res) {
+router.post('/define', authMiddleware('regular'), function (req, res) {
     workflowDefinitionService.defineNewWorkflow(req, req.body, function(err, workflow) {
         return res.sendApiResponse( err, workflow);
     });
@@ -29,7 +29,7 @@ router.post('/define', function (req, res) {
 /**
  * Töövoogude haldus
  */
-router.get('/management-list', function(req, res) {
+router.get('/management-list', authMiddleware('admin'), function(req, res) {
     workflowService.getWorkflowsManagementList(req, req.query, function(err, data) {
         return res.sendApiResponse( err, data);
     });
@@ -38,7 +38,7 @@ router.get('/management-list', function(req, res) {
 /**
  * Töövoo vaade
  */
-router.get('/:workflowId', function(req, res) {
+router.get('/:workflowId', authMiddleware('regular'), function(req, res) {
     workflowService.getWorkflowOverview(req, req.params.workflowId, function(err, overview) {
         return res.sendApiResponse( err, overview);
     });
@@ -47,7 +47,7 @@ router.get('/:workflowId', function(req, res) {
 /**
  * Definitsiooni lisamise vaade
  */
-router.get('/:workflowId/definition', function(req, res) {
+router.get('/:workflowId/definition', authMiddleware('regular'), function(req, res) {
     workflowService.getWorkflowDefinitionOverview(req, req.params.workflowId, function(err, overview) {
         return res.sendApiResponse( err, overview);
     });
@@ -56,7 +56,7 @@ router.get('/:workflowId/definition', function(req, res) {
 /**
  * Definitsiooni teenuste uuendamine
  */
-router.put('/:workflowId/definition/services', function(req, res) {
+router.put('/:workflowId/definition/services', authMiddleware('regular'), function(req, res) {
     workflowDefinitionService.updateDefinitionServices(req, req.params.workflowId, req.body, function(err, overview) {
         return res.sendApiResponse( err, overview);
     });
@@ -65,7 +65,7 @@ router.put('/:workflowId/definition/services', function(req, res) {
 /**
  * Käivitab töövoo
  */
-router.put('/:workflowId/run', function(req, res) {
+router.put('/:workflowId/run', authMiddleware('regular'), function(req, res) {
     workflowService.runWorkflow(req, req.params.workflowId, function (err, data) {
         return res.sendApiResponse( err, data);
     });
@@ -74,7 +74,7 @@ router.put('/:workflowId/run', function(req, res) {
 /**
  * Katkestab töövoo
  */
-router.put('/:workflowId/cancel', function(req, res) {
+router.put('/:workflowId/cancel', authMiddleware('regular'), function(req, res) {
     workflowService.setWorkflowStatusCanceled(req, req.params.workflowId, function(err, workflow) {
         return res.sendApiResponse( err, workflow);
     });
@@ -83,7 +83,7 @@ router.put('/:workflowId/cancel', function(req, res) {
 /**
  * Sättete modali sisu
  */
-router.get('/:workflowId/settings', function(req, res) {
+router.get('/:workflowId/settings', authMiddleware('regular'), function(req, res) {
     workflowDefinitionService.getWorkflowSettings(req, req.params.workflowId, function(err, settings) {
         return res.sendApiResponse( err, settings);
     });
@@ -92,7 +92,7 @@ router.get('/:workflowId/settings', function(req, res) {
 /**
  * Sättete uuendamine
  */
-router.put('/:workflowId/settings', function(req, res) {
+router.put('/:workflowId/settings', authMiddleware('regular'), function(req, res) {
     workflowDefinitionService.updateWorkflowSettings(req, req.params.workflowId, req.body, function(err, settings) {
         return res.sendApiResponse( err, settings);
     });
@@ -101,7 +101,7 @@ router.put('/:workflowId/settings', function(req, res) {
 /**
  * Olemasolevate ressurside lisamine
  */
-router.put('/:workflowId/add-resources', function(req, res) {
+router.put('/:workflowId/add-resources', authMiddleware('regular'), function(req, res) {
     workflowService.addResources(req, req.params.workflowId, req.body, function(err, data) {
         return res.sendApiResponse( err, data );
     });

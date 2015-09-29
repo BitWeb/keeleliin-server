@@ -5,24 +5,53 @@ var logger = require('log4js').getLogger('auth_middleware');
 
 var userService = require('../src/service/userService');
 
-module.exports = function(req, res, next){
+var rolesMap = {
+    guest: ['guest'],
+    regular: ['guest', 'regular'],
+    admin: ['guest', 'regular', 'admin']
+};
 
-    var userId = req.redisSession.data.userId;
-    logger.trace('User id before auth: ' +  userId);
-    if(userId && userId != undefined){
-        return next();
-    }
+function isAuthorized(requiredRole, actualRole){
+    requiredRole = requiredRole != undefined ? requiredRole : 'guest';
+    actualRole = actualRole != undefined ? actualRole : 'guest';
+    var allowedRoles = rolesMap[ actualRole ];
+    return allowedRoles.indexOf(requiredRole) > -1;
+}
 
-    if( !req.redisSession.data.authUrl ){
-        res.status(401);
-        return res.sendApiResponse( 'User not found');
-    }
+module.exports = function ( role ) {
 
-    userService.auth(req, function (error, userId) {
-        if(error || userId == undefined){
-            return res.send(401, {errors: 'User not found'});
+    return function(req, res, next){
+
+        if(isAuthorized(role)){
+            return next();
         }
 
-        return next();
-    });
+        var userId = req.redisSession.data.userId;
+        logger.trace('User id before auth: ' +  userId);
+
+        if(userId){
+            if(isAuthorized(role, req.redisSession.data.role)){
+                return next();
+            }
+        }
+
+        if( !req.redisSession.data.authUrl ){
+            res.status(401);
+            return res.sendApiResponse( 'Ligipääs keelatud');
+        }
+
+        userService.auth(req, function (error, user) {
+            if(error || user == undefined){
+                res.status(401);
+                return res.sendApiResponse( 'Ligipääs keelatud');
+            }
+
+            if(isAuthorized(role, user.role)){
+                return next();
+            } else {
+                res.status(401);
+                return res.sendApiResponse( 'Ligipääs keelatud');
+            }
+        });
+    };
 };

@@ -6,12 +6,13 @@ var router = express.Router();
 var logger = require('log4js').getLogger('project_controller');
 var workflowService = require(__base + 'src/service/workflowService');
 var projectService = require('../../../src/service/projectService');
-
+var authMiddleware = require(__base + 'middlewares/auth');
 
 /**
  * Kasutaja projektide nimekiri
  */
-router.get('/', function(req, res) {
+router.get('/', authMiddleware('regular'), function(req, res) {
+
     projectService.getCurrentUserProjectsList(req, function (err, projects) {
         return res.sendApiResponse(err, projects);
     });
@@ -20,7 +21,7 @@ router.get('/', function(req, res) {
 /**
  * Projekti vaade
  */
-router.get('/:id', function(req, res) {
+router.get('/:id', authMiddleware('regular'), function(req, res) {
 
     projectService.getCurrentUserProject(req, req.params.id, function (error, project) {
         if(!project){
@@ -34,7 +35,7 @@ router.get('/:id', function(req, res) {
 /**
  * Projekti sättete muutmine
  */
-router.put('/:id', function(req, res) {
+router.put('/:id', authMiddleware('regular'), function(req, res) {
     projectService.updateCurrentUserProject(req, req.params.id, req.body, function (error, project) {
         if(error && !project){
             res.status(404);
@@ -47,7 +48,7 @@ router.put('/:id', function(req, res) {
 /**
  * Uue projekti lisamine
  */
-router.post('/', function(req, res) {
+router.post('/', authMiddleware('regular'), function(req, res) {
     projectService.createCurrentUserProject(req, req.body, function (error, project) {
         return res.sendApiResponse(error, project);
     });
@@ -56,7 +57,7 @@ router.post('/', function(req, res) {
 /**
  * Projekti kustutamine
  */
-router.delete('/:id', function(req, res) {
+router.delete('/:id', authMiddleware('regular'), function(req, res) {
     projectService.deleteCurrentUserProject(req, req.params.id, function (error) {
         if(error){
             res.status(400);
@@ -68,9 +69,8 @@ router.delete('/:id', function(req, res) {
 /**
  * Projekti vaate töövoogude nimekiri
  */
-router.get('/:projectId/workflows', function(req, res) {
-
-    workflowService.getProjectWorkflowsList(req, req.params.projectId, function(error, workflows) {
+router.get('/:id/workflows', authMiddleware('regular'), function(req, res) {
+    workflowService.getProjectWorkflowsList(req, req.params.id, function(error, workflows) {
         return res.sendApiResponse(error, workflows);
     });
 });
