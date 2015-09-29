@@ -1,7 +1,7 @@
 /**
  * Created by taivo on 15.06.15.
  */
-
+var logger = require('log4js').getLogger('service_controller');
 var express = require('express');
 var router = express.Router();
 var serviceService = require(__base + 'src/service/serviceService');
@@ -84,10 +84,13 @@ router.put('/:serviceId/toggle-status', authMiddleware('admin'), function(req, r
     });
 });
 
-//todo ?
-router.post('/install/sid/:sid/apiKey/:apiKey', authMiddleware('quest'), function(req, res) {
-    if (config.apiKey == req.params.apiKey) {
-        serviceService.installService(req, req.params.sid, req.body, function(error, serviceModel) {
+/**
+ * Teenuse käivitamisel tehtav päring
+ */
+router.post('/install', authMiddleware('guest'), function(req, res) {
+
+    if (config.apiKey == req.body.apiKey) {
+        serviceService.installService(req, req.body, function(error, serviceModel) {
             return res.sendApiResponse(error, serviceModel);
         });
     } else {

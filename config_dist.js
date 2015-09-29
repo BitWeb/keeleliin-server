@@ -6,7 +6,7 @@ var config = {};
 
 config.port = 3000;
 config.appUrl = 'http://localhost:8001';
-config.apiKey = '';
+config.apiKey = 'server-wrapper-api-key';
 
 config.redis = {
     host: "127.0.0.1",

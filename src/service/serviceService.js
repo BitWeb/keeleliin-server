@@ -131,7 +131,7 @@ function ServiceService() {
                 });
             },
             function(callback) {
-                self._updateServiceRelations(req, serviceData, service, callback);
+                self._updateServiceRelations( serviceData, service, callback);
             }
         ], function(error, serviceModel) {
 
@@ -153,24 +153,24 @@ function ServiceService() {
         });
     };
 
-    this._updateServiceRelations = function (req, serviceData, serviceInstance, cb) {
+    this._updateServiceRelations = function ( serviceData, serviceInstance, cb) {
         async.waterfall([
             function(callback) {
-                self._updateServiceParamValues(req, serviceData, serviceInstance, callback);
+                self._updateServiceParamValues( serviceData, serviceInstance, callback);
             },
             function(serviceInstance, callback) {
-                self._updateServiceInputTypes(req, serviceData, serviceInstance, callback);
+                self._updateServiceInputTypes( serviceData, serviceInstance, callback);
             },
             function(serviceInstance, callback) {
-                self._updateServiceOutputTypes(req, serviceData, serviceInstance, callback);
+                self._updateServiceOutputTypes( serviceData, serviceInstance, callback);
             },
             function(serviceInstance, callback) {
-                self._updateServiceParentServices(req, serviceData, serviceInstance, callback);
+                self._updateServiceParentServices( serviceData, serviceInstance, callback);
             }
         ], cb);
     };
 
-    this._updateServiceParamValues = function(req, serviceData, serviceInstance, cb) {
+    this._updateServiceParamValues = function( serviceData, serviceInstance, cb) {
 
         var existingParamsIds = [];
         var updatedParamsIds = [];
@@ -196,7 +196,7 @@ function ServiceService() {
                        return item.id == serviceParamData.id
                     });
 
-                    self._updateOrCreateServiceParam(req, existingParam, serviceParamData, serviceInstance, function (err, serviceParam) {
+                    self._updateOrCreateServiceParam( existingParam, serviceParamData, serviceInstance, function (err, serviceParam) {
                        if(err){
                            return innerCallback(err);
                        }
@@ -220,7 +220,7 @@ function ServiceService() {
         ], cb);
     };
 
-    this._updateOrCreateServiceParam = function ( req, serviceParam, serviceParamData, serviceInstance, cb) {
+    this._updateOrCreateServiceParam = function ( serviceParam, serviceParamData, serviceInstance, cb) {
 
         if( serviceParam ){
             serviceParam.updateAttributes(serviceParamData, {fields:['type', 'key', 'value','isEditable','description']}).then(function () {
@@ -298,7 +298,7 @@ function ServiceService() {
         });
     };
 
-    this._updateServiceInputTypes = function(req, serviceData, serviceInstance, cb) {
+    this._updateServiceInputTypes = function( serviceData, serviceInstance, cb) {
 
         var existingTypesIds = [];
         var addedTypesIds = [];
@@ -360,7 +360,7 @@ function ServiceService() {
         ], cb);
     };
 
-    this._updateServiceOutputTypes = function(req, serviceData, serviceInstance, cb) {
+    this._updateServiceOutputTypes = function( serviceData, serviceInstance, cb) {
 
         var existingTypesIds = [];
         var addedTypesIds = [];
@@ -423,63 +423,118 @@ function ServiceService() {
         ], cb);
     };
 
-    this._updateServiceParentServices = function(req, serviceData, serviceInstance, cb) {
+    this._updateServiceParentServices = function( serviceData, serviceInstance, cb) {
 
         ServiceModel.findAll({ where: {id: serviceData.parentServices}}).then(function (parentServices) {
                 serviceInstance.setParentServices( parentServices).then(function () {
-                    cb(null, serviceInstance);
+                    return cb(null, serviceInstance);
                 }).catch(function (err) {
-                    cb(err.message);
+                    return cb(err.message);
                 });
             })
             .catch(function (err) {
-                cb(err.message);
+                return cb(err.message);
             });
     };
 
-    this.installService = function(req, sid, serviceData, callback) {
-        self.getServiceBySid(req, sid, function(error, serviceModel) {
-            if (error) {
-                return callback(error);
+    this.installService = function(req, serviceData, cb) {
+
+        async.waterfall([
+            function checkIfInstalled(callback) {
+                ServiceModel.find({where: {sid: serviceData.sid}}).then(function(serviceModel) {
+                    if(serviceModel){
+                        return callback('Service already installed');
+                    }
+                    return callback();
+                }).catch(function(error) {
+                    return callback( error.message );
+                });
+            },
+            function (callback) {
+                self._composeServiceDataFromInstallServiceData( serviceData, function(error, data) {
+                    if (error) {
+                        return callback(error);
+                    }
+
+                    var serviceForm = new ServiceForm(data);
+                    if (serviceForm.isValid()) {
+                        return self.createService(req, serviceForm.getData(), callback);
+                    } else {
+                        return callback(serviceForm.errors);
+                    }
+                });
             }
-
-            if (serviceModel) {
-                return callback('Service already installed.', serviceModel);
+        ], function (err, service) {
+            if(err){
+                logger.trace(err)
             }
-
-            self._composeServiceDataFromInstallServiceData(sid, serviceData, function(error, data) {
-                if (error) {
-                    return callback(error);
-                }
-
-                var serviceForm = new ServiceForm(data);
-                if (serviceForm.isValid()) {
-                    return self.createService(req, serviceForm.getData(), callback);
-                } else {
-                    return callback(serviceForm.errors);
-                }
-            });
+            cb(err, service);
         });
     };
 
-    this.getServiceBySid = function(req, sid, callback) {
+    /*
 
-        ServiceModel.find({where: {sid: sid}}).then(function(serviceModel) {
-            return callback(null, serviceModel);
-        }).catch(function(error) {
-            return callback({
-                message: error.message,
-                code: 500
-            });
-        });
-    };
+     sid: 'concat',
+     name: 'Konkateneerija',
+     url: 'http://localhost:3000/api/v1/',
+     inputTypes:
+     [ { key: 'content',
+     type: 'text',
+     sizeLimit: 0,
+     sizeUnit: 'byte',
+     isList: false } ],
+     outputTypes: [ { type: 'text', key: 'output' } ],
+     parameters: [ { key: 'isAsync', type: 'select', options: [Object], value: null } ] }
 
-    this._composeServiceDataFromInstallServiceData = function(sid, installData, cb) {
+     */
+
+
+    var it = {
+        description: null,
+        id: 7,
+        isActive: true,
+        isSynchronous: false,
+        name: "Arhiivi lahtipakkija",
+        sid: "uzip",
+        url: "http://dev.bitweb.ee:3007/api/v1/",
+
+        parentServices: [],
+        serviceInputTypes: [
+            {
+            doParallel: false,
+            id: 7,
+            isList: false,
+            key: "content",
+            resourceTypeId: 2,
+            sizeLimit: 0,
+            sizeUnit: "byte"}
+        ],
+        serviceOutputTypes: [
+            {
+                id: 7,
+                key: "output",
+                resourceTypeId: 2
+            }
+        ],
+        serviceParams: [
+            {
+            description: null,
+            id: 7,
+            isEditable: false,
+            key: "isAsync",
+            paramOptions: [],
+            type: "text",
+            value: "1"
+            }
+        ]};
+
+
+    this._composeServiceDataFromInstallServiceData = function( installData, cb) {
 
         var serviceData = {
             name: installData.name,
             url: installData.url,
-            sid: sid,
+            sid: installData.sid,
             description: installData.description,
             serviceParams: [],
             serviceInputTypes: [],
@@ -488,12 +543,22 @@ function ServiceService() {
 
         async.waterfall([
             function(callback) {
-                for (var i = 0; i < installData.parameters.length; i++) {
+                for (var i in installData.parameters) {
                     var param = installData.parameters[i];
+                    var paramOptions = [];
+                    if(param.type == 'select' && param.options){
+                        paramOptions = param.options.map(function (item) {
+                            return {
+                                value: item,
+                                label: item
+                            }
+                        });
+                    }
                     serviceData.serviceParams.push({
                         type: param.type,
                         key: param.key,
-                        value: param.value
+                        value: param.value,
+                        paramOptions: paramOptions
                     });
                 }
                 callback();
@@ -503,6 +568,7 @@ function ServiceService() {
                     async.eachSeries(installData.inputTypes, function(inputType, innerCallback) {
                         resourceService.getResourceTypeByValue(inputType.type, function(error, resourceType) {
                             if (error) {
+                                logger.error( error );
                                 return innerCallback(error);
                             }
 
@@ -551,7 +617,7 @@ function ServiceService() {
             function(callback) {
                 if (installData.outputTypes) {
                     async.eachSeries(installData.outputTypes, function(outputType, innerCallback) {
-                        resourceService.getResourceTypeByValue(inputType.type, function(error, resourceType) {
+                        resourceService.getResourceTypeByValue(outputType.type, function(error, resourceType) {
                             if (error) {
                                 return innerCallback(error);
                             }
@@ -572,9 +638,9 @@ function ServiceService() {
                                     innerCallback();
                                 });
                             } else {
-                                serviceData.serviceInputTypes.push({
+                                serviceData.serviceOutputTypes.push({
                                     resourceTypeId: resourceType.id,
-                                    key: resourceType.key
+                                    key: outputType.key
                                 });
                                 innerCallback();
                             }
@@ -593,6 +659,7 @@ function ServiceService() {
             }
         ], function(error) {
             if (error) {
+                logger.error( error );
                 return cb(error);
             }
             return cb(null, serviceData);
