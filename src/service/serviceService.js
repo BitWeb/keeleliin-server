@@ -738,7 +738,7 @@ function ServiceService() {
                 return cb(error);
             }
 
-            logger.debug('Compose. Mapping is done');
+            logger.debug('Compose. Mapping is done', serviceData);
 
             return cb(null, serviceData);
         });
