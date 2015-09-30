@@ -216,7 +216,7 @@ function ResourceDaoService() {
 
     this.getResource = function(resourceId, callback) {
 
-        Resource.find({ where: {id: resourceId }}).then(function(resource) {
+        Resource.findById( resourceId ).then(function(resource) {
             if(!resource){
                 return callback('Resource not found');
             }

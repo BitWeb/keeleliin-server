@@ -64,6 +64,13 @@ function ServiceService() {
                 parentServicesList.push( dataJSON.parentServices[i].id );
             }
             dataJSON.parentServices = parentServicesList;
+
+            var childServicesList = [];
+            for(i in dataJSON.childServices){
+                childServicesList.push( dataJSON.childServices[i].id );
+            }
+            dataJSON.childServices = childServicesList;
+
             return cb(null, dataJSON);
         });
     };
@@ -166,6 +173,9 @@ function ServiceService() {
             },
             function(serviceInstance, callback) {
                 self._updateServiceParentServices( serviceData, serviceInstance, callback);
+            },
+            function(serviceInstance, callback) {
+                self._updateServiceChildServices( serviceData, serviceInstance, callback);
             }
         ], cb);
     };
@@ -437,6 +447,20 @@ function ServiceService() {
             });
     };
 
+    this._updateServiceChildServices = function( serviceData, serviceInstance, cb) {
+
+        ServiceModel.findAll({ where: {id: serviceData.childServices}}).then(function (childServices) {
+            serviceInstance.setChildServices( childServices).then(function () {
+                return cb(null, serviceInstance);
+            }).catch(function (err) {
+                return cb(err.message);
+            });
+        })
+            .catch(function (err) {
+                return cb(err.message);
+            });
+    };
+
     this.installService = function(req, serviceData, cb) {
 
         async.waterfall([
@@ -541,11 +565,13 @@ function ServiceService() {
             description: installData.description,
             serviceParams: [],
             serviceInputTypes: [],
-            serviceOutputTypes: []
+            serviceOutputTypes: [],
+            parentServices: [],
+            childServices: []
         };
 
         async.waterfall([
-            function(callback) {
+            function mapParams(callback) {
                 for (var i in installData.parameters) {
                     var param = installData.parameters[i];
                     var paramOptions = [];
@@ -566,7 +592,7 @@ function ServiceService() {
                 }
                 callback();
             },
-            function(callback) {
+            function mapInputTypes(callback) {
                 if (installData.inputTypes) {
                     async.eachSeries(installData.inputTypes, function(inputType, innerCallback) {
                         resourceService.getResourceTypeByValue(inputType.type, function(error, resourceType) {
@@ -617,7 +643,8 @@ function ServiceService() {
                 }
             },
 
-            function(callback) {
+            function mapOutputTypes(callback) {
+
                 if (installData.outputTypes) {
                     async.eachSeries(installData.outputTypes, function(outputType, innerCallback) {
                         resourceService.getResourceTypeByValue(outputType.type, function(error, resourceType) {
@@ -659,6 +686,28 @@ function ServiceService() {
                 } else {
                     return callback();
                 }
+            },
+            function mapParentServices(callback) {
+                var outputTypes = serviceData.serviceInputTypes.map(function ( item ) {
+                    return item.resourceTypeId
+                });
+                serviceDaoService.findServicesByOutputResourceTypes( outputTypes, function (err, services) {
+                    serviceData.parentServices = services.map(function (service) {
+                        return service.id;
+                    });
+                    callback();
+                });
+            },
+            function mapChildServices(callback) {
+                var inputTypes = serviceData.serviceOutputTypes.map(function ( item ) {
+                    return item.resourceTypeId
+                });
+                serviceDaoService.findServicesByInputResourceTypes( inputTypes, function (err, services) {
+                    serviceData.childServices = services.map(function (service) {
+                        return service.id;
+                    });
+                    callback();
+                });
             }
         ], function(error) {
             if (error) {
@@ -668,9 +717,6 @@ function ServiceService() {
             return cb(null, serviceData);
         });
     };
-
-
-
 }
 
 module.exports = new ServiceService();

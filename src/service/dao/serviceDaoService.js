@@ -68,6 +68,12 @@ function ServiceDaoService() {
                     as: 'parentServices',
                     attributes: [ 'id' ],
                     required: false
+                },
+                {
+                    model: ServiceModel,
+                    as: 'childServices',
+                    attributes: [ 'id' ],
+                    required: false
                 }
             ]
         }).then(function(service) {
@@ -192,7 +198,29 @@ function ServiceDaoService() {
                 code: 500
             });
         });
-    }
+    };
+
+    this.findServicesByOutputResourceTypes = function(resourceTypeIds, callback) {
+        ServiceModel.findAll({
+            attributes: [
+                'id'
+            ],
+            include: [
+                {
+                    model: ServiceInputType,
+                    as: 'serviceOutputTypes',
+                    where: {
+                        resourceTypeId: resourceTypeIds
+                    },
+                    required: true
+                }
+            ]
+        }).then(function(services) {
+            return callback(null, services)
+        }).catch(function(error) {
+            return callback( error.message );
+        });
+    };
 
 }
 

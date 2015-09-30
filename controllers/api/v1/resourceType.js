@@ -21,7 +21,7 @@ router.get('/', authMiddleware('regular'), function(req, res) {
  * Ressursi tüübi muutmise vaade
  */
 router.get('/:id', authMiddleware('admin'), function(req, res) {
-    resourceTypeService.getResourceType(req ,req.params.id, function(err, item) {
+    resourceTypeService.getResourceTypeOverview(req ,req.params.id, function(err, item) {
         if (!item) {
             res.status(404);
         }

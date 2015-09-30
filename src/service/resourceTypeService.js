@@ -23,15 +23,62 @@ function ResourceTypeService() {
 
     this.getResourceType = function(req, id, callback) {
 
-        ResourceType.find({ where: {id: id }}).then(function(resourceType) {
+        ResourceType.findById( id ).then(function(resourceType) {
             if (!resourceType) {
                 return callback('No resource type found with id: ' + resourceTypeId);
             }
             return callback(null, resourceType);
         }).catch(function(error) {
-
             return callback(error);
         });
+    };
+
+    this.getResourceTypeOverview = function(req, id, cb) {
+
+        var overview;
+
+        async.waterfall([
+                function ( callback ) {
+                    self.getResourceType(req, id, callback);
+                },
+                function ( resourceType, callback ) {
+                    overview = resourceType.dataValues;
+                    resourceType.getInputTypes().then(function (inputTypes) {
+                        async.map(inputTypes, function (inputType, innerCb) {
+                            inputType.getService().then(function (service) {
+                                var serviceData = {
+                                    id: service.id,
+                                    name: service.name
+                                };
+                                innerCb( null, serviceData);
+                            });
+                        }, function (err, inputMap) {
+                            overview.useAsInput = inputMap;
+                            callback(err, resourceType);
+                        });
+                    });
+                },
+                function ( resourceType, callback ) {
+                    resourceType.getOutputTypes().then(function (outputTypes) {
+                        async.map(outputTypes, function (outputType, innerCb) {
+                            outputType.getService().then(function (service) {
+                                var serviceData = {
+                                    id: service.id,
+                                    name: service.name
+                                };
+                                innerCb( null, serviceData);
+                            });
+                        }, function (err, outputMap) {
+                            overview.useAsOutput = outputMap;
+                            callback(err, resourceType);
+                        });
+                    });
+                }
+            ],
+            function (err) {
+                cb(err, overview);
+            }
+        );
     };
 
     this.addResourceType = function(req, resourceTypeData, callback) {
@@ -46,10 +93,10 @@ function ResourceTypeService() {
         });
     };
 
-    this.updateResourceType = function(req, resourceId, data, cb) {
+    this.updateResourceType = function(req, typeId, data, cb) {
         async.waterfall([
             function (callback) {
-                self.getResourceType(req, resourceId, callback);
+                self.getResourceType(req, typeId, callback);
             },
             function (resourceType, callback) {
                 resourceType.updateAttributes(data, {fields: ['name','value', 'splitType']}).then(function () {
@@ -57,6 +104,9 @@ function ResourceTypeService() {
                 }).catch(function (err) {
                     callback(err.message);
                 });
+            },
+            function (resourceType, callback) {
+                self.getResourceTypeOverview(req, typeId, callback);
             }
         ], cb);
     };

@@ -34,7 +34,14 @@ module.exports = function(sequelize, DataTypes) {
 
         classMethods: {
             associate: function(models) {
-                //ServiceInputType.belongsTo(models.Service);
+                ResourceType.hasMany(models.ServiceInputType, {
+                    foreignKey: 'resourceTypeId',
+                    as: 'inputTypes'
+                });
+                ResourceType.hasMany(models.ServiceOutputType, {
+                    foreignKey: 'resourceTypeId',
+                    as: 'outputTypes'
+                });
             }
         }
     });
