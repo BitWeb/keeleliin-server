@@ -41,7 +41,7 @@ module.exports = function(sequelize, DataTypes) {
 
         classMethods: {
             associate: function(models) {
-                ServiceOutputType.belongsTo(models.Service);
+                ServiceOutputType.belongsTo(models.Service, {as: 'service', foreignKey: 'serviceId'});
                 ServiceOutputType.belongsTo(models.ResourceType, {
                     foreignKey: 'resourceTypeId',
                     as: 'resourceType'

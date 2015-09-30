@@ -171,32 +171,25 @@ function ServiceDaoService() {
             });
     };
 
-    this.findServicesByInputResourceTypes = function(resourceTypeIds, excludeServiceId, callback) {
+    this.findServicesByInputResourceTypes = function(resourceTypeIds, callback) {
         ServiceModel.findAll({
+            attributes: [
+                'id'
+            ],
             include: [
-                {
-                    model: ServiceModelParam,
-                    as: 'serviceParams',
-                    order: [['orderNum', 'ASC']]
-                },
                 {
                     model: ServiceInputType,
                     as: 'serviceInputTypes',
                     where: {
                         resourceTypeId: resourceTypeIds
-                    }
+                    },
+                    required: true
                 }
-            ],
-            where: {
-                id: { $ne: excludeServiceId }
-            }
+            ]
         }).then(function(services) {
             return callback(null, services)
         }).catch(function(error) {
-            return callback({
-                message: error.message,
-                code: 500
-            });
+            return callback( error.message );
         });
     };
 
@@ -207,7 +200,7 @@ function ServiceDaoService() {
             ],
             include: [
                 {
-                    model: ServiceInputType,
+                    model: ServiceOutputType,
                     as: 'serviceOutputTypes',
                     where: {
                         resourceTypeId: resourceTypeIds

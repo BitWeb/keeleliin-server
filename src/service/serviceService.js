@@ -558,6 +558,8 @@ function ServiceService() {
 
     this._composeServiceDataFromInstallServiceData = function( installData, cb) {
 
+        logger.debug('Compose service data');
+
         var serviceData = {
             name: installData.name,
             url: installData.url,
@@ -572,6 +574,9 @@ function ServiceService() {
 
         async.waterfall([
             function mapParams(callback) {
+
+                logger.debug('Compose. Map params');
+
                 for (var i in installData.parameters) {
                     var param = installData.parameters[i];
                     var paramOptions = [];
@@ -593,6 +598,9 @@ function ServiceService() {
                 callback();
             },
             function mapInputTypes(callback) {
+
+                logger.debug('Compose. Map input types');
+
                 if (installData.inputTypes) {
                     async.eachSeries(installData.inputTypes, function(inputType, innerCallback) {
                         resourceService.getResourceTypeByValue(inputType.type, function(error, resourceType) {
@@ -645,6 +653,8 @@ function ServiceService() {
 
             function mapOutputTypes(callback) {
 
+                logger.debug('Compose. Map output types');
+
                 if (installData.outputTypes) {
                     async.eachSeries(installData.outputTypes, function(outputType, innerCallback) {
                         resourceService.getResourceTypeByValue(outputType.type, function(error, resourceType) {
@@ -688,10 +698,17 @@ function ServiceService() {
                 }
             },
             function mapParentServices(callback) {
+
+                logger.debug('Compose. Map parent services');
+
                 var outputTypes = serviceData.serviceInputTypes.map(function ( item ) {
                     return item.resourceTypeId
                 });
                 serviceDaoService.findServicesByOutputResourceTypes( outputTypes, function (err, services) {
+                    if(err){
+                        return callback(err);
+                    }
+
                     serviceData.parentServices = services.map(function (service) {
                         return service.id;
                     });
@@ -699,10 +716,16 @@ function ServiceService() {
                 });
             },
             function mapChildServices(callback) {
+
+                logger.debug('Compose. Map child services');
+
                 var inputTypes = serviceData.serviceOutputTypes.map(function ( item ) {
-                    return item.resourceTypeId
+                    return item.resourceTypeId;
                 });
                 serviceDaoService.findServicesByInputResourceTypes( inputTypes, function (err, services) {
+                    if(err){
+                        return callback(err);
+                    }
                     serviceData.childServices = services.map(function (service) {
                         return service.id;
                     });
@@ -714,6 +737,9 @@ function ServiceService() {
                 logger.error( error );
                 return cb(error);
             }
+
+            logger.debug('Compose. Mapping is done');
+
             return cb(null, serviceData);
         });
     };
