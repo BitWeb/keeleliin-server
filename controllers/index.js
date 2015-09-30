@@ -12,14 +12,14 @@ var authMiddleware = require(__base + 'middlewares/auth');
 router.use('/api/v1/', require(__base + 'controllers/api/v1/index'));
 
 /* GET home page. Service description from config */
-router.get('/', authMiddleware, function(req, res, next) {
+router.get('/', authMiddleware('guest'), function(req, res, next) {
     res.send('index', {
         title: 'Hello',
         description: 'Keeleliin server'
     });
 });
 
-router.get('/generate', authMiddleware, function(req, res, next) {
+router.get('/generate', authMiddleware('guest'), function(req, res, next) {
 
     sqlModel.sequelize.sync( { force: true } );
     res.send({

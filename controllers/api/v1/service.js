@@ -88,12 +88,14 @@ router.put('/:serviceId/toggle-status', authMiddleware('admin'), function(req, r
  * Teenuse käivitamisel tehtav päring
  */
 router.post('/install', authMiddleware('guest'), function(req, res) {
-    logger.debug('Start install service');
+
     if (config.apiKey == req.body.apiKey) {
+        logger.debug('Start install service');
         serviceService.installService(req, req.body, function(error, serviceModel) {
             return res.sendApiResponse(error, serviceModel);
         });
     } else {
+        logger.debug('No suitable api key');
         return res.sendApiResponse({
             message: 'Api key does not match!',
             code: 401
