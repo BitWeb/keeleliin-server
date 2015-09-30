@@ -434,9 +434,10 @@ function ServiceService() {
     };
 
     this._updateServiceParentServices = function( serviceData, serviceInstance, cb) {
-
+        logger.debug('Update parent services: ', serviceData.parentServices);
         ServiceModel.findAll({ where: {id: serviceData.parentServices}}).then(function (parentServices) {
                 serviceInstance.setParentServices( parentServices).then(function () {
+                    logger.debug('Update parent services updated: ', parentServices.length);
                     return cb(null, serviceInstance);
                 }).catch(function (err) {
                     return cb(err.message);
@@ -448,9 +449,10 @@ function ServiceService() {
     };
 
     this._updateServiceChildServices = function( serviceData, serviceInstance, cb) {
-
+        logger.debug('Update child services: ', serviceData.childServices);
         ServiceModel.findAll({ where: {id: serviceData.childServices}}).then(function (childServices) {
             serviceInstance.setChildServices( childServices).then(function () {
+                logger.debug('Update child services finished: ', childServices.length);
                 return cb(null, serviceInstance);
             }).catch(function (err) {
                 return cb(err.message);
