@@ -9,7 +9,7 @@ var config = require(__base + 'config');
 var authMiddleware = require(__base + 'middlewares/auth');
 
 /**
- * Ressursi tüüpide grid list & teenuse lisamise vaade
+ * Ressursi tüüpide grid list & teenuse lisamise vaade & info vaade
  */
 router.get('/', authMiddleware('regular'), function(req, res) {
     resourceTypeService.getResourceTypesList(req, function(err, data) {

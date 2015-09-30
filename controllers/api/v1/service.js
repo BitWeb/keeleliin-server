@@ -30,8 +30,8 @@ router.get('/detailed', authMiddleware('regular'), function(req, res) {
 /**
  * Teenuse muutmise vaade
  */
-router.get('/:serviceId', authMiddleware('regular'), function(req, res) {
-    serviceService.getServiceEditData(req ,req.params.serviceId, function(err, service) {
+router.get('/:id', authMiddleware('regular'), function(req, res) {
+    serviceService.getServiceEditData(req ,req.params.id, function(err, service) {
         if (!service) {
             res.status(404);
         }
@@ -63,10 +63,10 @@ router.post('/', authMiddleware('quest'), function(req, res) {
 /**
  * Teenuse muutmise vaade
  */
-router.put('/:serviceId', authMiddleware('admin'), function(req, res) {
+router.put('/:id', authMiddleware('admin'), function(req, res) {
     var form = new ServiceForm(req.body);
     if (form.isValid()) {
-        serviceService.updateService(req, req.params.serviceId, req.body, function(err, responseData) {
+        serviceService.updateService(req, req.params.id, req.body, function(err, responseData) {
             return res.sendApiResponse( err, responseData);
         });
     } else {
@@ -77,9 +77,9 @@ router.put('/:serviceId', authMiddleware('admin'), function(req, res) {
 /**
  * Teenuste list
  */
-router.put('/:serviceId/toggle-status', authMiddleware('admin'), function(req, res) {
+router.put('/:id/toggle-status', authMiddleware('admin'), function(req, res) {
 
-    serviceService.toggleServiceStatus(req, req.params.serviceId, function(err, service) {
+    serviceService.toggleServiceStatus(req, req.params.id, function(err, service) {
         return res.sendApiResponse( err, service );
     });
 });

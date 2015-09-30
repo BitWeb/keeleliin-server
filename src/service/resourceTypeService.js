@@ -11,7 +11,9 @@ function ResourceTypeService() {
     var self = this;
 
     this.getResourceTypesList = function (req, callback) {
-        ResourceType.findAll().then(function (data) {
+        ResourceType.findAll({
+            order: [['name','ASC']]
+        }).then(function (data) {
             callback(null, data);
         }).catch(function (err) {
             callback({
