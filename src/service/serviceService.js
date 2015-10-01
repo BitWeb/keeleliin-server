@@ -106,7 +106,7 @@ function ServiceService() {
                 serviceInstance.updateAttributes(serviceData, {fields:['name', 'description', 'url','sid','isSynchronous','isActive']}).then(function() {
                     return callback(null, serviceInstance);
                 }).catch(function(error) {
-                    return callback(error);
+                    return callback(error.message);
                 });
             },
             function(serviceInstance, callback) {
@@ -114,7 +114,7 @@ function ServiceService() {
             }
         ], function (err, serviceInstance) {
             if(err){
-                logger.error(err);
+                logger.error('update Error: ', err);
                 return cb(err);
             }
             self.getServiceEditData(req, serviceInstance.id, cb);
@@ -143,7 +143,7 @@ function ServiceService() {
         ], function(error, serviceModel) {
 
             if(error){
-                logger.error(error);
+                logger.error('Creation error', error);
             }
 
             if (error && service) {
@@ -221,7 +221,7 @@ function ServiceService() {
                     ServiceModelParam.destroy({where: {id: removableIds}}).then(function() {
                         return callback(null, serviceInstance);
                     }).catch(function(error) {
-                        return callback(error);
+                        return callback(error.message);
                     });
                 } else {
                     return callback(null, serviceInstance);
@@ -236,7 +236,7 @@ function ServiceService() {
             serviceParam.updateAttributes(serviceParamData, {fields:['type', 'key', 'value','isEditable','description']}).then(function () {
                 return self._updateServiceParamOptions( serviceParam, serviceParamData, cb);
             }).catch(function(err) {
-                return cb(err);
+                return cb(err.message);
             });
         } else {
             serviceParamData.serviceId = serviceInstance.id;
@@ -244,7 +244,7 @@ function ServiceService() {
                 logger.debug('New param added');
                 return self._updateServiceParamOptions( serviceParam, serviceParamData, cb);
             }).catch(function(err) {
-                return cb(err);
+                return cb(err.message);
             });
         }
     };
@@ -301,7 +301,7 @@ function ServiceService() {
                     ParamOption.destroy({where: {id: removableIds}}).then(function() {
                         return callback(null);
                     }).catch(function(error) {
-                        return callback(error);
+                        return callback(error.message);
                     });
                 } else {
                     return callback(null);
@@ -430,7 +430,7 @@ function ServiceService() {
                     }).then(function() {
                         return callback(null, serviceInstance);
                     }).catch(function(error) {
-                        return callback(error);
+                        return callback(error.message);
                     });
                 } else {
                     return callback(null, serviceInstance);
