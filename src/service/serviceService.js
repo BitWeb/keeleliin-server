@@ -252,6 +252,9 @@ function ServiceService() {
     this._updateServiceParamOptions = function ( serviceParam, serviceParamData, cb ) {
 
         logger.debug('Update or create param options: ', serviceParamData);
+        logger.debug('Update or create param options to param: ', serviceParam);
+
+
         var existingOptionsIds = [];
         var updatedOptionsIds = [];
         var optionsData = serviceParamData.paramOptions ? serviceParamData.paramOptions : [];
@@ -280,15 +283,12 @@ function ServiceService() {
                             return innerCallback(err.message);
                         });
                     } else {
-                        var optionInstance = ParamOption.build(optionData, {fields: ['label', 'value']});
-                        serviceParam.addParamOption(optionInstance).then(function () {
+                        optionData.serviceParamId = serviceParam.id;
+                        ParamOption.create(optionData, {fields: ['label', 'value', 'serviceParamId']}).then(function (optionInstance) {
                             updatedOptionsIds.push(optionInstance.id);
                             return innerCallback();
                         }).catch(function (err) {
-                            logger.error(err.message);
-                            logger.error(serviceParam);
-                            logger.error(optionInstance);
-
+                            logger.error(err);
                             return innerCallback(err.message);
                         });
                     }
@@ -308,6 +308,9 @@ function ServiceService() {
                 }
             }
         ], function (err) {
+            if(err){
+                logger.error(err);
+            }
             cb(err, serviceParam);
         });
     };
@@ -330,15 +333,12 @@ function ServiceService() {
             function update(existingTypes, callback ) {
 
                 async.eachSeries(serviceData.serviceInputTypes, function(serviceInputTypeData, innerCallback) {
-
                     var inputType;
-
                     if(serviceInputTypeData.id){
                         inputType = ArrayUtils.find(existingTypes, function (item) {
                             return item.id == serviceInputTypeData.id
                         });
                     }
-
                     if(inputType){
                         inputType.updateAttributes(serviceInputTypeData, {fields: ['key','doParallel','sizeLimit','sizeUnit','resourceTypeId']}).then(function () {
                             addedTypesIds.push(inputType.id);
@@ -347,10 +347,11 @@ function ServiceService() {
                             innerCallback(err.message);
                         });
                     } else {
-                        inputType = ServiceInputType.build(serviceInputTypeData, {fields: ['key','doParallel','sizeLimit','sizeUnit','resourceTypeId']});
-                        serviceInstance.addServiceInputType(inputType).then(function () {
-                            addedTypesIds.push(inputType.id);
-                            innerCallback();
+                        serviceInputTypeData.serviceId = serviceInstance.id;
+                        ServiceInputType.create(serviceInputTypeData, {fields: ['key','doParallel','sizeLimit','sizeUnit','resourceTypeId', 'serviceId']})
+                            .then(function (inputType) {
+                                addedTypesIds.push(inputType.id);
+                                innerCallback();
                         }).catch(function (err) {
                             innerCallback(err.message);
                         });
@@ -410,10 +411,11 @@ function ServiceService() {
                             innerCallback(err.message);
                         });
                     } else {
-                        outputType = ServiceOutputType.build(serviceOutputTypeData, {fields: ['key','resourceTypeId']});
-                        serviceInstance.addServiceOutputType(outputType).then(function () {
-                            addedTypesIds.push(outputType.id);
-                            innerCallback();
+                        serviceOutputTypeData.serviceId = serviceInstance.id;
+                        ServiceOutputType.create(serviceOutputTypeData, {fields: ['key','resourceTypeId', 'serviceId']}).
+                            then(function (outputType) {
+                                addedTypesIds.push(outputType.id);
+                                innerCallback();
                         }).catch(function (err) {
                             innerCallback(err.message);
                         });

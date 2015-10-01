@@ -140,12 +140,12 @@ function UserService() {
 
         User.create(userParams).then(function (user) {
 
-            var project = Project.build({
+            Project.create({
                 name: 'Projekt 1',
-                description: 'Minu esimene projekt'
-            });
-            logger.debug('User Add project');
-            user.addProject(project).then(function () {
+                description: 'Minu esimene projekt',
+                userId: user.id
+            }).then(function (project) {
+
                 logger.debug('User Add userProject');
                 user.addUserProject(project, {role: ProjectUser.roles.ROLE_OWNER}).then(function () {
                     logger.debug('Vaikimisi project loodud');
