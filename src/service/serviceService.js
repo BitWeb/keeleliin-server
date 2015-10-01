@@ -624,7 +624,7 @@ function ServiceService() {
                                     }
                                     serviceData.serviceOutputTypes.push({
                                         resourceTypeId: resourceType.id,
-                                        key: resourceType.key
+                                        key: outputType.key
                                     });
                                     innerCallback();
                                 });
