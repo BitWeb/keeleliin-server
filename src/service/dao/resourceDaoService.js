@@ -14,18 +14,17 @@ function ResourceDaoService() {
     this.getResources = function(query, callback) {
 
 /*
-        Kasutaja
         >Avalikud Ressursid
         >Kasutajale Jagatud Ressursid
         Projekt
-        >Töövoota Ressursid
-        >Töövoog
-        >>Sisendressursid
-        >>Väljundressursid
-        >>Töövoo teenus
-        >>>Sisendressursid
-        >>>Väljundressursid
-        */
+            >Töövoota Ressursid
+            >Töövoog
+                >>Sisendressursid
+                >>Väljundressursid
+                >>Töövoo teenus
+                    >>>Sisendressursid
+                    >>>Väljundressursid
+*/
 
         var publicResources = " SELECT " +
             " 'Avalik' as level_0," +
@@ -38,8 +37,7 @@ function ResourceDaoService() {
             " null::INTEGER as workflow_id, " +
             " null::INTEGER as service_id " +
             " FROM resource as resource " +
-            " WHERE resource.is_public = TRUE AND" +
-            " resource.deleted_at IS NULL " +
+            " WHERE resource.is_public = TRUE " +
             (query.projectId ?  (" AND FALSE " ) : "") +
             (query.workflowId ?  (" AND FALSE ") : "");
 
@@ -55,8 +53,7 @@ function ResourceDaoService() {
             " null::INTEGER as service_id " +
             " FROM resource AS resource " +
             " LEFT JOIN resource_user AS ru ON ( ru.user_id = " + query.userId + " AND ru.resource_id = resource.id ) " +
-            " WHERE ru.id IS NOT NULL AND " +
-            " resource.deleted_at IS NULL " +
+            " WHERE ru.user_id IS NOT NULL " +
             (query.projectId ?  (" AND FALSE " ) : "") +
             (query.workflowId ?  (" AND FALSE ") : "");
 
@@ -75,8 +72,7 @@ function ResourceDaoService() {
             " JOIN project_has_resource AS phr ON ( phr.resource_id = resource.id ) " +
             " JOIN project AS project ON ( phr.project_id = project.id ) " +
             " JOIN project_user AS pu ON ( pu.project_id = project.id AND pu.user_id = " + query.userId + " ) " +
-            " WHERE resource.deleted_at IS NULL AND " +
-
+            " WHERE " +
             " NOT EXISTS (SELECT workflow.id FROM " +
             "   workflow " +
             "   LEFT JOIN workflow_has_input_resource AS workflow_hir ON ( workflow_hir.workflow_id = workflow.id AND workflow_hir.resource_id = resource.id )" +
@@ -109,7 +105,7 @@ function ResourceDaoService() {
             " JOIN project_user AS pu ON ( pu.project_id = project.id AND pu.user_id = " + query.userId + " ) " +
             " JOIN workflow AS workflow ON ( workflow.project_id = project.id ) " +
             " JOIN workflow_has_input_resource as workflowInput ON (workflowInput.workflow_id = workflow.id AND workflowInput.resource_id = resource.id )" +
-            " WHERE resource.deleted_at IS NULL AND workflow.project_id = project.id " +
+            " WHERE workflow.project_id = project.id " +
             (query.projectId ?  (" AND project.id = " + query.projectId ) : "") +
             (query.workflowId ?  (" AND workflow.id = " + query.workflowId ) : "");
 
@@ -129,7 +125,7 @@ function ResourceDaoService() {
             " JOIN project AS project ON ( project.id = phr.project_id ) " +
             " JOIN project_user AS pu ON ( pu.project_id = project.id AND pu.user_id = " + query.userId + " ) " +
             " JOIN workflow AS workflow ON ( workflow.project_id = project.id AND workflow.id = resource.workflow_output_id ) " +
-            " WHERE resource.deleted_at IS NULL AND workflow.project_id = project.id " +
+            " WHERE workflow.project_id = project.id " +
             (query.projectId ?  (" AND project.id = " + query.projectId ) : "") +
             (query.workflowId ?  (" AND workflow.id = " + query.workflowId ) : "");
 
@@ -153,7 +149,7 @@ function ResourceDaoService() {
             " JOIN workflow_service_substep as serviceSubstep ON ( serviceSubstep.workflow_service_id = wf_service.id ) " +
             " JOIN workflow_service_substep_has_input_resource AS wsshir ON (wsshir.workflow_service_substep_id = serviceSubstep.id AND wsshir.resource_id = resource.id ) " +
             " JOIN service AS service ON ( wf_service.service_id = service.id ) " +
-            " WHERE resource.deleted_at IS NULL AND " +
+            " WHERE " +
             " workflow.project_id = project.id " +
             (query.projectId ?  (" AND project.id = " + query.projectId ) : "") +
             (query.workflowId ?  (" AND workflow.id = " + query.workflowId ) : "");
@@ -178,7 +174,7 @@ function ResourceDaoService() {
             " JOIN workflow_service AS wf_service ON ( wf_service.workflow_id = workflow.id ) " +
             " JOIN workflow_service_substep as serviceSubstep ON ( serviceSubstep.workflow_service_id = wf_service.id AND resource.workflow_service_substep_id = serviceSubstep.id ) " +
             " JOIN service AS service ON ( wf_service.service_id = service.id ) " +
-            " WHERE resource.deleted_at IS NULL AND " +
+            " WHERE " +
             " workflow.project_id = project.id " +
             (query.projectId ?  (" AND project.id = " + query.projectId ) : "") +
             (query.workflowId ?  (" AND workflow.id = " + query.workflowId ) : "");

@@ -46,7 +46,7 @@ function Runner() {
                 function createHandlers(project, callback) {
                     statusHolder = new StatusHolder();
                     substepHandler = new SubstepHandler(project, workflow);
-                    resourceHandler = new ResourceHandler(project);
+                    resourceHandler = new ResourceHandler(project, workflow);
                     callback();
                 }
             ],

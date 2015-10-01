@@ -51,7 +51,7 @@ function WorkflowDaoService() {
             function overviewQuery(callback) {
 
                 Workflow.find({
-                    as: 'workflow',
+
                     attributes: [
                         'id',
                         'name',

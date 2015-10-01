@@ -63,7 +63,7 @@ router.put('/:resourceId', authMiddleware('regular'), function(req, res) {
  * Ressursi kustutamise vorm
  */
 router.delete('/:resourceId', authMiddleware('regular'), function(req, res) {
-    resourceService.deleteResource(req, req.params.resourceId, req.body, function(error, resource) {
+    resourceService.deleteResource(req, req.params.resourceId, req.query, function(error, resource) {
         return res.sendApiResponse( error, resource);
     });
 });

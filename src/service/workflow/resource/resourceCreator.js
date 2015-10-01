@@ -8,13 +8,14 @@ var Resource = require(__base + 'src/service/dao/sql').Resource;
 var FileUtil = require(__base + 'src/util/fileUtil');
 var async = require('async');
 
-function ResourceCreator(sourceResource, workflowService, resourceIndex, project){
+function ResourceCreator(sourceResource, workflowService, resourceIndex, project, workflow){
     var self = this;
 
     this.sourceResource = sourceResource;
     this.workflowService = workflowService;
     this.resourceIndex = resourceIndex;
     this.project = project;
+    this.workflow = workflow;
 
     var encoding = 'utf-8';
     var resourceFilename;
@@ -58,7 +59,8 @@ function ResourceCreator(sourceResource, workflowService, resourceIndex, project
                     contentType: self.sourceResource.contentType,
                     encoding: self.sourceResource.encoding,
                     name: self.getOriginalName(),
-                    originalName: self.getOriginalName()
+                    originalName: self.getOriginalName(),
+                    userId: self.workflow.userId
                 };
                 callback(null, data);
             },

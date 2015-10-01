@@ -216,7 +216,8 @@ function SubStepHandler(project, workflow){
                     resourceTypeId: resourceType.id,
                     originalName: fileName,
                     name: fileName,
-                    contentType: fileData.contentType
+                    contentType: fileData.contentType,
+                    userId: workflow.userId
                 };
                 callback(null, data);
             },

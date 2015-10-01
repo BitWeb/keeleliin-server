@@ -12,7 +12,7 @@ var fs = require('fs');
 var lineReader = require('line-reader');
 var config = require(__base + 'config');
 
-function ResourceHandler(project) {
+function ResourceHandler(project, workflow) {
 
     var self = this;
 
@@ -512,7 +512,7 @@ function ResourceHandler(project) {
         var globalLineIndex = 0;
         var subResourceIndex = 0;
         var limitLeft = serviceInputType.sizeLimit;
-        var resourceCreator = new ResourceCreator(sourceResource, workflowService, globalLineIndex, project);
+        var resourceCreator = new ResourceCreator(sourceResource, workflowService, globalLineIndex, project, workflow);
 
         lineReader.eachLine(pathToSourceFile, function (line, last, lineReaderCb) {
 
@@ -546,7 +546,7 @@ function ResourceHandler(project) {
                     logger.debug('Subresource filled');
 
                     subResourceCallback(null, resource, function (err) {
-                        resourceCreator = new ResourceCreator(sourceResource, workflowService, globalLineIndex, project);
+                        resourceCreator = new ResourceCreator(sourceResource, workflowService, globalLineIndex, project, workflow);
                         limitLeft = serviceInputType.sizeLimit - lineSize;
                         write();
                     });

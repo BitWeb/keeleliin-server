@@ -61,7 +61,7 @@ module.exports = function(sequelize, DataTypes) {
     }, {
         tableName: 'workflow_service_substep',
         timestamps: false,
-        paranoid: true,
+        paranoid: false,
         underscored: true,
 
         classMethods: {

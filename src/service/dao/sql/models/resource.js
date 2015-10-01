@@ -36,6 +36,7 @@ module.exports = function(sequelize, DataTypes) {
         workflowOutputId: {
             type: DataTypes.INTEGER,
             allowNull: true,
+            defaultValue: null,
             references: {
                 model: 'workflow',
                 key: 'id'
@@ -80,10 +81,14 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: true,
             primaryKey: false
         },
-        author: {
-            type: DataTypes.STRING,
+        userId: {
+            type: DataTypes.INTEGER,
             allowNull: true,
-            primaryKey: false
+            references: {
+                model: 'user',
+                key: 'id'
+            },
+            field: 'user_id'
         },
         contentType: {
             type: DataTypes.STRING,
@@ -105,14 +110,6 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.DATE,
             field: 'created_at'
         },
-        updatedAt: {
-            type: DataTypes.DATE,
-            field: 'updated_at'
-        },
-        deletedAt: {
-            type: DataTypes.DATE,
-            field: 'deleted_at'
-        },
         isPublic: {
             type: DataTypes.BOOLEAN,
             allowNull: false,
@@ -121,12 +118,13 @@ module.exports = function(sequelize, DataTypes) {
         }
     }, {
         tableName: 'resource',
-        timestamps: true,
-        paranoid: true,
+        timestamps: false,
+        paranoid: false,
         underscored: true,
 
         hooks: {
             beforeCreate: function(resource, options) {
+                resource.createdAt = new Date();
                 var stats = fs.statSync(config.resources.location + resource.filename);
                 resource.fileSize = stats["size"];
             }
@@ -135,31 +133,37 @@ module.exports = function(sequelize, DataTypes) {
         classMethods: {
             associate: function(models) {
                 Resource.belongsTo(models.ResourceType, {
-                    foreignKey: 'resourceTypeId',
-                    as: 'resourceType'
-                });
+                        foreignKey: 'resourceTypeId',
+                        as: 'resourceType'
+                    }
+                );
                 Resource.belongsToMany(models.Project, {
-                    through: 'project_has_resource',
-                    foreignKey: 'resource_id',
-                    otherKey: 'project_id',
-                    as: 'projects'
-                });
+                        through: 'project_has_resource',
+                        foreignKey: 'resource_id',
+                        otherKey: 'project_id',
+                        as: 'projects'
+                    }
+                );
                 Resource.belongsToMany(models.WorkflowDefinition, {
-                    through: 'workflow_definition_has_input_resource',
-                    foreignKey: 'resource_id',
-                    otherKey: 'workflow_definition_id',
-                    as: 'workflowDefinitions'}
+                        through: 'workflow_definition_has_input_resource',
+                        foreignKey: 'resource_id',
+                        otherKey: 'workflow_definition_id',
+                        as: 'workflowDefinitions'
+                    }
                 );
                 Resource.belongsToMany(models.Workflow, {
-                    through: 'workflow_has_input_resource',
-                    foreignKey: 'resource_id',
-                    otherKey: 'workflow_id',
-                    as: 'workflows'}
+                        through: 'workflow_has_input_resource',
+                        foreignKey: 'resource_id',
+                        otherKey: 'workflow_id',
+                        timestamps: false,
+                        as: 'workflows'
+                    }
                 );
                 Resource.belongsToMany(models.WorkflowServiceSubstep, {
                         through: 'workflow_service_substep_has_input_resource',
                         foreignKey: 'resource_id',
                         otherKey: 'workflow_service_substep_id',
+                        timestamps: false,
                         as: 'inputSubsteps'
                     }
                 );
@@ -168,13 +172,27 @@ module.exports = function(sequelize, DataTypes) {
                         as: 'outputSubsteps'
                     }
                 );
+                Resource.belongsTo(models.User, {
+                        as: 'user',
+                        foreignKey: 'userId'
+                    }
+                );
                 Resource.hasMany(models.ResourceUser, {
-                    as: 'users', foreignKey: 'resourceId'
-                });
+                        as: 'users',
+                        foreignKey: 'resourceId'
+                    }
+                );
+                Resource.belongsToMany(models.User, {
+                        as: 'resourceUsers',
+                        through: models.ResourceUser,
+                        foreignKey: 'resource_id'
+                    }
+                );
                 Resource.belongsTo(models.Workflow, {
-                    foreignKey: 'workflowOutputId',
-                    as: 'workflowOutput'
-                });
+                        foreignKey: 'workflowOutputId',
+                        as: 'workflowOutput'
+                    }
+                );
             }
         }
     });

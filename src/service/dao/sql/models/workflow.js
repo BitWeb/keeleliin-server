@@ -96,7 +96,7 @@ module.exports = function(sequelize, DataTypes) {
     }, {
         tableName: 'workflow',
         timestamps: false,
-        paranoid: true,
+        paranoid: false,
         underscored: true,
 
         classMethods: {
@@ -121,7 +121,8 @@ module.exports = function(sequelize, DataTypes) {
                 Workflow.belongsToMany(models.Resource, {
                         through: 'workflow_has_input_resource',
                         foreignKey: 'workflow_id',
-                        as: 'inputResources'
+                        as: 'inputResources',
+                        timestamps: false
                     }
                 );
                 Workflow.hasMany(models.Resource, {
