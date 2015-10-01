@@ -102,8 +102,8 @@ function ProjectService(){
                 });
             },
             function createProject( currentUser, callback ){
-                var project = Project.build(projectData);
-                currentUser.addProject(project).then(function(project) {
+                projectData.userId = currentUser.id;
+                 Project.create(projectData).then(function(project) {
                     callback(null, project, currentUser)
                 }).catch(function (e) {
                     return callback(e.message);
