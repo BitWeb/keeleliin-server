@@ -68,7 +68,7 @@ module.exports = function(sequelize, DataTypes) {
                 fn(null, item);
             },
             updatedAt: function(item, options, fn) {
-                item.datetimeUpdated = new Date();
+                item.updatedAt = new Date();
                 fn(null, item);
             }
         }

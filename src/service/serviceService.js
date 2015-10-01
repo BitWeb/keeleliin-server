@@ -239,8 +239,8 @@ function ServiceService() {
                 return cb(err);
             });
         } else {
-            serviceParam = ServiceModelParam.build(serviceParamData, {fields:['type', 'key', 'value','isEditable','description']});
-            serviceInstance.addServiceParam(serviceParam).then(function() {
+            serviceParamData.serviceId = serviceInstance.id;
+            ServiceModelParam.create(serviceParamData, {fields:['type', 'key', 'value','isEditable','description']}).then(function (serviceParam) {
                 logger.debug('New param added');
                 return self._updateServiceParamOptions( serviceParam, serviceParamData, cb);
             }).catch(function(err) {
@@ -504,63 +504,6 @@ function ServiceService() {
             cb(err, service);
         });
     };
-
-    /*
-
-     sid: 'concat',
-     name: 'Konkateneerija',
-     url: 'http://localhost:3000/api/v1/',
-     inputTypes:
-     [ { key: 'content',
-     type: 'text',
-     sizeLimit: 0,
-     sizeUnit: 'byte',
-     isList: false } ],
-     outputTypes: [ { type: 'text', key: 'output' } ],
-     parameters: [ { key: 'isAsync', type: 'select', options: [Object], value: null } ] }
-
-     */
-
-
-    var it = {
-        description: null,
-        id: 7,
-        isActive: true,
-        isSynchronous: false,
-        name: "Arhiivi lahtipakkija",
-        sid: "uzip",
-        url: "http://dev.bitweb.ee:3007/api/v1/",
-
-        parentServices: [],
-        serviceInputTypes: [
-            {
-            doParallel: false,
-            id: 7,
-            isList: false,
-            key: "content",
-            resourceTypeId: 2,
-            sizeLimit: 0,
-            sizeUnit: "byte"}
-        ],
-        serviceOutputTypes: [
-            {
-                id: 7,
-                key: "output",
-                resourceTypeId: 2
-            }
-        ],
-        serviceParams: [
-            {
-            description: null,
-            id: 7,
-            isEditable: false,
-            key: "isAsync",
-            paramOptions: [],
-            type: "text",
-            value: "1"
-            }
-        ]};
-
 
     this._composeServiceDataFromInstallServiceData = function( installData, cb) {
 
