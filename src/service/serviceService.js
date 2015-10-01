@@ -240,7 +240,7 @@ function ServiceService() {
             });
         } else {
             serviceParamData.serviceId = serviceInstance.id;
-            ServiceModelParam.create(serviceParamData, {fields:['type', 'key', 'value','isEditable','description']}).then(function (serviceParam) {
+            ServiceModelParam.create(serviceParamData, {fields:['type', 'key', 'value','isEditable','description', 'serviceId']}).then(function (serviceParam) {
                 logger.debug('New param added');
                 return self._updateServiceParamOptions( serviceParam, serviceParamData, cb);
             }).catch(function(err) {
