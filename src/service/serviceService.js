@@ -285,6 +285,10 @@ function ServiceService() {
                             updatedOptionsIds.push(optionInstance.id);
                             return innerCallback();
                         }).catch(function (err) {
+                            logger.error(err.message);
+                            logger.error(serviceParam);
+                            logger.error(optionInstance);
+
                             return innerCallback(err.message);
                         });
                     }
