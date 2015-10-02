@@ -13,8 +13,6 @@ var fs = require('fs');
 
 function NotificationService() {
 
-    var TIME_SEND_MAIL_ENABLED_AFTER_API_ACCESS = 1; // in minutes
-
     var self = this;
 
     this.getCurrentUserNotificationsSummary = function (req, cb) {
@@ -278,8 +276,7 @@ function NotificationService() {
             var dateApiAccessed = user.dateApiAccessed;
             var now = new Date();
 
-            if (!dateApiAccessed || ( (now.getTime() - 60000 * TIME_SEND_MAIL_ENABLED_AFTER_API_ACCESS) > dateApiAccessed.getTime() )) {
-
+            if (!dateApiAccessed || ( (now.getTime() - 10000 ) > dateApiAccessed.getTime() )) {
                 var mailOptions = {
                     to: [user.email],
                     subject: notification.mailSubject,
