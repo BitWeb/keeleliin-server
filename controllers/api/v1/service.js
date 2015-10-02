@@ -85,6 +85,18 @@ router.put('/:id/toggle-status', authMiddleware('admin'), function(req, res) {
 });
 
 /**
+ * Teenuse statistika vaade
+ */
+router.get('/:id/statistics', authMiddleware('admin'), function(req, res) {
+
+    serviceService.getStatistics(req, req.params.id, function(err, data) {
+        return res.sendApiResponse( err, data );
+    });
+});
+
+
+
+/**
  * Teenuse käivitamisel tehtav päring
  */
 router.post('/install', authMiddleware('guest'), function(req, res) {

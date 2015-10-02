@@ -16,6 +16,7 @@ var resourceService = require(__base + 'src/service/resourceService');
 var resourceTypeService = require(__base + 'src/service/resourceTypeService');
 var ServiceForm = require(__base + 'src/form/serviceForm');
 var sequelize = require(__base + 'src/service/dao/sql').sequelize;
+var apiService = require('./workflow/service/apiService');
 
 function ServiceService() {
 
@@ -693,6 +694,29 @@ function ServiceService() {
 
             return cb(null, serviceData);
         });
+    };
+
+    self.getStatistics = function ( req, serviceId, cb ) {
+
+        async.waterfall([
+                function (callback) {
+                    self.getService(serviceId, callback);
+                },
+                function (service, callback) {
+                    apiService.getStatistics( service.url, callback);
+                }
+            ],
+            function (err, data) {
+                if(err){
+                    logger.error( err );
+                }
+                if(data.errors){
+                    logger.error( data.errors );
+                    return cb(data.errors);
+                }
+                return cb(err, data);
+            }
+        );
     };
 }
 

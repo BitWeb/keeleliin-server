@@ -22,5 +22,6 @@ router.use('/workflow', require(__base + 'controllers/api/v1/workflow'));
 router.use('/workflow-definition', require(__base + 'controllers/api/v1/workflowDefinition'));
 router.use('/resource-type', require(__base + 'controllers/api/v1/resourceType'));
 router.use('/meta', require(__base + 'controllers/api/v1/meta'));
+router.use('/statistics', require(__base + 'controllers/api/v1/statistics'));
 
 module.exports = router;
