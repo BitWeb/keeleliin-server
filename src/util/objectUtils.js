@@ -19,6 +19,14 @@ var ObjectUtils = {
             newObject[newKey] = object[i];
         }
         return newObject;
+    },
+
+    mapProperties: function(object, properties){
+        var result = {};
+        for(i in properties){
+            result[properties[i]] = object[properties[i]];
+        }
+        return result;
     }
 };
 

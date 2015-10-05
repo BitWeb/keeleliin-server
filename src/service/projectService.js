@@ -90,7 +90,18 @@ function ProjectService(){
 
     this.getCurrentUserProject = function (req, projectId, callback) {
         var userId = req.redisSession.data.userId;
-        return projectDaoService.getUserProject( userId, projectId, callback);
+        return projectDaoService.getUserProject( userId, projectId, function( err, project ){
+            project = project.toJSON();
+            project.projectUsers = project.projectUsers.map(function (projectUser) {
+                var updatedUser = {};
+                updatedUser.id = projectUser.id;
+                updatedUser.name = projectUser.name;
+                updatedUser.displaypicture = projectUser.displaypicture;
+                updatedUser.role = projectUser.projectUser.role;
+                return updatedUser;
+            });
+            callback(err, project);
+        });
     };
 
     this.createCurrentUserProject = function(req, projectData, cb){

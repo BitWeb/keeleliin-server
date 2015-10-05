@@ -73,6 +73,7 @@ function ResourceDaoService() {
             " JOIN project AS project ON ( phr.project_id = project.id ) " +
             " JOIN project_user AS pu ON ( pu.project_id = project.id AND pu.user_id = " + query.userId + " ) " +
             " WHERE " +
+                //Ei ole projekti töövoo sisendressurss, projekti töövoo teenuse sisendressurss, projekti töövoo teenuse väljundressurss ega töövoo väljundressurss
             " NOT EXISTS (SELECT workflow.id FROM " +
             "   workflow " +
             "   LEFT JOIN workflow_has_input_resource AS workflow_hir ON ( workflow_hir.workflow_id = workflow.id AND workflow_hir.resource_id = resource.id )" +
@@ -80,7 +81,7 @@ function ResourceDaoService() {
             "   LEFT JOIN workflow_service_substep AS wss ON ( wss.workflow_service_id = ws.id )" +
             "   LEFT JOIN workflow_service_substep_has_input_resource AS wss_hir ON (wss_hir.workflow_service_substep_id = wss.id AND wss_hir.resource_id = resource.id )" +
             "   WHERE workflow.project_id = project.id AND " +
-            "       ( workflow_hir.resource_id IS NOT NULL OR wss_hir.resource_id IS NOT NULL OR wss.id = resource.workflow_service_substep_id ) " +
+            "       ( workflow_hir.resource_id IS NOT NULL OR wss_hir.resource_id IS NOT NULL OR wss.id = resource.workflow_service_substep_id OR workflow.id = resource.workflow_output_id ) " +
             " ) " +
             "  " +
             (query.projectId ?  (" AND project.id = " + query.projectId ) : "") +

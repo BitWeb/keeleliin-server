@@ -84,7 +84,9 @@ function ResourceTypeService() {
     };
 
     this.addResourceType = function(req, resourceTypeData, callback) {
-        self.createResourceType(resourceTypeData, callback);
+        self.createResourceType(resourceTypeData, function (err, resourceType) {
+            self.getResourceTypeOverview(req, resourceType.id, callback);
+        });
     };
 
     this.createResourceType = function(resourceTypeData, callback) {

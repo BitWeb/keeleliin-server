@@ -56,17 +56,17 @@ function UserDaoService() {
         });
     };
 
-    this.getUsersWithCount = function(pagination, cb) {
-        pagination = pagination || {};
-        var sort = pagination.sort || 'id';
-        var order = pagination.order || 'ASC';
+    this.getUsersWithCount = function(query, cb) {
+        query = query || {};
+        var sort = query.sort || 'id';
+        var order = query.order || 'ASC';
 
         var andWhere = {};
-        if (pagination.data.name) {
-            andWhere['name'] = pagination.data.name;
+        if (query.name) {
+            andWhere['name'] = query.name;
         }
-        if (pagination.data.role) {
-            andWhere['role'] = pagination.data.role;
+        if (query.role) {
+            andWhere['role'] = query.role;
         }
 
         var q = 'SELECT ' +
@@ -97,26 +97,13 @@ function UserDaoService() {
             var totalCount = parseInt((result ? result['total'] : 0));
 
             // Add limit and offset
-            if (pagination.page > 0 && pagination.perPage > 0) {
-                q += ' LIMIT ' + pagination.perPage;
-                q += ' OFFSET ' + ((pagination.page - 1) * pagination.perPage);
+            if (query.page > 0 && query.perPage > 0) {
+                q += ' LIMIT ' + query.perPage;
+                q += ' OFFSET ' + ((query.page - 1) * query.perPage);
             }
-
             // Get users per page
             sequelize.query(q, { type: sequelize.QueryTypes.SELECT}).then(function (users) {
-                var sql = 'SELECT COUNT(userCount.id) as total FROM (' + q + ') as userCount';
-
-                // Get per page count
-                sequelize.query(sql, { type: sequelize.QueryTypes.SELECT}).then(function (result) {
-                    result = result.pop();
-                    var pageTotal = parseInt((result ? result['total'] : 0));
-
-                    return cb(null, {rows: users, count: pageTotal, totalCount: totalCount});
-
-                }).catch(function (err) {
-                    return cb(err.message);
-                });
-
+                return cb(null, {rows: users, count: totalCount});
             }).catch(function (err) {
                 return cb(err.message);
             });

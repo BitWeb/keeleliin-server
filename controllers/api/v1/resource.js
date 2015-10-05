@@ -12,7 +12,7 @@ var authMiddleware = require(__base + 'middlewares/auth');
 /**
  * Kusagil ressursside puus
  */
-router.get('/download/:resourceId', authMiddleware('regular'), function(req, res) {
+router.get('/:resourceId/download', authMiddleware('regular'), function(req, res) {
     resourceService.getResource(req, req.params.resourceId, function(error, resource) {
         if (error || !resource) {
             res.status(404);

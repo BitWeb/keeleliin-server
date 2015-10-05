@@ -9,7 +9,7 @@ var workflowDefinitionService = require(__base + 'src/service/workflowDefinition
 var authMiddleware = require(__base + 'middlewares/auth');
 
 /**
- * Uue töövoo defineerimine
+ * Uue töövoo loomine
  */
 router.post('/create', authMiddleware('regular'), function (req, res) {
     workflowDefinitionService.createNewWorkflow(req, req.body, function(err, workflow) {

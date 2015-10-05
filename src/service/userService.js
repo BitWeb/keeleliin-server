@@ -9,8 +9,8 @@ var User = require(__base + 'src/service/dao/sql').User;
 var ProjectUser = require(__base + 'src/service/dao/sql').ProjectUser;
 var entuDaoService = require('./dao/entu/daoService');
 var notificationService = require('./notificationService');
-
 var RedisSession = require( './dao/redis/models/redisSession');
+var ObjectUtils = require('../util/objectUtils');
 
 function UserService() {
 
@@ -170,16 +170,16 @@ function UserService() {
         return userDaoService.findById(userId, cb);
     };
 
-    this.isAdmin = function (request, cb) {
+    this.getCurrentUserMainProperties = function (request, cb) {
 
-        return cb(null, true);
-        //todo
-        /*self.getCurrentUser(request, function (err, user) {
-            if(user && user.role == User.roles.ROLE_ADMIN){
-                return cb(null, true);
+        self.getCurrentUser(request, function (err, user) {
+            if(err){
+               logger.error(err);
+                return cb(err);
             }
-            return cb();
-        });*/
+            var response = ObjectUtils.mapProperties(user, ['id','entuId', 'email', 'name', 'displaypicture', 'role', 'isActive', 'createdAt']);
+            cb(null, response);
+        });
     };
 
     this.getUser = function(req, userId, cb) {
@@ -221,6 +221,18 @@ function UserService() {
     this.logout = function (request, cb) {
         request.redisSession.delete(cb);
     };
+
+    this.getUserGridList = function ( req, query, cb ) {
+
+        userDaoService.getUsersWithCount( query , function (err, users) {
+            var updatedUsers = [];
+            for(i in users.rows){
+                users.rows[i] = ObjectUtils.snakeToCame(users.rows[i])
+            }
+            cb( err, users );
+        });
+    };
+
 
 }
 

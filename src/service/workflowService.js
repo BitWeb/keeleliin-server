@@ -185,14 +185,7 @@ function WorkflowService() {
     this.getWorkflowsManagementList = function (req, params, cb) {
 
         async.waterfall([
-                function isAdmin(callback) {
-                    userService.isAdmin(req, function (err, isAdmin) {
-                        if(!isAdmin){
-                            return callback('Tegemist ei ole admin kasutajaga');
-                        }
-                        callback();
-                    });
-                },
+
                 function (callback) {
                     workflowDaoService.getWorkflowsManagementList( params, callback );
                 },

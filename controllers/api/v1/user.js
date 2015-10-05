@@ -12,18 +12,6 @@ var userService = require('../../../src/service/userService');
 var userDaoService = require('../../../src/service/dao/userDaoService');
 
 /**
- * Sisselogitud kasutaja
- */
-router.get('/', authMiddleware('regular'), function( req, res ) {
-    userService.getCurrentUser(req, function (error, user) {
-        if(error){
-            res.status(401);
-        }
-        return res.sendApiResponse( error, user);
-    });
-});
-
-/**
  * Entu auth andmed
  */
 router.get('/login/:redirectUrl', authMiddleware('guest'), function( req, res ) {
@@ -44,6 +32,18 @@ router.get('/login/:redirectUrl', authMiddleware('guest'), function( req, res ) 
 });
 
 /**
+ * Sisselogitud kasutaja
+ */
+router.get('/', authMiddleware('regular'), function( req, res ) {
+    userService.getCurrentUserMainProperties(req, function (error, user) {
+        if(error){
+            res.status(401);
+        }
+        return res.sendApiResponse( error, user);
+    });
+});
+
+/**
  * Logi välja
  */
 router.get('/logout', authMiddleware('guest'), function( req, res ) {
@@ -57,9 +57,9 @@ router.get('/logout', authMiddleware('guest'), function( req, res ) {
  * Kasutajate haldus && millegi jagamine
  */
 router.get('/list', authMiddleware('regular'), function( req, res ) {
-    var paginationParameters = new PaginationParameters(url.parse(req.url, true).query);
-    userDaoService.getUsersWithCount(paginationParameters, function (err, users) {
-        res.sendApiResponse( err, users );
+
+    userService.getUserGridList(req, req.query, function (err, data) {
+        res.sendApiResponse( err, data );
     });
 });
 
@@ -84,7 +84,7 @@ router.put('/:userId/details', authMiddleware('admin'), function(req, res) {
 /**
  * Päringud peale sisselogimist
  */
-router.post('/heart-beat', authMiddleware('regular'), function(req, res) {
+router.put('/heart-beat', authMiddleware('regular'), function(req, res) {
 
     userService.registerApiAccess(req, function(error, status) {
         return res.sendApiResponse(error, status);

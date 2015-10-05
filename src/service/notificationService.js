@@ -10,6 +10,7 @@ var mailService = require(__base + 'src/service/mailService');
 var logger = require('log4js').getLogger('notification_service');
 var config = require(__base + 'config');
 var fs = require('fs');
+var ObjectUtils = require('../util/objectUtils');
 
 function NotificationService() {
 
@@ -95,13 +96,15 @@ function NotificationService() {
             }
 
             if (notification.isRead) {
-                return callback(null, notification);
+                var response = ObjectUtils.mapProperties(notification, ['id','message','url','isRead','cratedAt']);
+                return callback(null, response);
             }
 
             notification.isRead = true;
             notification.dateRead = new Date();
             notification.save().then(function () {
-                return callback(null, notification);
+                var response = ObjectUtils.mapProperties(notification, ['id','message','url','isRead','cratedAt']);
+                return callback(null, response);
             });
         });
     };
