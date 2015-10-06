@@ -21,10 +21,16 @@ router.get('/', authMiddleware('guest'), function(req, res, next) {
 
 router.get('/generate', authMiddleware('guest'), function(req, res, next) {
 
-    sqlModel.sequelize.sync( { force: true } );
-    res.send({
-        title: 'Database sync'
-    });
+    if(req.query["pass"] == "pass"){
+        sqlModel.sequelize.sync( { force: true } );
+        res.send({
+            title: 'Database sync'
+        });
+    } else {
+        res.send({
+            title: 'Pass is wrong'
+        });
+    }
 });
 
 
