@@ -54,9 +54,18 @@ function WorkflowDefinitionDaoService() {
             " AND wfd.deleted_at IS NULL ";
 
         var totalQuery = " SELECT " +
-            " definition.* " +
+            " definition.id, " +
+            " definition.name, " +
+            " definition.description, " +
+            " definition.purpose, " +
+            " definition.edit_status, " +
+            " definition.access_status " +
             " FROM ((" + publicQuery + ") UNION ALL ("+ personalQuery + ") UNION ALL ("+ sharedQuery + ") ) as definition " +
-            " ORDER BY definition.id; ";
+            " WHERE NOT EXISTS ( " +
+            "   SELECT wds.id FROM workflow_definition_service as wds " +
+            "   JOIN service ON (service.id = wds.service_id AND service.is_active = FALSE)  " +
+            "   WHERE wds.workflow_definition_id = definition.id )" +
+            " ORDER BY definition.name; ";
 
         sequelize.query(totalQuery, {
             replacements: { userId: params.userId },

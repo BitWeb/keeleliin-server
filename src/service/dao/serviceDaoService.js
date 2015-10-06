@@ -67,12 +67,14 @@ function ServiceDaoService() {
                     model: ServiceModel,
                     as: 'parentServices',
                     attributes: [ 'id' ],
+                    where: {isActive: true},
                     required: false
                 },
                 {
                     model: ServiceModel,
                     as: 'childServices',
                     attributes: [ 'id' ],
+                    where: {isActive: true},
                     required: false
                 }
             ]
@@ -134,12 +136,14 @@ function ServiceDaoService() {
                     model: ServiceModel,
                     as: 'childServices',
                     attributes: ['id'],
+                    where: {isActive: true},
                     required: false
                 },
                 {
                     model: ServiceModel,
                     as: 'parentServices',
                     attributes: ['id'],
+                    where: {isActive: true},
                     required: false
                 },
                 {
@@ -176,6 +180,7 @@ function ServiceDaoService() {
             attributes: [
                 'id'
             ],
+            where: {isActive: true},
             include: [
                 {
                     model: ServiceInputType,
@@ -198,6 +203,7 @@ function ServiceDaoService() {
             attributes: [
                 'id'
             ],
+            where: {isActive: true},
             include: [
                 {
                     model: ServiceOutputType,

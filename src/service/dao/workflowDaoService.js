@@ -13,7 +13,6 @@ var ServiceModel = require(__base + 'src/service/dao/sql').Service;
 var User = require(__base + 'src/service/dao/sql').User;
 var WorkflowServiceSubstep = require(__base + 'src/service/dao/sql').WorkflowServiceSubstep;
 var WorkflowServiceModel = require(__base + 'src/service/dao/sql').WorkflowService;
-var WorkflowServiceParamValue = require(__base + 'src/service/dao/sql').WorkflowServiceParamValue;
 var ServiceParam = require(__base + 'src/service/dao/sql').ServiceParam;
 var sequelize = require('sequelize');
 var ArrayUtils = require(__base + 'src/util/arrayUtils');
@@ -58,6 +57,7 @@ function WorkflowDaoService() {
                         'description',
                         'purpose',
                         'status',
+                        'log',
                         'datetimeCreated',
                         'datetimeUpdated',
                         'datetimeStart',
@@ -108,7 +108,8 @@ function WorkflowDaoService() {
                                         'id',
                                         'name'
                                     ],
-                                    required: false
+                                    required: false,
+                                    paranoid:false
                                 },
                                 {
                                     model: WorkflowServiceSubstep,

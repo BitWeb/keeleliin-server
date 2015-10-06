@@ -42,16 +42,16 @@ router.get('/:id', authMiddleware('regular'), function(req, res) {
 /**
  * Teenuse lisamise vaade
  */
-router.post('/', authMiddleware('quest'), function(req, res) {
+router.post('/', authMiddleware('admin'), function(req, res) {
     var form = new ServiceForm(req.body);
     if (form.isValid()) {
         serviceService.createService(req, req.body, function(err, service) {
             if (err) {
                 return res.sendApiResponse( err, service);
             }
-
+            logger.debug('Service created');
             // Get service with persisted data
-            serviceService.getService(req, service.id, function(err, service) {
+            serviceService.getServiceEditData(req, service.id, function(err, service) {
                 return res.sendApiResponse( err, service);
             });
         });
@@ -114,5 +114,16 @@ router.post('/install', authMiddleware('guest'), function(req, res) {
         });
     }
 });
+
+/**
+ * Teenuse vaade
+ */
+router.delete('/:id', authMiddleware('admin'), function(req, res) {
+
+    serviceService.deleteService(req, req.params.id, function(err, data) {
+        return res.sendApiResponse( err, data );
+    });
+});
+
 
 module.exports = router;

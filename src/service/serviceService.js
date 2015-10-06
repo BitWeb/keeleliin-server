@@ -589,8 +589,6 @@ function ServiceService() {
                                 });
                                 innerCallback();
                             }
-
-
                         });
                     }, function(error) {
                         if (error) {
@@ -696,7 +694,7 @@ function ServiceService() {
         });
     };
 
-    self.getStatistics = function ( req, serviceId, cb ) {
+    this.getStatistics = function ( req, serviceId, cb ) {
 
         async.waterfall([
                 function (callback) {
@@ -717,6 +715,16 @@ function ServiceService() {
                 return cb(err, data);
             }
         );
+    };
+
+    this.deleteService = function(req, serviceId, cb){
+        self.getService(serviceId, function (err, service) {
+            service.isActive = false;
+            service.destroy().then(function () {
+                cb(null, true);
+            });
+
+        });
     };
 }
 

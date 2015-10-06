@@ -88,8 +88,11 @@ function Runner() {
             [
                 function getNextWorkflowService(callback){
                     if (subStep == null) {
-                        workflow.getFirstWorkflowService(function (err, nextWorkflowService) {
-                            callback(err, nextWorkflowService, null);
+                        workflow.getFirstWorkflowService(function (err, firstWorkflowService) {
+                            if(!firstWorkflowService && !err){
+                                err = 'Tövoos ei ole ühtegi teenust';
+                            }
+                            callback(err, firstWorkflowService, null);
                         } );
                     } else {
                         subStep.getWorkflowService().then(function (workflowService) {
@@ -106,6 +109,10 @@ function Runner() {
                     if(nextWorkflowService){
                         //
                         nextWorkflowService.getService().then(function (nextService) {
+                            if(!nextService || nextService.isActive == false){
+                                return callback('Teenust ei leitud! Teenus on kustutatud või mitteaktiivne.');
+                            }
+
                             if(nextService.isSynchronous){
 
                                 if(!subStep){
@@ -151,6 +158,7 @@ function Runner() {
             function (err) {
                 if(err){
                     logger.error( err );
+                    workflow.log = err;
                     return self.finishWorkflow(Workflow.statusCodes.ERROR, function (err) {
                         logger.debug('Workflow ' + workflow + ' breaked with status ' + workflow.status + '. Came from substep ' + (subStep != undefined ? subStep.id: null));
                     });
@@ -433,6 +441,7 @@ function Runner() {
 
                     self.canFinishWorkflow(function (err, success) {
                         if(err){
+                            workflow.error = err;
                             return self.finishWorkflow(Workflow.statusCodes.ERROR, function (err) {
                                 logger.trace('Töövoog lõpetati staatusega', success);
                                 return callback(err, false);

@@ -45,10 +45,14 @@ module.exports = function(sequelize, DataTypes) {
         updatedAt: {
             type: DataTypes.DATE,
             field: 'updated_at'
+        },
+        deletedAt: {
+            type: DataTypes.DATE,
+            field: 'deleted_at'
         }
     }, {
         tableName: 'service',
-        timestamps: false,
+        timestamps: true,
         paranoid: true,
         underscored: true,
 

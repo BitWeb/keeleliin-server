@@ -71,7 +71,7 @@ var ServiceForm = function(data) {
         },
         serviceParams: {
             required: false,
-            allowEmpty: false,
+            allowEmpty: true,
             inputFilter: {
                 id: {
                     required: false,
