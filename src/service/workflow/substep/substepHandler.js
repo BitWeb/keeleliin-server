@@ -57,6 +57,7 @@ function SubStepHandler(project, workflow){
                             ResourceAssociation.create(associationData).then(function (association) {
                                 innerCb();
                             }).catch(function (err) {
+                                logger.error('Association create error: ', err);
                                 innerCb( err.message );
                             });
                         },

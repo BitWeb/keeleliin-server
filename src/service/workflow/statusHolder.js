@@ -1,7 +1,7 @@
 /**
  * Created by priit on 27.07.15.
  */
-var logger = require('log4js').getLogger('workflow_runner');
+var logger = require('log4js').getLogger('running_workflow_status_holder');
 
 function StatusHolder(){
 
