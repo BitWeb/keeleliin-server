@@ -3,6 +3,7 @@
  */
 var logger = require('log4js').getLogger('substep_service_dto_mapper');
 var async = require('async');
+var ResourceAssociation = require(__base + 'src/service/dao/sql').ResourceAssociation;
 
 function SubstepServiceDtoMapper(){
 
@@ -85,7 +86,14 @@ function SubstepServiceDtoMapper(){
 
         async.waterfall([
             function getInputResources(callback) {
-                workflowSubstep.getInputResources().then(function (data) {
+                workflowSubstep.getInputResources({
+                    through:{
+                        attributes:[],
+                        where: {
+                            context: ResourceAssociation.contexts.SUBSTEP_INPUT
+                        }
+                    }
+                }).then(function (resources) {
                     logger.debug('Substep ' + workflowSubstep.id + ' input resources count ' + data.length );
                     resources = data;
                     callback();
@@ -117,7 +125,6 @@ function SubstepServiceDtoMapper(){
                             }
                         }
                     }
-
                 }catch ( e ){
                     logger.error(e);
                     return callback(e);
