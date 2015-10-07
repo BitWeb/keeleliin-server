@@ -120,20 +120,28 @@ module.exports = function(sequelize, DataTypes) {
                 });
 
                 Workflow.belongsToMany(models.Resource, {
-                    as: 'inputResources',
-                    through: models.ResourceAssociation,
-                    foreignKey: 'workflow_id'}
+                        as: 'inputResources',
+                        through: {
+                            model: models.ResourceAssociation,
+                            foreignKey: 'workflowId',
+                            unique: false
+                        }
+                    }
                 );
                 Workflow.belongsToMany(models.Resource, {
                         as: 'resources',
-                        through: models.ResourceAssociation,
-                        foreignKey: 'workflow_id'}
+                        through: {
+                            model: models.ResourceAssociation,
+                            foreignKey: 'workflowId',
+                            unique: false
+                        }
+                    }
                 );
-
-
                 Workflow.hasMany(models.ResourceAssociation, {
                         as: 'resourceAssociations',
-                        foreignKey: 'workflow_id'}
+                        foreignKey: 'workflowId',
+                        unique: false
+                    }
                 );
             }
         },

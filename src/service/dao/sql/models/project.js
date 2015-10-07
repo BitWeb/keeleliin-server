@@ -70,6 +70,15 @@ module.exports = function(sequelize, DataTypes) {
                 Project.belongsTo(models.User, {as: 'user', foreignKey: 'userId'});
                 Project.belongsToMany(models.User, {as: 'projectUsers', through: models.ProjectUser, foreignKey: 'project_id'});
                 Project.hasMany(models.ProjectUser, {as: 'projectUserRelations', foreignKey: 'project_id'});
+                Project.belongsToMany(models.Resource, {
+                        as: 'resources',
+                        through: {
+                            model: models.ResourceAssociation,
+                            foreignKey: 'projectId',
+                            unique: false
+                        }
+                    }
+                );
             }
         }
     });

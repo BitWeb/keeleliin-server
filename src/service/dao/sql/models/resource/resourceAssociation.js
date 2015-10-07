@@ -85,7 +85,7 @@ module.exports = function(sequelize, DataTypes) {
 
         hooks: {
             beforeCreate: function(resource, options) {
-                //maybe some duplicate validation
+                return;
             }
         },
 
