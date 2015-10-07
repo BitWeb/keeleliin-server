@@ -5,16 +5,16 @@ var logger = require('log4js').getLogger('resource_service');
 var fs = require('fs');
 var resourceDaoService = require('./dao/resourceDaoService');
 var Resource = require(__base + 'src/service/dao/sql').Resource;
+var ResourceAssociation = require(__base + 'src/service/dao/sql').ResourceAssociation;
 var Project = require(__base + 'src/service/dao/sql').Project;
 var ResourceType = require(__base + 'src/service/dao/sql').ResourceType;
-var ResourceUser = require(__base + 'src/service/dao/sql').ResourceUser;
+
 var WorkflowServiceSubstep = require(__base + 'src/service/dao/sql').WorkflowServiceSubstep;
 var Workflow = require(__base + 'src/service/dao/sql').Workflow;
 var path = require('path');
 var async = require('async');
 var config = require(__base + 'config');
 var formidable = require('formidable');
-var projectService = require(__base + 'src/service/projectService');
 var uniqid = require('uniqid');
 var FileUtil = require('../util/fileUtil');
 var ObjectUtils = require('../util/objectUtils');
@@ -168,9 +168,10 @@ function ResourceService() {
                     });
                 },
                 function getProject(callback) {
+                    logger.debug('Got fields: ', fields);
 
                     if (fields.workflowId) {
-                        Workflow.find({where: {id: fields.workflowId}}).then(function (workflowItem) {
+                        Workflow.findById(fields.workflowId).then(function (workflowItem) {
                             workflow = workflowItem;
                             if (!workflow) {
                                 return callback('Workflow not found');
@@ -186,9 +187,11 @@ function ResourceService() {
                         });
 
                     } else if (fields.projectId) {
-                        projectService.getProject(req, fields.projectId, function (err, projectItem) {
+                        Project.findById(fields.projectId).then(function (projectItem) {
                             project = projectItem;
-                            callback(err);
+                            callback();
+                        }).catch(function (err) {
+                            callback(err.message);
                         });
                     } else {
                         callback('Project not found');
@@ -220,8 +223,7 @@ function ResourceService() {
                         resourceTypeId: resourceType.id,
                         filename: filename,
                         originalName: path.basename(resourceFile.name),
-                        name: resourceFile.name,
-                        userId: req.redisSession.data.userId
+                        name: resourceFile.name
                     };
 
                     Resource.create(resourceData).then(function (resourceItem) {
@@ -231,23 +233,28 @@ function ResourceService() {
                         callback(err.message);
                     });
                 },
-                function addResourceToProject(callback) {
-                    resource.addProject(project).then(function () {
-                        return callback();
-                    }).catch(function (err) {
-                        return callback(err.message);
-                    });
-                },
-                function checkForWorkflow(callback) {
-                    if (workflow) {
-                        workflow.addInputResource(resource).then(function () {
-                            callback()
-                        });
+                function createAssociations(callback) {
+
+                    var associationData = {
+                        resourceId: resource.id,
+                        userId: req.redisSession.data.userId,
+                        projectId: project.id
+                    };
+
+                    if(workflow){
+                        associationData.context = ResourceAssociation.contexts.WORKFLOW_INPUT;
+                        associationData.workflowId = workflow.id;
                     } else {
-                        callback()
+                        associationData.context = ResourceAssociation.contexts.PROJECT_UPLOAD;
                     }
-                }
-            ],
+
+                    ResourceAssociation.create( associationData ).then(function ( inputAssociation ) {
+                        callback();
+                    }).catch(function (err) {
+                        callback(err.message);
+                    });
+
+                }],
             function (err) {
                 if (err) {
                     logger.error(err);
@@ -327,43 +334,53 @@ function ResourceService() {
 
 //######################################################################################################################
 
-    this.deleteResource = function (req, resourceId, options, callback) {
-        /* var options = { context: 'middle_input', projectId: 1, serviceId: 1, workflowId: 1, }; */
-        logger.debug(options);
+    this.deleteResourceAssociation = function (req, associationId, cb) {
 
-        async.waterfall(
-            [
-                function getResource(callback) {
-                    resourceDaoService.getResource(resourceId, function (err, resource) {
-                        if (err) {
-                            return callback(err);
-                        }
+        async.waterfall([
+                function (callback) {
+                    ResourceAssociation.findById( associationId)
+                        .then(function (association) {
+                            callback( null, association);
+                        })
+                        .catch(function (err) {
+                            callback(err.message);
+                        });
+                },
+                function (association, callback) {
+
+                    association
+                        .getResource()
+                        .then(function (resource) {
+                            callback(null, association, resource);
+                        })
+                        .catch(function (err) {
+                            callback(err.message);
+                        });
+                },
+                function (association, resource, callback) {
+                    association.destroy().then(function () {
                         callback(null, resource);
+                    }).catch(function (err) {
+                        callback(err.message);
                     });
                 },
                 function (resource, callback) {
-                    self._deleteResourceFromContext(req, resource, options, callback);
-                },
-                function getResourceProjects(resource, callback) {
-                    resource.getProjects().then(function (projects) {
-
-                        if(projects.length == 0){
-                            self._deleteResourceEntity(resource, function (err) {
-                                callback( err );
-                            });
+                    resource.getAssociations().then(function (associations) {
+                        if(associations.length > 0){
+                            self._deleteResourceEntity(resource, callback);
                         } else {
-                            return callback();
+                            callback();
                         }
                     }).catch(function (err) {
-                        return callback(err.message);
+                        callback(err.message);
                     });
                 }
             ],
             function (err) {
-                if (err) {
-                    logger.error(err);
+                if(err){
+                    logger.error( err );
                 }
-                callback(err);
+                cb(err);
             }
         );
     };
@@ -390,191 +407,6 @@ function ResourceService() {
                 cb( err );
             }
         );
-    };
-
-    this._deleteResourceFromContext = function (req, resource, options, callback) {
-
-        if (options.context == 'public') {
-            return self.removeResourceFromPublic(req, resource, options, callback);
-        } else if (options.context == 'shared') {
-            return self.removeResourceFromShared(req, resource, options, callback);
-        } else if (options.context == 'project') {
-            return self.removeResourceFromProject(req, resource, options, callback);
-        } else if (options.context == 'input') {
-            return self.removeRemoveResourceFromWorkflowInput(req, resource, options, callback);
-        } else if (options.context == 'output') {
-            return self.removeRemoveResourceFromWorkflowOutput(req, resource, options, callback);
-        } else if (options.context == 'middle_input') {
-            return self.removeRemoveResourceFromMiddleInput(req, resource, options, callback);
-        } else if (options.context == 'middle_output') {
-            return self.removeRemoveResourceFromMiddleOutput(req, resource, options, callback);
-        } else {
-            callback('Konteksti ei leitud');
-        }
-    };
-
-    self.removeResourceFromPublic = function (req, resource, options, callback) {
-        var userId = req.redisSession.data.userId;
-        if (resource.userId != userId) {
-            return callback('Avalikku faili saab kustutada vaid selle looja.');
-        }
-        resource.isPublic = false;
-        resource.save().then(function () {
-            return callback(null, resource);
-        }).catch(function (err) {
-            return callback(err.message);
-        });
-    };
-
-    self.removeResourceFromShared = function (req, resource, options, callback) {
-        var userId = req.redisSession.data.userId;
-        ResourceUser.find({
-            where: {
-                resourceId: resource.id,
-                userId: userId
-            }
-        }).then(function (resourceUser) {
-            if (resourceUser) {
-                resourceUser.destroy().then(function () {
-                    callback(null, resource);
-                }).catch(function (err) {
-                    return callback(err.message);
-                });
-            } else {
-                callback('Ei leitud, et antud ressurss oleks kasutajale jagatud');
-            }
-        }).catch(function (err) {
-            return callback(err.message);
-        });
-    };
-
-    self.removeResourceFromProject = function (req, resource, options, callback) {
-        //todo: siin ei tohiks ressurss olla selle projekti töövoo sisend ega selle projekti töövoo alamsammu sisend
-        Project.findById(options.projectId).then(function (project) {
-            resource.removeProject(project).then(function () {
-                return callback(null, resource);
-            }).catch(function (err) {
-                return callback(err.message);
-            });
-        }).catch(function (err) {
-            return callback(err.message);
-        });
-    };
-
-    self.removeRemoveResourceFromWorkflowInput = function (req, resource, options, cb) {
-        async.waterfall([
-                function getWorkflow(callback) {
-                    Workflow.findById(options.workflowId).then(function (workflow) {
-                        if (!workflow) {
-                            return callback('Töövoogu ei letud.');
-                        }
-                        callback(null, workflow);
-                    }).catch(function (err) {
-                        return callback(err.message);
-                    });
-                },
-                function removeFromWorkflowInput(workflow, callback) {
-                    workflow.removeInputResource(resource).then(function () {
-                        callback(null, resource);
-                    }).catch(function (err) {
-                        return callback(err.message);
-                    });
-                }
-            ],
-            function (err, resource) {
-                cb(err, resource);
-            }
-        );
-    };
-
-    self.removeRemoveResourceFromWorkflowOutput = function (req, resource, options, cb) {
-        async.waterfall([
-                function getWorkflow(callback) {
-                    Workflow.findById(options.workflowId).then(function (workflow) {
-                        if (!workflow) {
-                            return callback('Töövoogu ei letud.');
-                        }
-                        callback(null, workflow);
-                    }).catch(function (err) {
-                        return callback(err.message);
-                    });
-                },
-                function (workflow, callback) {
-                    var unsetWorkflowOutputIdQuery = 'UPDATE resource SET workflow_output_id = NULL WHERE id = ' + resource.id + '';
-                    sequelize.query( unsetWorkflowOutputIdQuery, { type: sequelize.QueryTypes.UPDATE}).then(function () {
-                        resource.reload().then(function () {
-                            return callback(null, resource);
-                        }).catch(function (err) {
-                            logger.error(err.message);
-                            return callback(err.message);
-                        });
-                    }).catch(function (err) {
-                        logger.error(err.message);
-                        return callback(err.message);
-                    });
-                }
-            ],
-            function (err, resource) {
-                cb(err, resource);
-            }
-        );
-    };
-
-    self.removeRemoveResourceFromMiddleInput = function (req, resource, options, cb) {
-        async.waterfall([
-            function (callback) {
-                WorkflowServiceSubstep.findAll({
-                        where: {
-                            workflowServiceId: options.serviceId
-                        },
-                        include: [
-                            {
-                                model: Resource,
-                                as: 'inputResources',
-                                attributes: ['id'],
-                                where: {
-                                    id: resource.id
-                                },
-                                required: true
-                            }
-                        ]
-                    }
-                ).then(function (substeps) {
-                        return callback(null, substeps);
-                    }).catch(function (err) {
-                        return callback(err.message);
-                    });
-            },
-            function (substeps, callback) {
-                async.each(substeps, function (substep, innerCb) {
-                    substep.removeInputResource(resource).then(function () {
-                        innerCb();
-                    }).catch(function (err) {
-                        return callback(err.message);
-                    });
-                }, function () {
-                    callback();
-                });
-            }
-        ], function (err) {
-            cb(err, resource);
-        });
-    };
-
-    self.removeRemoveResourceFromMiddleOutput = function (req, resource, options, callback) {
-
-        var unsetWorkflowServiceSubstepIdQuery = 'UPDATE resource SET workflow_service_substep_id = NULL WHERE id = ' + resource.id + '';
-        sequelize.query( unsetWorkflowServiceSubstepIdQuery, { type: sequelize.QueryTypes.UPDATE}).then(function () {
-            resource.reload().then(function () {
-                return callback(null, resource);
-            }).catch(function (err) {
-                logger.error(err.message);
-                return callback(err.message);
-            });
-        }).catch(function (err) {
-            logger.error(err.message);
-            return callback(err.message);
-        });
     };
 }
 

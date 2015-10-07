@@ -10,6 +10,7 @@ var workflowDaoService = require(__base + 'src/service/dao/workflowDaoService');
 var resourceDaoService = require(__base + 'src/service/dao/resourceDaoService');
 var Workflow = require(__base + 'src/service/dao/sql').Workflow;
 var Resource = require(__base + 'src/service/dao/sql').Resource;
+var ResourceAssociation = require(__base + 'src/service/dao/sql').ResourceAssociation;
 var User = require(__base + 'src/service/dao/sql').User;
 var WorkflowServiceSubstep = require(__base + 'src/service/dao/sql').WorkflowServiceSubstep;
 var WorkflowServiceModel = require(__base + 'src/service/dao/sql').WorkflowService;
@@ -33,7 +34,7 @@ function WorkflowService() {
         workflowDaoService.getWorkflowDefinitionOverview( id, function (err, overview) {
             if(err){
                logger.error(err);
-                callback(err);
+               return callback(err);
             }
             callback(err, overview);
         });
@@ -216,12 +217,13 @@ function WorkflowService() {
 
     this.addResources = function(req, workflowId, data, callback){
 
+        logger.trace('Add resources', data);
+
         async.waterfall([
             function (callback) {
                 workflowDaoService.getWorkflow(workflowId, callback);
             },
             function (workflow, callback) {
-
                 if(workflow.status != Workflow.statusCodes.INIT){
                     return callback('Töövoog ei ole init staatusega');
                 }
@@ -242,13 +244,17 @@ function WorkflowService() {
                             logger.error(err);
                            return innerCallback();
                         }
-                        workflow.addInputResource(resource).then(function () {
-                            project.addResource(resource).then(function () {
-                                innerCallback()
-                            }).catch(function (err) {
-                                logger.error(err);
-                                innerCallback()
-                            });
+
+                        var associationData = {
+                            context: ResourceAssociation.contexts.WORKFLOW_INPUT,
+                            resourceId: resourceId,
+                            userId: workflow.userId,
+                            projectId: project.id,
+                            workflowId: workflow.id
+                        };
+
+                        ResourceAssociation.create(associationData).then(function (association) {
+                            innerCallback();
                         }).catch(function (err) {
                             logger.error(err);
                             innerCallback()
@@ -264,7 +270,93 @@ function WorkflowService() {
             }
             callback(err);
         })
-    }
+    };
+
+    this.deleteWorkflow = function (req, workflowId, callback ) {
+
+        async.waterfall([
+                function (callback) {
+                    workflowDaoService.getWorkflow(workflowId, callback)
+                },
+                function (workflow, callback) {
+                    workflow.getWorkflowServices().then(function (wfServices) {
+                        async.eachSeries(
+                            wfServices,
+                            function ( wfService, innerCb) {
+                                self._deleteWorkflowService( wfService, innerCb );
+                            },
+                            function (err) {
+                                callback( err );
+                            }
+                        );
+                    }).catch(function (err) {
+                        callback(err.message);
+                    });
+                }
+            ],
+            function ( err, data) {
+                if(err){
+                    logger.error(err);
+                }
+                cb(err, data);
+            }
+        );
+    };
+
+    self._deleteWorkflowService = function ( workflowService, cb) {
+
+        async.waterfall([
+                function getSubSteps(callback) {
+                    workflowService.getSubSteps().then(function ( substeps ) {
+                        callback(null, substeps);
+                    }).catch(function (err) {
+                        cb(err.message);
+                    });
+                },
+                function unsetInputResources(substeps, callback) {
+                    async.eachSeries(substeps,
+                        function (substep, innerCb) {
+                            substep.setInputResources([]).then(function () {
+                                innerCb();
+                            }).catch(function (err) {
+                                cb(err.message);
+                            });
+                        },
+                        function (err) {
+                            callback(err, substeps);
+                        }
+                    );
+                },
+                function deleteOutputResources(substeps, callback) {
+
+                },
+                function deleteSubSteps(substeps, callback) {
+
+                },
+                function deleteWfService() {
+
+                }
+            ],
+            function ( err ) {
+                cb( err );
+            }
+        );
+    };
+
+    //1. Eemalda alamsammudest sisendressursid
+    //2. Kustuta alamsammude väljundressursid
+    //3. Kustuta almsammud
+    //4. Kustuta Töövoo teenused
+    //5. Kustuta töövoo sisendressursid
+    //6. Kustuta töövoog
+
+
+
+
+
+
+
+
 }
 
 module.exports = new WorkflowService();

@@ -9,6 +9,8 @@ var Workflow = require(__base + 'src/service/dao/sql').Workflow;
 var WorkflowServiceSubstep = require(__base + 'src/service/dao/sql').WorkflowServiceSubstep;
 var WorkflowService = require(__base + 'src/service/dao/sql').WorkflowService;
 var Resource = require(__base + 'src/service/dao/sql').Resource;
+var ResourceAssociation = require(__base + 'src/service/dao/sql').ResourceAssociation;
+
 var workflowDaoService = require(__base + 'src/service/dao/workflowDaoService');
 var SubstepHandler = require('./substep/substepHandler');
 var ResourceHandler = require('./resource/resourceHandler');
@@ -114,24 +116,31 @@ function Runner() {
                             }
 
                             if(nextService.isSynchronous){
+                                logger.debug('Next service is Synchronous');
 
-                                if(!subStep){
-                                    return callback();
+                                if(!subStep){ // esimene töövoo samm
+                                    logger.debug('No previous substep. run');
+                                    return self._handleWorkflowService(nextWorkflowService, subStep, callback );
                                 }
+
                                 self.canFinishWorkflowService( workflowService, function (err, canFinish) {
                                     if(err){
                                         return callback(err);
                                     }
 
                                     if(canFinish){
+                                        logger.debug('Can finish');
                                         nextWorkflowService.reload().then(function () {
+                                            logger.debug('Next status: ' + nextWorkflowService.status);
                                             if(nextWorkflowService.status == Workflow.statusCodes.INIT){
                                                 return self._handleWorkflowService(nextWorkflowService, subStep, callback );
                                             } else {
                                                 callback();
                                             }
                                         });
+                                        return;
                                     }
+                                    logger.debug('Can not finish');
                                     return callback(); //If not - break the flow
                                 });
                             } else {
@@ -139,19 +148,14 @@ function Runner() {
                             }
                         });
                     } else {
-                        //No next service for given step => to mark resources ??
-
                         substepHandler.mapLastServiceSubstepResources(subStep, function (err) {
-
                             if(workflowService){
                                 return self.tryToCloseWorkflowFromWorkflowService(workflowService, callback);
                             } else {
                                 logger.trace('Eelnevat töövoo teenust ei leitud'); //happens when no servoices in flow
                                 callback();
                             }
-
                         });
-
                     }
                 }
             ],

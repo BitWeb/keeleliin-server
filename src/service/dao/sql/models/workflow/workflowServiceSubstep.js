@@ -71,20 +71,34 @@ module.exports = function(sequelize, DataTypes) {
                         foreignKey: 'workflowServiceId'
                     }
                 );
-                WorkflowServiceSubstep.hasMany(models.Resource, {
-                        as: 'outputResources',
-                        foreignKey: 'workflowServiceSubstepId'
-                    }
-                );
                 WorkflowServiceSubstep.belongsTo(models.WorkflowServiceSubstep, {
                         foreignKey: 'prevSubstepId',
                         as: 'prevSubstep'
                     }
                 );
+
+                WorkflowServiceSubstep.hasMany(models.ResourceAssociation, {
+                        as: 'resourceAssociations',
+                        foreignKey: 'workflowServiceSubstepId'
+                    }
+                );
                 WorkflowServiceSubstep.belongsToMany(models.Resource, {
-                        through: 'workflow_service_substep_has_input_resource',
-                        foreignKey: 'workflow_service_substep_id',
-                        as: 'inputResources'}
+                        as: 'resources',
+                        through: models.ResourceAssociation,
+                        foreignKey: 'workflowServiceSubstepId'
+                    }
+                );
+                WorkflowServiceSubstep.belongsToMany(models.Resource, {
+                        as: 'inputResources',
+                        through: models.ResourceAssociation,
+                        foreignKey: 'workflowServiceSubstepId'
+                    }
+                );
+                WorkflowServiceSubstep.belongsToMany(models.Resource, {
+                        as: 'outputResources',
+                        through: models.ResourceAssociation,
+                        foreignKey: 'workflowServiceSubstepId'
+                    }
                 );
             }
         }

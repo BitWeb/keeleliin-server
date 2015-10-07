@@ -9,6 +9,7 @@ var WorkflowDefinition = require(__base + 'src/service/dao/sql').WorkflowDefinit
 var WorkflowDefinitionService = require(__base + 'src/service/dao/sql').WorkflowDefinitionService;
 
 var Resource = require(__base + 'src/service/dao/sql').Resource;
+var ResourceAssociation = require(__base + 'src/service/dao/sql').ResourceAssociation;
 var ServiceModel = require(__base + 'src/service/dao/sql').Service;
 var User = require(__base + 'src/service/dao/sql').User;
 var WorkflowServiceSubstep = require(__base + 'src/service/dao/sql').WorkflowServiceSubstep;
@@ -22,11 +23,9 @@ function WorkflowDaoService() {
     var self = this;
 
     this.getWorkflow = function (id, cb) {
-        Workflow.find({
-            where: {id: id}
-        }).then(function (item) {
+        Workflow.findById( id ).then(function (item) {
             if (!item) {
-                return cb('workflow not found');
+                return cb('Töövoogu ei leitud');
             }
             return cb(null, item);
         }).catch(cb);
@@ -86,7 +85,13 @@ function WorkflowDaoService() {
                                 'name',
                                 'createdAt'
                             ],
-                            required: false
+                            required: false,
+                            through:{
+                                attributes:[],
+                                where: {
+                                    context: ResourceAssociation.contexts.WORKFLOW_INPUT
+                                }
+                            }
                         }, {
                             model: WorkflowServiceModel,
                             as: 'workflowServices',
@@ -127,23 +132,34 @@ function WorkflowDaoService() {
                                         {
                                             model: Resource,
                                             as: 'inputResources',
-                                            where: {},
-                                            attributes: [
-                                                'id',
-                                                'name',
-                                                'createdAt'],
-                                            required: false
-                                        },
-                                        {
-                                            model: Resource,
-                                            as: 'outputResources',
-                                            where: {},
                                             attributes: [
                                                 'id',
                                                 'name',
                                                 'createdAt'
                                             ],
-                                            required: false
+                                            required: false,
+                                            through:{
+                                                attributes:[],
+                                                where: {
+                                                    context: ResourceAssociation.contexts.SUBSTEP_INPUT
+                                                }
+                                            }
+                                        },
+                                        {
+                                            model: Resource,
+                                            as: 'outputResources',
+                                            attributes: [
+                                                'id',
+                                                'name',
+                                                'createdAt'
+                                            ],
+                                            required: false,
+                                            through:{
+                                                attributes:[],
+                                                where: {
+                                                    context: ResourceAssociation.contexts.SUBSTEP_OUTPUT
+                                                }
+                                            }
                                         }
                                     ]
                                 }
@@ -191,16 +207,6 @@ function WorkflowDaoService() {
                     attributes: [
                         'id',
                         'editStatus'
-                    ],
-                    required: false
-                },
-                {
-                    model: Resource,
-                    as: 'inputResources',
-                    attributes: [
-                        'id',
-                        'name',
-                        'createdAt'
                     ],
                     required: false
                 }

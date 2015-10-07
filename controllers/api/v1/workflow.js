@@ -45,6 +45,15 @@ router.get('/:workflowId', authMiddleware('regular'), function(req, res) {
 });
 
 /**
+ * Töövoo vaade
+ */
+router.delete('/:workflowId', authMiddleware('regular'), function(req, res) {
+    workflowService.deleteWorkflow(req, req.params.workflowId, function(err, data) {
+        return res.sendApiResponse( err, data);
+    });
+});
+
+/**
  * Definitsiooni lisamise vaade
  */
 router.get('/:workflowId/definition', authMiddleware('regular'), function(req, res) {

@@ -5,6 +5,8 @@
 var logger = require('log4js').getLogger('resource_handler');
 var async = require('async');
 var ResourceType = require(__base + 'src/service/dao/sql').ResourceType;
+var ResourceAssociation = require(__base + 'src/service/dao/sql').ResourceAssociation;
+var Resource = require(__base + 'src/service/dao/sql').Resource;
 var ServiceInputType = require(__base + 'src/service/dao/sql').ServiceInputType;
 var ResourceCreator = require('./resourceCreator');
 var ArrayUtil = require(__base + 'src/util/arrayUtils');
@@ -74,7 +76,7 @@ function ResourceHandler(project, workflow) {
 
             function (callback) {
                 if(service.isSynchronous){
-                    return self.getSyncServiceResources(fromSubStep, workflowService, inputTypes, inputResourceTypes, resourceJunkCallback, callback );
+                    return self._getSyncServiceResources(fromSubStep, workflowService, inputTypes, inputResourceTypes, resourceJunkCallback, callback );
                 } else {
                     return self.getAsyncServiceResources(fromSubStep, workflowService, inputTypes, inputResourceTypes, resourceJunkCallback, callback );
                 }
@@ -89,17 +91,27 @@ function ResourceHandler(project, workflow) {
             function getInitResources(callback) {
                 logger.debug('Get resource junks');
                 if(fromSubStep){
-                    fromSubStep.getOutputResources().then(function (resources) {
+                    fromSubStep.getResources({
+                        through:{
+                            attributes:[],
+                            where: {
+                                context: ResourceAssociation.contexts.SUBSTEP_OUTPUT
+                            }
+                        }
+                    }).then(function (resources) {
                         return callback(null, resources);
                     });
                 } else {
                     workflowService.getWorkflow().then(function (workflow) {
-                        workflow.getInputResources().then(function (resources) {
-                            logger.debug('Start handle first service resources');
+                        workflow.getResources({
+                            through:{
+                                attributes:[],
+                                where: {
+                                    context: ResourceAssociation.contexts.WORKFLOW_INPUT
+                                }
+                            }
+                        }).then(function (resources) {
                             return callback(null, resources);
-                        }).catch(function (err) {
-                            logger.error(err);
-                            return callback(err);
                         });
                     });
                 }
@@ -125,7 +137,7 @@ function ResourceHandler(project, workflow) {
         ], resourcesCb);
     };
 
-    this.getSyncServiceResources = function ( fromSubStep, workflowService, inputTypes, inputResourceTypes, resourceJunkCallback, resourcesCb ) {
+    this._getSyncServiceResources = function ( fromSubStep, workflowService, inputTypes, inputResourceTypes, resourceJunkCallback, resourcesCb ) {
 
         async.waterfall([
             function getResources( callback ) {
@@ -137,21 +149,33 @@ function ResourceHandler(project, workflow) {
 
                         previousWorkflowService.getSubSteps().then(function (substeps) {
                             async.each(substeps, function (substep, innerCallback) {
-                                substep.getOutputResources().then(function (resources) {
-                                    initResources = initResources.concat( resources );
+                                substep.getResources({
+                                    through:{
+                                        attributes:[],
+                                        where: {
+                                            context: ResourceAssociation.contexts.SUBSTEP_OUTPUT
+                                        }
+                                    }
+                                }).then(function (resources) {
+                                    initResources = initResources.concat(resources);
                                     return innerCallback();
                                 });
                             }, function (err) {
-                                callback(err, initResources);
+                                callback(err, initResources );
                             });
                         });
                     });
                 } else {
                     workflowService.getWorkflow().then(function (workflow) {
-                        workflow.getInputResources().then(function (resources) {
+                        workflow.getResources({
+                            through:{
+                                attributes:[],
+                                where: {
+                                    context: ResourceAssociation.contexts.WORKFLOW_INPUT
+                                }
+                            }
+                        }).then(function (resources) {
                             return callback(null, resources);
-                        }).catch(function (err) {
-                            return callback(err);
                         });
                     });
                 }

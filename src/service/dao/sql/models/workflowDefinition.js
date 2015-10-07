@@ -110,13 +110,6 @@ module.exports = function(sequelize, DataTypes) {
                         foreignKey: 'userId'
                     }
                 );
-                WorkflowDefinition.belongsToMany(models.Resource, {
-                        through: 'workflow_definition_has_input_resource',
-                        foreignKey: 'workflowDefinitionId',
-                        as: 'inputResources'
-                    }
-                );
-
                 WorkflowDefinition.belongsToMany(models.User, {
                         as: 'workflowDefinitionUsers',
                         through: models.WorkflowDefinitionUser,

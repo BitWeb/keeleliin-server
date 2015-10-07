@@ -5,6 +5,7 @@ var logger = require('log4js').getLogger('resource_creator');
 var config = require(__base + 'config');
 var fs = require('fs');
 var Resource = require(__base + 'src/service/dao/sql').Resource;
+var ResourceAssociation = require(__base + 'src/service/dao/sql').ResourceAssociation;
 var FileUtil = require(__base + 'src/util/fileUtil');
 var async = require('async');
 
@@ -59,8 +60,7 @@ function ResourceCreator(sourceResource, workflowService, resourceIndex, project
                     contentType: self.sourceResource.contentType,
                     encoding: self.sourceResource.encoding,
                     name: self.getOriginalName(),
-                    originalName: self.getOriginalName(),
-                    userId: self.workflow.userId
+                    originalName: self.getOriginalName()
                 };
                 callback(null, data);
             },

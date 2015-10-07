@@ -26,180 +26,42 @@ function ResourceDaoService() {
                     >>>Väljundressursid
 */
 
-        var publicResources = " SELECT " +
-            " 'Avalik' as level_0," +
-            " null as level_1, " +
-            " null as level_2, " +
-            " resource.id as id, " +
-            " resource.name as name, " +
-            " 'public' AS context, " +
-            " null::INTEGER as project_id, " +
-            " null::INTEGER as workflow_id, " +
-            " null::INTEGER as service_id " +
-            " FROM resource as resource " +
-            " WHERE resource.is_public = TRUE " +
-            (query.projectId ?  (" AND FALSE " ) : "") +
-            (query.workflowId ?  (" AND FALSE ") : "");
+        var conditions = [];
+        if( query.projectId ){
+            conditions.push("ra.project_id = " + query.projectId);
+        }
+        if( query.workflowId ){
+            conditions.push("ra.workflow_id = " + query.workflowId);
+        }
+        if( query.userId ){
+            conditions.push("ra.user_id = " + query.userId);
+        }
 
-        var sharedResources = " SELECT " +
-            " 'Jagatud' as level_0," +
-            " null as level_1, " +
-            " null as level_2, " +
-            " resource.id as id, " +
-            " resource.name as name, " +
-            " 'shared' AS context, " +
-            " null::INTEGER as project_id, " +
-            " null::INTEGER as workflow_id, " +
-            " null::INTEGER as service_id " +
-            " FROM resource AS resource " +
-            " LEFT JOIN resource_user AS ru ON ( ru.user_id = " + query.userId + " AND ru.resource_id = resource.id ) " +
-            " WHERE ru.user_id IS NOT NULL " +
-            (query.projectId ?  (" AND FALSE " ) : "") +
-            (query.workflowId ?  (" AND FALSE ") : "");
+        var where = "";
 
-        //projektile lisatud ressursid, mis ei ole selles projektis ühegi töövooga seotud
-        var projectResourceHasNoWorkflow =  " SELECT " +
-            " project.name as level_0, " +
-            " null as level_1, " +
-            " null as level_2, " +
-            " resource.id as id, " +
-            " resource.name as name, " +
-            " 'project' AS context, " +
-            " project.id as project_id, " +
-            " null::INTEGER as workflow_id, " +
-            " null::INTEGER as service_id " +
-            " FROM resource as resource " +
-            " JOIN project_has_resource AS phr ON ( phr.resource_id = resource.id ) " +
-            " JOIN project AS project ON ( phr.project_id = project.id ) " +
-            " JOIN project_user AS pu ON ( pu.project_id = project.id AND pu.user_id = " + query.userId + " ) " +
-            " WHERE " +
-                //Ei ole projekti töövoo sisendressurss, projekti töövoo teenuse sisendressurss, projekti töövoo teenuse väljundressurss ega töövoo väljundressurss
-            " NOT EXISTS (SELECT workflow.id FROM " +
-            "   workflow " +
-            "   LEFT JOIN workflow_has_input_resource AS workflow_hir ON ( workflow_hir.workflow_id = workflow.id AND workflow_hir.resource_id = resource.id )" +
-            "   LEFT JOIN workflow_service AS ws ON ( ws.workflow_id = workflow.id ) " +
-            "   LEFT JOIN workflow_service_substep AS wss ON ( wss.workflow_service_id = ws.id )" +
-            "   LEFT JOIN workflow_service_substep_has_input_resource AS wss_hir ON (wss_hir.workflow_service_substep_id = wss.id AND wss_hir.resource_id = resource.id )" +
-            "   WHERE workflow.project_id = project.id AND " +
-            "       ( workflow_hir.resource_id IS NOT NULL OR wss_hir.resource_id IS NOT NULL OR wss.id = resource.workflow_service_substep_id OR workflow.id = resource.workflow_output_id ) " +
-            " ) " +
-            "  " +
-            (query.projectId ?  (" AND project.id = " + query.projectId ) : "") +
-            (query.workflowId ? " AND FALSE " : "") +
-            " GROUP BY resource.id, project.id " ;
-
-
-        //töövoo sisend
-        var workflowInputResources = " SELECT " +
-            " project.name as level_0, " +
-            " workflow.name as level_1, " +
-            " null as level_2, " +
-            " resource.id as id, " +
-            " resource.name as name, " +
-            " 'input' AS context, " +
-            " project.id as project_id, " +
-            " workflow.id as workflow_id, " +
-            " null::INTEGER as service_id " +
-            " FROM resource as resource " +
-            " JOIN project_has_resource AS phr ON ( phr.resource_id = resource.id ) " +
-            " JOIN project AS project ON ( project.id = phr.project_id ) " +
-            " JOIN project_user AS pu ON ( pu.project_id = project.id AND pu.user_id = " + query.userId + " ) " +
-            " JOIN workflow AS workflow ON ( workflow.project_id = project.id ) " +
-            " JOIN workflow_has_input_resource as workflowInput ON (workflowInput.workflow_id = workflow.id AND workflowInput.resource_id = resource.id )" +
-            " WHERE workflow.project_id = project.id " +
-            (query.projectId ?  (" AND project.id = " + query.projectId ) : "") +
-            (query.workflowId ?  (" AND workflow.id = " + query.workflowId ) : "");
-
-        //töövoo väljundid
-        var resourceIsOutput = " SELECT " +
-            " project.name as level_0, " +
-            " workflow.name as level_1, " +
-            " null as level_2, " +
-            " resource.id as id, " +
-            " resource.name as name, " +
-            " 'output' AS context, " +
-            " project.id as project_id, " +
-            " workflow.id as workflow_id, " +
-            " null::INTEGER as service_id " +
-            " FROM resource as resource " +
-            " JOIN project_has_resource AS phr ON ( phr.resource_id = resource.id ) " +
-            " JOIN project AS project ON ( project.id = phr.project_id ) " +
-            " JOIN project_user AS pu ON ( pu.project_id = project.id AND pu.user_id = " + query.userId + " ) " +
-            " JOIN workflow AS workflow ON ( workflow.project_id = project.id AND workflow.id = resource.workflow_output_id ) " +
-            " WHERE workflow.project_id = project.id " +
-            (query.projectId ?  (" AND project.id = " + query.projectId ) : "") +
-            (query.workflowId ?  (" AND workflow.id = " + query.workflowId ) : "");
-
-        //töövoo alamsammude sisendid
-        var resourceIsSubInput = " SELECT " +
-            " project.name as level_0, " +
-            " workflow.name as level_1, " +
-            " service.name as level_2, " +
-            " resource.id as id, " +
-            " resource.name as name, " +
-            " 'middle_input' AS context, " +
-            " project.id as project_id, " +
-            " workflow.id as workflow_id, " +
-            " wf_service.id as service_id " +
-            " FROM resource as resource " +
-            " JOIN project_has_resource AS phr ON ( phr.resource_id = resource.id ) " +
-            " JOIN project AS project ON ( project.id = phr.project_id ) " +
-            " JOIN project_user AS pu ON ( pu.project_id = project.id AND pu.user_id = " + query.userId + " ) " +
-            " JOIN workflow AS workflow ON ( workflow.project_id = project.id ) " +
-            " JOIN workflow_service AS wf_service ON ( wf_service.workflow_id = workflow.id ) " +
-            " JOIN workflow_service_substep as serviceSubstep ON ( serviceSubstep.workflow_service_id = wf_service.id ) " +
-            " JOIN workflow_service_substep_has_input_resource AS wsshir ON (wsshir.workflow_service_substep_id = serviceSubstep.id AND wsshir.resource_id = resource.id ) " +
-            " JOIN service AS service ON ( wf_service.service_id = service.id ) " +
-            " WHERE " +
-            " workflow.project_id = project.id " +
-            (query.projectId ?  (" AND project.id = " + query.projectId ) : "") +
-            (query.workflowId ?  (" AND workflow.id = " + query.workflowId ) : "");
-
-
-        //töövoo alamsammude väljundid
-        var resourceIsSubOutput = " SELECT " +
-            " project.name as level_0, " +
-            " workflow.name as level_1, " +
-            " service.name as level_2, " +
-            " resource.id as id, " +
-            " resource.name as name, " +
-            " 'middle_output' AS context, " +
-            " project.id as project_id, " +
-            " workflow.id as workflow_id, " +
-            " wf_service.id as service_id " +
-            " FROM resource as resource " +
-            " JOIN project_has_resource AS phr ON ( phr.resource_id = resource.id ) " +
-            " JOIN project AS project ON ( project.id = phr.project_id ) " +
-            " JOIN project_user AS pu ON ( pu.project_id = project.id AND pu.user_id = " + query.userId + " ) " +
-            " JOIN workflow AS workflow ON ( workflow.project_id = project.id ) " +
-            " JOIN workflow_service AS wf_service ON ( wf_service.workflow_id = workflow.id ) " +
-            " JOIN workflow_service_substep as serviceSubstep ON ( serviceSubstep.workflow_service_id = wf_service.id AND resource.workflow_service_substep_id = serviceSubstep.id ) " +
-            " JOIN service AS service ON ( wf_service.service_id = service.id ) " +
-            " WHERE " +
-            " workflow.project_id = project.id " +
-            (query.projectId ?  (" AND project.id = " + query.projectId ) : "") +
-            (query.workflowId ?  (" AND workflow.id = " + query.workflowId ) : "");
-
-        var queries = [];
-        queries.push( publicResources );
-        queries.push( sharedResources );
-        queries.push( projectResourceHasNoWorkflow );
-        queries.push( workflowInputResources );
-        queries.push( resourceIsOutput );
-        queries.push( resourceIsSubInput );
-        queries.push( resourceIsSubOutput );
+        if(conditions.length > 0){
+            where = " WHERE " + conditions.join(" AND ");
+        }
 
         var totalQuery = " SELECT " +
-            " level_0, " +
-            " level_1, " +
-            " level_2, " +
-            " id, " +
-            " name, " +
-            " context, " +
-            " project_id, " +
-            " workflow_id, " +
-            " service_id " +
-            " FROM ( " + queries.join(" UNION ALL ") + " ) as resource; ";
+            " CASE WHEN (ra.context = 'public') THEN 'Avalik' WHEN (ra.context = 'shared') THEN 'Jagatud' ELSE project.name END as level_0, " +
+            " workflow.name as level_1, " +
+            " service.name as level_2, " +
+            " ra.id, " +
+            " ra.resource_id, " +
+            " resource.name, " +
+            " ra.context, " +
+            " ra.project_id, " +
+            " ra.workflow_id, " +
+            " ws.id as service_id " +
+            " FROM resource_association as ra " +
+            " JOIN resource ON (ra.resource_id = resource.id) " +
+            " LEFT JOIN project ON (ra.project_id = project.id)" +
+            " LEFT JOIN workflow ON (ra.workflow_id = workflow.id)" +
+            " LEFT JOIN workflow_service_substep as ws_substep ON (ra.workflow_service_substep_id = ws_substep.id) " +
+            " LEFT JOIN workflow_service as ws ON (ws_substep.workflow_service_id = ws.id)" +
+            " LEFT JOIN service ON (ws.service_id = service.id)" +
+            "" + where;
 
         var start = new Date().getTime();
         sequelize.query( totalQuery, { type: sequelize.QueryTypes.SELECT}).then(function (resources) {

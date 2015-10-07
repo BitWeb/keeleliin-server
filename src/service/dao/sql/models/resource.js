@@ -24,25 +24,6 @@ module.exports = function(sequelize, DataTypes) {
             },
             field: 'resource_type_id'
         },
-        workflowServiceSubstepId: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-            references: {
-                model: 'workflow_service_substep',
-                key: 'id'
-            },
-            field: 'workflow_service_substep_id'
-        },
-        workflowOutputId: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-            defaultValue: null,
-            references: {
-                model: 'workflow',
-                key: 'id'
-            },
-            field: 'workflow_output_id'
-        },
         filename: { //asukoht failisysteemis
             type: DataTypes.STRING,
             allowNull: true,
@@ -137,60 +118,9 @@ module.exports = function(sequelize, DataTypes) {
                         as: 'resourceType'
                     }
                 );
-                Resource.belongsToMany(models.Project, {
-                        through: 'project_has_resource',
-                        foreignKey: 'resource_id',
-                        otherKey: 'project_id',
-                        as: 'projects'
-                    }
-                );
-                Resource.belongsToMany(models.WorkflowDefinition, {
-                        through: 'workflow_definition_has_input_resource',
-                        foreignKey: 'resource_id',
-                        otherKey: 'workflow_definition_id',
-                        as: 'workflowDefinitions'
-                    }
-                );
-                Resource.belongsToMany(models.Workflow, {
-                        through: 'workflow_has_input_resource',
-                        foreignKey: 'resource_id',
-                        otherKey: 'workflow_id',
-                        timestamps: false,
-                        as: 'workflows'
-                    }
-                );
-                Resource.belongsToMany(models.WorkflowServiceSubstep, {
-                        through: 'workflow_service_substep_has_input_resource',
-                        foreignKey: 'resource_id',
-                        otherKey: 'workflow_service_substep_id',
-                        timestamps: false,
-                        as: 'inputSubsteps'
-                    }
-                );
-                Resource.belongsTo(models.WorkflowServiceSubstep, {
-                        foreignKey: 'workflowServiceSubstepId',
-                        as: 'outputSubsteps'
-                    }
-                );
-                Resource.belongsTo(models.User, {
-                        as: 'user',
-                        foreignKey: 'userId'
-                    }
-                );
-                Resource.hasMany(models.ResourceUser, {
-                        as: 'users',
-                        foreignKey: 'resourceId'
-                    }
-                );
-                Resource.belongsToMany(models.User, {
-                        as: 'resourceUsers',
-                        through: models.ResourceUser,
-                        foreignKey: 'resource_id'
-                    }
-                );
-                Resource.belongsTo(models.Workflow, {
-                        foreignKey: 'workflowOutputId',
-                        as: 'workflowOutput'
+                Resource.hasMany(models.ResourceAssociation, {
+                        foreignKey: 'resourceId',
+                        as: 'associations'
                     }
                 );
             }

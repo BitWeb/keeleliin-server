@@ -6,6 +6,7 @@ var logger = require('log4js').getLogger('substep_handler');
 var async = require('async');
 var fs = require('fs');
 var Resource = require(__base + 'src/service/dao/sql').Resource;
+var ResourceAssociation = require(__base + 'src/service/dao/sql').ResourceAssociation;
 var WorkflowServiceSubstep = require(__base + 'src/service/dao/sql').WorkflowServiceSubstep;
 var Workflow = require(__base + 'src/service/dao/sql').Workflow;
 var apiService = require('./../service/apiService');
@@ -22,27 +23,57 @@ function SubStepHandler(project, workflow){
 
     this.makeWorkflowServiceSubStep = function (inputResources, workflowService, previousStep, cb) {
 
-        var subStepData = {
-            workflowServiceId: workflowService.id,
-            prevSubstepId: previousStep ? previousStep.id: null,
-            status: 'INIT',
-            index: 0
-        };
+        async.waterfall([
+                function (callback) {
+                    var subStepData = {
+                        workflowServiceId: workflowService.id,
+                        prevSubstepId: previousStep ? previousStep.id: null,
+                        status: 'INIT',
+                        index: 0
+                    };
 
-        WorkflowServiceSubstep.build(subStepData).save().then(function (subStep) {
+                    WorkflowServiceSubstep.create(subStepData).then(function (subStep) {
+                        callback(null, subStep);
+                    }).catch(function (err) {
+                        logger.error('SubStep build error', err);
+                        callback(err.message);
+                    });
 
-            subStep.setInputResources(inputResources).then(function () {
-                cb(null, subStep);
-            }).catch(function (err) {
-                logger.error('Add resource error', err);
-                cb(err.message);
-            });
-        }).catch(function (err) {
-            logger.error('SubStep build error', err);
-            cb(err.message);
-        });
+                },
+                function (substep, callback) {
+
+                    async.each( inputResources,
+                        function (inputResource, innerCb) {
+
+                            var associationData = {
+                                context: ResourceAssociation.contexts.SUBSTEP_INPUT,
+                                resourceId: inputResource.id,
+                                userId: workflow.userId,
+                                projectId: project.id,
+                                workflowId: workflow.id,
+                                workflowServiceSubstepId: substep.id
+                            };
+
+                            ResourceAssociation.create(associationData).then(function (association) {
+                                innerCb();
+                            }).catch(function (err) {
+                                innerCb( err.message );
+                            });
+                        },
+                        function (err) {
+                            callback(err, substep);
+                        }
+                    );
+                }
+            ],
+            function (err, substep) {
+                if(err){
+                    logger.error( err );
+                }
+                cb(err, substep);
+            }
+        );
     };
-
 
     this.run = function (substep, cb) {
 
@@ -216,13 +247,10 @@ function SubStepHandler(project, workflow){
                     resourceTypeId: resourceType.id,
                     originalName: fileName,
                     name: fileName,
-                    contentType: fileData.contentType,
-                    userId: workflow.userId
+                    contentType: fileData.contentType
                 };
-                callback(null, data);
-            },
-            function createResource(data, callback) {
-                Resource.build(data).save().then(function (resource) {
+
+                Resource.create(data).then(function (resource) {
                     callback(null, resource);
                 }).catch(function (err) {
                     logger.error(err);
@@ -230,13 +258,21 @@ function SubStepHandler(project, workflow){
                 });
             },
             function addSubstepResource(resource, callback) {
-                substep.addOutputResource(resource).then(function () {
-                    callback(null, resource);
-                });
-            },
-            function addProjectResource(resource, callback) {
-                project.addResource(resource).then(function () {
-                    callback(null);
+
+                var associationData = {
+                    context: ResourceAssociation.contexts.SUBSTEP_OUTPUT,
+                    resourceId: resource.id,
+                    userId: workflow.userId,
+                    projectId: project.id,
+                    workflowId: workflow.id,
+                    workflowServiceSubstepId: substep.id
+                };
+
+                ResourceAssociation.create( associationData ).then(function (association) {
+                   callback();
+                }).catch(function (err) {
+                    logger.error(err);
+                    callback(err);
                 });
             }
         ], cb);
@@ -299,13 +335,34 @@ function SubStepHandler(project, workflow){
             return callback();
         }
 
-        substep.getOutputResources().then(function (resources) {
-            async.each(resources, function (resource, innerCb) {
-                resource.setWorkflowOutput(self.workflow).then(innerCb);
-            }, function (err) {
-               callback(err);
-            });
-        });
+        substep.getResourceAssociations( { where: { context: ResourceAssociation.contexts.SUBSTEP_OUTPUT } })
+            .then(function (outputAssociations) {
+                async.each(outputAssociations, function (outputAssociation, innerCb) {
+
+                    var outputData = {
+                        context: ResourceAssociation.contexts.WORKFLOW_OUTPUT,
+                        resourceId: outputAssociation.resourceId,
+                        userId: outputAssociation.userId,
+                        projectId: outputAssociation.projectId,
+                        workflowId: outputAssociation.workflowId
+                    };
+
+                    ResourceAssociation.create( outputData).then(function (outputAssociation) {
+                        innerCb();
+                    })
+                    .catch(function (err) {
+                            innerCb(err.message);
+                        }
+                    );
+
+                }, function (err) {
+                    callback(err);
+                });
+            }
+        ).catch(function (err) {
+                callback(err.message);
+            }
+        );
     }
 }
 

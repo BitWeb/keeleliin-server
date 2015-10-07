@@ -5,7 +5,6 @@ var logger = require('log4js').getLogger('workflow_instance_builder');
 var WorkflowDefinition = require(__base + 'src/service/dao/sql').WorkflowDefinition;
 var Workflow = require(__base + 'src/service/dao/sql').Workflow;
 var WorkflowService = require(__base + 'src/service/dao/sql').WorkflowService;
-var WorkflowServiceParamValue = require(__base + 'src/service/dao/sql').WorkflowServiceParamValue;
 var async = require('async');
 
 function WorkflowBuilder(){

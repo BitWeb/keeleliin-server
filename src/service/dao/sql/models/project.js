@@ -62,7 +62,6 @@ module.exports = function(sequelize, DataTypes) {
         classMethods: {
             associate: function(models) {
 
-                Project.belongsToMany(models.Resource, {through: 'project_has_resource', foreignKey: 'project_id', otherKey: 'resource_id'});
                 Project.belongsToMany(models.WorkflowDefinition, {
                     through: 'project_workflow_definition',
                     foreignKey: 'project_id',
