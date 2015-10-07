@@ -196,6 +196,9 @@ function Runner() {
                 callback(null);
             },
             function handleInputResources(callback) {
+
+                logger.debug('Handle input resources');
+
                 resourceHandler.getWorkflowServiceSubStepsInputResources(
                     workflowService,
                     fromSubStep,
@@ -215,6 +218,9 @@ function Runner() {
                         });
                     },
                     function resourcesTraversed(err) {
+
+                        logger.debug('resources traversed');
+
                         if(err){
                             logger.error(err);
                         }
@@ -228,7 +234,7 @@ function Runner() {
                 callback();
             }
         ], function (err) {
-            logger.info('workflow service ' + workflowService + ' handling started from sub step ' + (fromSubStep != undefined ? fromSubStep.id : null));
+            logger.info('workflow service ' + workflowService.id + ' handling started from sub step ' + (fromSubStep != undefined ? fromSubStep.id : null));
             if (err) {
                 logger.error(err);
                 workflowService.log = err;

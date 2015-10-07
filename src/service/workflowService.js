@@ -140,10 +140,16 @@ function WorkflowService() {
             async.each(
                 runningSubSteps,
                 function (substep, callback) {
+
+                    if(!substep.serviceSession){
+                        return callback();
+                    }
+
                     var dto = {
                         id: substep.serviceSession,
                         url: substep.workflowService.service.url
                     };
+
                     apiService.killRequest(dto, function (err, respBody) {
                         if(err){
                             return callback();

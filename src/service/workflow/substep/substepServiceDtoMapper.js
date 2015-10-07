@@ -93,7 +93,7 @@ function SubstepServiceDtoMapper(){
                             context: ResourceAssociation.contexts.SUBSTEP_INPUT
                         }
                     }
-                }).then(function (resources) {
+                }).then(function (data) {
                     logger.debug('Substep ' + workflowSubstep.id + ' input resources count ' + data.length );
                     resources = data;
                     callback();
@@ -108,8 +108,7 @@ function SubstepServiceDtoMapper(){
             },
             function mapInputs(callback) {
 
-                try{
-
+                try {
                     for(i in inputTypes){
                         var inputype = inputTypes[i];
                         for(j in resources){
