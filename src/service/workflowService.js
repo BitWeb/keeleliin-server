@@ -8,6 +8,7 @@ var async = require('async');
 var projectService = require(__base + 'src/service/projectService');
 var workflowDaoService = require(__base + 'src/service/dao/workflowDaoService');
 var resourceDaoService = require(__base + 'src/service/dao/resourceDaoService');
+var resourceService = require(__base + 'src/service/resourceService');
 var Workflow = require(__base + 'src/service/dao/sql').Workflow;
 var Resource = require(__base + 'src/service/dao/sql').Resource;
 var ResourceAssociation = require(__base + 'src/service/dao/sql').ResourceAssociation;
@@ -278,23 +279,38 @@ function WorkflowService() {
         })
     };
 
-    this.deleteWorkflow = function (req, workflowId, callback ) {
+    this.deleteWorkflow = function (req, workflowId, cb ) {
+
+        //kustuta töövoo ressursid
+        //kustuta alamsammud
+        //kustuta teenused
+        //kustuta töövoog
 
         async.waterfall([
                 function (callback) {
+
                     workflowDaoService.getWorkflow(workflowId, callback)
                 },
-                function (workflow, callback) {
-                    workflow.getWorkflowServices().then(function (wfServices) {
-                        async.eachSeries(
-                            wfServices,
-                            function ( wfService, innerCb) {
-                                self._deleteWorkflowService( wfService, innerCb );
-                            },
-                            function (err) {
-                                callback( err );
-                            }
-                        );
+                function deleteResources(workflow, callback) {
+
+                    workflow.getResourceAssociations().then(function (associations) {
+
+                        logger.debug( ' Got associations to delete: ' + associations.length );
+
+                        async.eachSeries(associations, function (association, innerCb) {
+                            resourceService.deleteAssociation( association, function (err) {
+                                logger.debug('Association deleted');
+                                innerCb(err);
+                            });
+                        }, function (err) {
+                            callback(err, workflow);
+                        });
+                    });
+                },
+                function deleteWorkflow(workflow, callback) {
+
+                    workflow.destroy().then(function () {
+                        callback();
                     }).catch(function (err) {
                         callback(err.message);
                     });
@@ -308,61 +324,6 @@ function WorkflowService() {
             }
         );
     };
-
-    self._deleteWorkflowService = function ( workflowService, cb) {
-
-        async.waterfall([
-                function getSubSteps(callback) {
-                    workflowService.getSubSteps().then(function ( substeps ) {
-                        callback(null, substeps);
-                    }).catch(function (err) {
-                        cb(err.message);
-                    });
-                },
-                function unsetInputResources(substeps, callback) {
-                    async.eachSeries(substeps,
-                        function (substep, innerCb) {
-                            substep.setInputResources([]).then(function () {
-                                innerCb();
-                            }).catch(function (err) {
-                                cb(err.message);
-                            });
-                        },
-                        function (err) {
-                            callback(err, substeps);
-                        }
-                    );
-                },
-                function deleteOutputResources(substeps, callback) {
-
-                },
-                function deleteSubSteps(substeps, callback) {
-
-                },
-                function deleteWfService() {
-
-                }
-            ],
-            function ( err ) {
-                cb( err );
-            }
-        );
-    };
-
-    //1. Eemalda alamsammudest sisendressursid
-    //2. Kustuta alamsammude väljundressursid
-    //3. Kustuta almsammud
-    //4. Kustuta Töövoo teenused
-    //5. Kustuta töövoo sisendressursid
-    //6. Kustuta töövoog
-
-
-
-
-
-
-
-
 }
 
 module.exports = new WorkflowService();

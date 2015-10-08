@@ -79,16 +79,26 @@ function WorkflowDefinitionService() {
                 });
             },
             function (definition, user, callback) {
-                definition.addWorkflowDefinitionUser( user, { role: WorkflowDefinitionUser.roles.OWNER }).then(function () {
+                logger.debug('Add definition owner user: def:' + definition.id + ' user: ' + user.id);
+
+                WorkflowDefinitionUser.create({
+                    role: WorkflowDefinitionUser.roles.OWNER,
+                    userId: user.id,
+                    workflowDefinitionId: definition.id
+                }).then(function () {
+                    logger.debug('Definition user added');
                     return callback(null, definition);
                 }).catch(function (e) {
-                    return callback(e.message);
+                    logger.error(e.pop());
+                    return callback('Err: ' + e.message);
                 });
             },
             function (definition, callback) {
+                logger.debug('Add shared to users users');
                 if(definition.accessStatus == WorkflowDefinition.accessStatuses.SHARED){
                     return self._updateDefinitionUserRelations( req, definition, workflowDefinitionData.users, callback );
                 }
+                logger.debug('Not shared definition: ', definition);
                 return callback(null, definition);
             },
             function createInitWorkflowBasedOnDefinition(definition, callback) {
@@ -225,6 +235,8 @@ function WorkflowDefinitionService() {
      */
     this._updateDefinitionUserRelations = function (req, definition, userIds, cb) {
 
+        logger.debug('Update definition user relations: ', userIds);
+
         if(!userIds){
             return cb(null, definition);
         }
@@ -312,10 +324,15 @@ function WorkflowDefinitionService() {
                                 if(err){
                                     return innerCb(err.message);
                                 }
-                                definition.addWorkflowDefinitionUser(user, {role: WorkflowDefinitionUser.roles.EDITOR}).then(function () {
+
+                                WorkflowDefinitionUser.create({
+                                    userId: user.id,
+                                    workflowDefinitionId: definition.id,
+                                    role: WorkflowDefinitionUser.roles.EDITOR
+                                }).then(function () {
                                     return innerCb();
                                 }).catch(function (e) {
-                                    return innerCb(e.message);
+                                    return innerCb('Err' + e.message);
                                 });
                             });
                         },

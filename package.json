@@ -31,7 +31,7 @@
     "randomstring": "^1.0.5",
     "redis": "^0.12.1",
     "request": "^2.57.0",
-    "sequelize": "^3.1.1",
+    "sequelize": "^3.11.0",
     "uid-safe": "^2.0.0",
     "underscore": "^1.8.3",
     "uniqid": "1.0.0",

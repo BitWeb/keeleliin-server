@@ -10,6 +10,7 @@ var userService = require('./userService');
 var userDaoService = require('./dao/userDaoService');
 var async = require('async');
 var notificationService = require(__base + 'src/service/notificationService');
+var resourceService = require(__base + 'src/service/resourceService');
 var NotificationType = require(__base + 'src/service/dao/sql').NotificationType;
 var ArrayUtil = require('../util/arrayUtils');
 var ObjectUtil = require('../util/objectUtils');
@@ -91,6 +92,9 @@ function ProjectService(){
     this.getCurrentUserProject = function (req, projectId, callback) {
         var userId = req.redisSession.data.userId;
         return projectDaoService.getUserProject( userId, projectId, function( err, project ){
+            if(!project){
+                return callback('Kasutaja projekti ei leitud');
+            }
             project = project.toJSON();
             project.projectUsers = project.projectUsers.map(function (projectUser) {
                 var updatedUser = {};
@@ -121,7 +125,12 @@ function ProjectService(){
                 });
             },
             function addOwnerRelation(project, currentUser, callback) {
-                project.addProjectUser(currentUser, {role: ProjectUser.roles.ROLE_OWNER}).then(function () {
+
+                ProjectUser.create({
+                    userId: currentUser.id,
+                    projectId: project.id,
+                    role: ProjectUser.roles.ROLE_OWNER
+                }).then(function (projectuser) {
                     return callback(null, project);
                 }).catch(function (e) {
                     return callback(e);
@@ -261,7 +270,12 @@ function ProjectService(){
                                     if(err){
                                         return innerCb(err.message);
                                     }
-                                    project.addProjectUser(user, {role: newRelation.role}).then(function () {
+
+                                    ProjectUser.create({
+                                        userId: user.id,
+                                        projectId: project.id,
+                                        role: newRelation.role
+                                    }).then(function () {
                                         notificationService.addNotification(user.id, NotificationType.codes.PROJECT_USER_ADDED, project.id, function () {});
                                         return innerCb();
                                     }).catch(function (e) {
@@ -286,22 +300,43 @@ function ProjectService(){
         });
     };
 
-    this.deleteCurrentUserProject = function (req, projectId, callback) {
+    this.deleteCurrentUserProject = function (req, projectId, cb) {
 
-        // todo: kustuta seotud andmeobjektid
-        var userId = req.redisSession.data.userId;
-
-        projectDaoService.getUserProject( userId, projectId, function (err, project) {
-            if(err){
-                return callback( err );
+        async.waterfall([
+                function (callback) {
+                    var userId = req.redisSession.data.userId;
+                    projectDaoService.getUserProject( userId, projectId, function (err, project) {
+                        callback( err, project )
+                    });
+                },
+                function (project, callback) {
+                    project.getResourceAssociations().then(function (associations) {
+                        logger.debug( ' Got associations to delete: ' + associations.length );
+                        async.eachSeries(associations, function (association, innerCb) {
+                            resourceService.deleteAssociation( association, function (err) {
+                                logger.debug('Association deleted');
+                                innerCb(err);
+                            });
+                        }, function (err) {
+                            callback(err, project);
+                        });
+                    });
+                },
+                function (project, callback) {
+                    project.destroy().then(function () {
+                        return callback();
+                    }).catch(function (error) {
+                        return callback( error.message );
+                    });
+                }
+        ],
+            function ( err ) {
+                if(err){
+                    logger.error();
+                }
+                cb(err);
             }
-
-            project.destroy().then(function () {
-                return callback();
-            }).catch(function (error) {
-                return callback( error.message );
-            });
-        });
+        );
     };
 
 }

@@ -96,6 +96,9 @@ function ResourceService() {
             function setQueryUserId(callback) {
                 if (query.workflowId) {
                     Workflow.findById(query.workflowId).then(function (workflow) {
+                        if(!workflow){
+                            return callback('Töövoogu ei leitud');
+                        }
                         query.userId = workflow.userId;
                         callback(null, query);
                     });
@@ -347,10 +350,27 @@ function ResourceService() {
                         });
                 },
                 function (association, callback) {
+                    self.deleteAssociation( association, callback );
+                }
+            ],
+            function (err) {
+                if(err){
+                    logger.error( err );
+                }
+                cb(err);
+            }
+        );
+    };
 
-                    association
-                        .getResource()
+    this.deleteAssociation = function (association, cb) {
+
+        async.waterfall([
+                function ( callback ) {
+                    association.getResource()
                         .then(function (resource) {
+                            if(!resource){
+                                callback('Seose ressurss on juba kustutatud');
+                            }
                             callback(null, association, resource);
                         })
                         .catch(function (err) {
@@ -366,7 +386,7 @@ function ResourceService() {
                 },
                 function (resource, callback) {
                     resource.getAssociations().then(function (associations) {
-                        if(associations.length > 0){
+                        if(associations.length == 0){
                             self._deleteResourceEntity(resource, callback);
                         } else {
                             callback();
@@ -388,6 +408,7 @@ function ResourceService() {
     self._deleteResourceEntity = function( resource, cb ) {
         async.waterfall([
                 function (callback) {
+                    logger.debug('Unlink file');
                     fs.unlink(config.resources.location + resource.filename, function (err) {
                         if(err && err.code == 'ENOENT'){
                             return callback(null, resource);
@@ -396,6 +417,7 @@ function ResourceService() {
                     });
                 },
                 function deleteResource(resource, callback) {
+                    logger.debug('Delete resource entity');
                     resource.destroy().then(function () {
                         callback()
                     }).catch(function (err) {

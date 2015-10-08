@@ -8,12 +8,27 @@ module.exports = function(sequelize, DataTypes) {
     };
 
     var WorkflowDefinitionUser = sequelize.define("WorkflowDefinitionUser", {
+        id: {
+            type: DataTypes.INTEGER,
+            primaryKey: true,
+            autoIncrement: true
+        },
         userId: {
             type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: 'User',
+                key: 'id'
+            },
             field: 'user_id'
         },
         workflowDefinitionId: {
             type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: 'WorkflowDefinition',
+                key: 'id'
+            },
             field: 'workflow_definition_id'
         },
         role: {
@@ -32,17 +47,18 @@ module.exports = function(sequelize, DataTypes) {
     }, {
         tableName: 'workflow_definition_user',
         timestamps: false,
-        paranoid: true,
+        paranoid: false,
         underscored: true,
         classMethods: {
             associate: function(models) {
                 WorkflowDefinitionUser.belongsTo(models.WorkflowDefinition, {
                     as: 'workflowDefinition',
-                    foreignKey: 'workflow_definition_id'
+                    foreignKey: 'workflowDefinitionId'
                 });
+
                 WorkflowDefinitionUser.belongsTo(models.User, {
                     as: 'user',
-                    foreignKey: 'user_id'
+                    foreignKey: 'userId'
                 });
             }
         },

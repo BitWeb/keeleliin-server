@@ -21,7 +21,7 @@ function MetaService() {
                     return callback();
                 }
                 Project.find({where:{id: query.projectId},attributes:['id', 'name']}).then(function (item) {
-                    response.projectId = item.name;
+                    response.projectId = item ? item.name : '';
                     callback()
                 });
             },
@@ -30,7 +30,7 @@ function MetaService() {
                     return callback();
                 }
                 Workflow.find({where:{id: query.workflowId},attributes:['id','name','projectId']}).then(function (item) {
-                    response.workflowId = item.name;
+                    response.workflowId = item ? item.name : '';
                     callback();
                 });
             },
@@ -39,7 +39,7 @@ function MetaService() {
                     return callback();
                 }
                 User.find({where:{id: query.userId},attributes:['id','name']}).then(function (item) {
-                    response.userId = item.name;
+                    response.userId = item ? item.name : '';
                     callback()
                 });
             },
@@ -48,7 +48,7 @@ function MetaService() {
                     return callback();
                 }
                 Service.find({where:{id: query.serviceId},attributes:['id','name']}).then(function (item) {
-                    response.serviceId = item.name;
+                    response.serviceId = item ? item.name : '';
                     callback()
                 });
             },
@@ -57,7 +57,7 @@ function MetaService() {
                     return callback();
                 }
                 ResourceType.find({where:{id: query.resourceTypeId},attributes:['id','name']}).then(function (item) {
-                    response.resourceTypeId = item.name;
+                    response.resourceTypeId = item ? item.name : '';
                     callback()
                 });
             }

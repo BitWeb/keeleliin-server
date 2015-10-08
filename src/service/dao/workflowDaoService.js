@@ -213,7 +213,7 @@ function WorkflowDaoService() {
             ]
         }).then(function (definition) {
             if(!definition){
-                return callback('Definition not found');
+                return cb('Definitsiooni ei leitud');
             }
 
             WorkflowDefinitionService.findAll({

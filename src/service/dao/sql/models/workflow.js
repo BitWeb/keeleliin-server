@@ -66,7 +66,7 @@ module.exports = function(sequelize, DataTypes) {
         },
         workflowDefinitionId: {
             type: DataTypes.INTEGER,
-            allowNull: false,
+            allowNull: true,
             references: {
                 model: 'workflow_definition',
                 key: 'id'
@@ -101,9 +101,11 @@ module.exports = function(sequelize, DataTypes) {
 
         classMethods: {
             associate: function(models) {
-
-                Workflow.belongsTo(models.User, {as: 'user', foreignKey: 'userId'});
-
+                Workflow.belongsTo(models.User, {
+                        as: 'user',
+                        foreignKey: 'userId'
+                    }
+                );
                 Workflow.belongsTo(models.WorkflowDefinition, {
                         foreignKey:'workflowDefinitionId',
                         as: 'workflowDefinition'
@@ -118,13 +120,27 @@ module.exports = function(sequelize, DataTypes) {
                     foreignKey:'workflowId',
                     as: 'workflowServices'
                 });
-
                 Workflow.belongsToMany(models.Resource, {
                         as: 'inputResources',
                         through: {
                             model: models.ResourceAssociation,
                             foreignKey: 'workflowId',
-                            unique: false
+                            unique: false,
+                            scope: {
+                                context: models.ResourceAssociation.contexts.WORKFLOW_INPUT
+                            }
+                        }
+                    }
+                );
+                Workflow.belongsToMany(models.Resource, {
+                        as: 'outputResources',
+                        through: {
+                            model: models.ResourceAssociation,
+                            foreignKey: 'workflowId',
+                            unique: false,
+                            scope: {
+                                context: models.ResourceAssociation.contexts.WORKFLOW_OUTPUT
+                            }
                         }
                     }
                 );

@@ -48,28 +48,42 @@ module.exports = function(sequelize, DataTypes) {
         updatedAt: {
             type: DataTypes.DATE,
             field: 'updated_at'
-        },
-        deletedAt: {
-            type: DataTypes.DATE,
-            field: 'deleted_at'
         }
     }, {
         tableName: 'project',
         timestamps: true,
-        paranoid: true,
+        paranoid: false,
         underscored: true,
 
         classMethods: {
             associate: function(models) {
 
-                Project.belongsToMany(models.WorkflowDefinition, {
-                    through: 'project_workflow_definition',
-                    foreignKey: 'project_id',
-                    otherKey: 'workflow_definition_id'
-                });
-                Project.belongsTo(models.User, {as: 'user', foreignKey: 'userId'});
-                Project.belongsToMany(models.User, {as: 'projectUsers', through: models.ProjectUser, foreignKey: 'project_id'});
-                Project.hasMany(models.ProjectUser, {as: 'projectUserRelations', foreignKey: 'project_id'});
+                Project.belongsTo(models.User, {
+                        as: 'user',
+                        foreignKey: 'userId'
+                    }
+                );
+                Project.belongsToMany(models.User, {
+                        as: 'projectUsers',
+                        through: models.ProjectUser,
+                        foreignKey: 'projectId'
+                    }
+                );
+                Project.hasMany(models.ProjectUser, {
+                        as: 'projectUserRelations',
+                        foreignKey: 'projectId'
+                    }
+                );
+                Project.hasMany(models.WorkflowDefinition, {
+                        as: 'workflowDefinitions',
+                        foreignKey: 'projectId'
+                    }
+                );
+                Project.hasMany(models.Workflow, {
+                        as: 'workflows',
+                        foreignKey: 'projectId'
+                    }
+                );
                 Project.belongsToMany(models.Resource, {
                         as: 'resources',
                         through: {
@@ -77,6 +91,12 @@ module.exports = function(sequelize, DataTypes) {
                             foreignKey: 'projectId',
                             unique: false
                         }
+                    }
+                );
+                Project.hasMany(models.ResourceAssociation, {
+                        as: 'resourceAssociations',
+                        foreignKey: 'projectId',
+                        unique: false
                     }
                 );
             }

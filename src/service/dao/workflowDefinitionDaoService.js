@@ -22,8 +22,7 @@ function WorkflowDefinitionDaoService() {
             " wfd.access_status as access_status" +
             " FROM workflow_definition as wfd " +
             " WHERE " +
-            " wfd.access_status = '" + WorkflowDefinition.accessStatuses.PUBLIC + "'" +
-            " AND wfd.deleted_at IS NULL ";
+            " wfd.access_status = '" + WorkflowDefinition.accessStatuses.PUBLIC + "'";
 
         //Isiklikud
         var personalQuery = " SELECT " +
@@ -35,8 +34,7 @@ function WorkflowDefinitionDaoService() {
             " '" + WorkflowDefinition.accessStatuses.PRIVATE + "' as access_status" +
             " FROM workflow_definition as wfd " +
             " WHERE " +
-            " wfd.user_id = :userId " +
-            " AND wfd.deleted_at IS NULL ";
+            " wfd.user_id = :userId ";
 
         //Mulle jagatud
         var sharedQuery = " SELECT " +
@@ -50,8 +48,7 @@ function WorkflowDefinitionDaoService() {
             " JOIN workflow_definition_user AS wfdu ON ( wfdu.user_id = :userId AND wfdu.workflow_definition_id = wfd.id )" +
             " WHERE " +
             " wfd.access_status = '" + WorkflowDefinition.accessStatuses.SHARED + "' " +
-            " AND wfd.user_id != :userId " +
-            " AND wfd.deleted_at IS NULL ";
+            " AND wfd.user_id != :userId ";
 
         var totalQuery = " SELECT " +
             " definition.id, " +

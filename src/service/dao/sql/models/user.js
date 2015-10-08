@@ -70,18 +70,32 @@ module.exports = function(sequelize, DataTypes) {
         classMethods: {
             associate: function(models) {
                 User.belongsToMany(models.Project, {
-                    as: 'userProjects',
-                    through: models.ProjectUser,
-                    foreignKey: 'userId'}
+                        as: 'userProjects',
+                        through: models.ProjectUser,
+                        foreignKey: 'userId'
+                    }
                 );
                 User.hasMany(models.Project,{
-                    as: 'projects',
-                    foreignKey: 'userId'}
+                        as: 'createdProjects',
+                        foreignKey: 'userId'
+                    }
                 );
                 User.hasMany(models.ProjectUser,{
-                    as: 'userProjectRelations',
-                    foreignKey: 'userId'}
+                        as: 'userProjectRelations',
+                        foreignKey: 'userId'
+                    }
                 );
+
+                User.belongsToMany(models.WorkflowDefinition, {
+                        as: 'userWorkflowDefinition',
+                        through: {
+                            model: models.WorkflowDefinitionUser,
+                            foreignKey: 'userId',
+                            unique: true
+                        }
+                    }
+                );
+
             }
         }
     });

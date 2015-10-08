@@ -95,7 +95,10 @@ module.exports = function(sequelize, DataTypes) {
                         through: {
                             model: models.ResourceAssociation,
                             foreignKey: 'workflowServiceSubstepId',
-                            unique: false
+                            unique: false,
+                            scope: {
+                                context: models.ResourceAssociation.contexts.SUBSTEP_INPUT
+                            }
                         }
                     }
                 );
@@ -104,7 +107,10 @@ module.exports = function(sequelize, DataTypes) {
                         through: {
                             model: models.ResourceAssociation,
                             foreignKey: 'workflowServiceSubstepId',
-                            unique: false
+                            unique: false,
+                            scope: {
+                                context: models.ResourceAssociation.contexts.SUBSTEP_OUTPUT
+                            }
                         }
                     }
                 );

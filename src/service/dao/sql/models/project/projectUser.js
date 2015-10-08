@@ -9,13 +9,27 @@ module.exports = function(sequelize, DataTypes) {
     };
 
     var ProjectUser = sequelize.define("projectUser", {
-
+        id: {
+            type: DataTypes.INTEGER,
+            primaryKey: true,
+            autoIncrement: true
+        },
         userId: {
             type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: 'user',
+                key: 'id'
+            },
             field: 'user_id'
         },
         projectId: {
             type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: 'project',
+                key: 'id'
+            },
             field: 'project_id'
         },
         role: {
@@ -39,8 +53,16 @@ module.exports = function(sequelize, DataTypes) {
 
         classMethods: {
             associate: function(models) {
-                ProjectUser.belongsTo(models.Project, {as: 'project'});
-                ProjectUser.belongsTo(models.User, {as: 'user'});
+                ProjectUser.belongsTo(models.Project, {
+                        as: 'project',
+                        foreignKey:'projectId'
+                    }
+                );
+                ProjectUser.belongsTo(models.User, {
+                        as: 'user',
+                        foreignKey:'userId'
+                    }
+                );
             }
         },
 

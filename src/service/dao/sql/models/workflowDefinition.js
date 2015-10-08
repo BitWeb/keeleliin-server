@@ -75,15 +75,11 @@ module.exports = function(sequelize, DataTypes) {
         updatedAt: {
             type: DataTypes.DATE,
             field: 'updated_at'
-        },
-        deletedAt: {
-            type: DataTypes.DATE,
-            field: 'deleted_at'
         }
     }, {
         tableName: 'workflow_definition',
         timestamps: true,
-        paranoid: true,
+        paranoid: false,
         underscored: true,
 
         classMethods: {
@@ -98,28 +94,32 @@ module.exports = function(sequelize, DataTypes) {
                         foreignKey: 'workflowDefinitionId'
                     }
                 );
-                WorkflowDefinition.belongsToMany(models.Project, {
-                        through: 'project_workflow_definition',
-                        foreignKey: 'workflow_definition_id',
-                        otherKey: 'project_id',
-                        as: 'projects'
-                    }
-                );
+
                 WorkflowDefinition.belongsTo(models.User, {
                         as: 'user',
                         foreignKey: 'userId'
                     }
                 );
+
+                WorkflowDefinition.belongsTo(models.Project, {
+                        as: 'project',
+                        foreignKey: 'projectId'
+                    }
+                );
+
                 WorkflowDefinition.belongsToMany(models.User, {
                         as: 'workflowDefinitionUsers',
-                        through: models.WorkflowDefinitionUser,
-                        foreignKey: 'workflow_definition_id', //cant point to field. Delete will not work
-                        otherKey: 'user_id' //cant point to field. Delete will not work
+                        through: {
+                            model: models.WorkflowDefinitionUser,
+                            foreignKey: 'workflowDefinitionId',
+                            otherKey: 'userId',
+                            unique: true
+                        }
                     }
                 );
                 WorkflowDefinition.hasMany(models.WorkflowDefinitionUser, {
                         as: 'workflowDefinitionUserRelations',
-                        foreignKey: 'workflow_definition_id'
+                        foreignKey: 'workflowDefinitionId'
                     }
                 );
             }

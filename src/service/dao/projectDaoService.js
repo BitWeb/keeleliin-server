@@ -24,7 +24,7 @@ function ProjectDaoService() {
             " JOIN project_user as pu ON (pu.project_id = project.id AND pu.user_id = " + userId + ")" +
             " ";
 
-        var where = " WHERE project.deleted_at IS NULL ";
+        var where = " WHERE project.id IS NOT NULL ";
 
         if(params.name){
             where += " AND project.name ILIKE '"+ params.name +"%'"
