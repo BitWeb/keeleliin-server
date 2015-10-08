@@ -1,0 +1,14 @@
+data:         uid  command         script                                                                  forever pid   id logfile                 uptime
+data:    [0]  9Sv6 /usr/bin/nodejs /var/www/bitweb.ee/keeleliin.bitweb.ee/server/app.js                    17538   12853    /root/.forever/9Sv6.log 0:0:48:58.27
+data:    [1]  pQGm /usr/bin/nodejs /var/www/bitweb.ee/keeleliin.bitweb.ee/wrapper/archive-extractor/app.js 17548   12851    /root/.forever/pQGm.log 0:0:48:58.17
+data:    [2]  n5X1 /usr/bin/nodejs /var/www/bitweb.ee/keeleliin.bitweb.ee/wrapper/lausestaja/app.js        17558   12848    /root/.forever/n5X1.log 0:0:48:58.24
+data:    [3]  xZf7 /usr/bin/nodejs /var/www/bitweb.ee/keeleliin.bitweb.ee/wrapper/morfanalyzer/app.js      17568   12843    /root/.forever/xZf7.log 0:0:48:58.49
+data:    [4]  wP70 /usr/bin/nodejs /var/www/bitweb.ee/keeleliin.bitweb.ee/wrapper/morfoconcat/app.js       17596   12854    /root/.forever/wP70.log 0:0:48:58.28
+data:    [5]  JTyn /usr/bin/nodejs /var/www/bitweb.ee/keeleliin.bitweb.ee/wrapper/osalausestaja/app.js     17617   12847    /root/.forever/JTyn.log 0:0:48:58.44
+data:    [6]  T9f1 /usr/bin/nodejs /var/www/bitweb.ee/keeleliin.bitweb.ee/wrapper/pindsyn/app.js           17637   12845    /root/.forever/T9f1.log 0:0:48:58.25
+data:    [7]  GlZc /usr/bin/nodejs /var/www/bitweb.ee/keeleliin.bitweb.ee/wrapper/s6ltsyn/app.js           17661   12846    /root/.forever/GlZc.log 0:0:48:58.34
+data:    [8]  Wr1X /usr/bin/nodejs /var/www/bitweb.ee/keeleliin.bitweb.ee/wrapper/tokenizer/app.js         17923   12855    /root/.forever/Wr1X.log 0:0:48:58.22
+data:    [9]  __tZ /usr/bin/nodejs /var/www/bitweb.ee/keeleliin.bitweb.ee/wrapper/morph_tagger/app.js      26601   12842    /root/.forever/__tZ.log 0:0:48:58.58
+data:    [10] OmkK /usr/bin/nodejs /var/www/bitweb.ee/keeleliin.bitweb.ee/wrapper/concat/app.js            29845   12849    /root/.forever/OmkK.log 0:0:48:58.29
+
+forever start /var/www/bitweb.ee/keeleliin.bitweb.ee/server/app.js
