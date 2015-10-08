@@ -87,10 +87,7 @@ function WorkflowDaoService() {
                             ],
                             required: false,
                             through:{
-                                attributes:[],
-                                where: {
-                                    context: ResourceAssociation.contexts.WORKFLOW_INPUT
-                                }
+                                attributes:[]
                             }
                         }, {
                             model: WorkflowServiceModel,
@@ -139,10 +136,7 @@ function WorkflowDaoService() {
                                             ],
                                             required: false,
                                             through:{
-                                                attributes:[],
-                                                where: {
-                                                    context: ResourceAssociation.contexts.SUBSTEP_INPUT
-                                                }
+                                                attributes:[]
                                             }
                                         },
                                         {
@@ -155,10 +149,7 @@ function WorkflowDaoService() {
                                             ],
                                             required: false,
                                             through:{
-                                                attributes:[],
-                                                where: {
-                                                    context: ResourceAssociation.contexts.SUBSTEP_OUTPUT
-                                                }
+                                                attributes:[]
                                             }
                                         }
                                     ]

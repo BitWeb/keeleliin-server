@@ -88,10 +88,7 @@ function SubstepServiceDtoMapper(){
             function getInputResources(callback) {
                 workflowSubstep.getInputResources({
                     through:{
-                        attributes:[],
-                        where: {
-                            context: ResourceAssociation.contexts.SUBSTEP_INPUT
-                        }
+                        attributes:[]
                     }
                 }).then(function (data) {
                     logger.debug('Substep ' + workflowSubstep.id + ' input resources count ' + data.length );

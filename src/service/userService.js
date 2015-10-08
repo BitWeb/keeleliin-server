@@ -145,9 +145,12 @@ function UserService() {
                 description: 'Minu esimene projekt',
                 userId: user.id
             }).then(function (project) {
-
                 logger.debug('User Add userProject');
-                user.addUserProject(project, {role: ProjectUser.roles.ROLE_OWNER}).then(function () {
+                ProjectUser.create({
+                    userId: user.id,
+                    projectId: project.id,
+                    role: ProjectUser.roles.ROLE_OWNER
+                }).then(function () {
                     logger.debug('Vaikimisi project loodud');
                     cb(null, user);
                 }).catch(function (err) {

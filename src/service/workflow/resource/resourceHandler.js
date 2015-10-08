@@ -91,24 +91,18 @@ function ResourceHandler(project, workflow) {
             function getInitResources(callback) {
                 logger.debug('Get resource junks');
                 if(fromSubStep){
-                    fromSubStep.getResources({
+                    fromSubStep.getOutputResources({
                         through:{
-                            attributes:[],
-                            where: {
-                                context: ResourceAssociation.contexts.SUBSTEP_OUTPUT
-                            }
+                            attributes:[]
                         }
                     }).then(function (resources) {
                         return callback(null, resources);
                     });
                 } else {
                     workflowService.getWorkflow().then(function (workflow) {
-                        workflow.getResources({
+                        workflow.getInputResources({
                             through:{
-                                attributes:[],
-                                where: {
-                                    context: ResourceAssociation.contexts.WORKFLOW_INPUT
-                                }
+                                attributes:[]
                             }
                         }).then(function (resources) {
                             return callback(null, resources);
@@ -149,12 +143,9 @@ function ResourceHandler(project, workflow) {
 
                         previousWorkflowService.getSubSteps().then(function (substeps) {
                             async.each(substeps, function (substep, innerCallback) {
-                                substep.getResources({
+                                substep.getOutputResources({
                                     through:{
-                                        attributes:[],
-                                        where: {
-                                            context: ResourceAssociation.contexts.SUBSTEP_OUTPUT
-                                        }
+                                        attributes:[]
                                     }
                                 }).then(function (resources) {
                                     initResources = initResources.concat(resources);
@@ -167,12 +158,9 @@ function ResourceHandler(project, workflow) {
                     });
                 } else {
                     workflowService.getWorkflow().then(function (workflow) {
-                        workflow.getResources({
+                        workflow.getInputResources({
                             through:{
-                                attributes:[],
-                                where: {
-                                    context: ResourceAssociation.contexts.WORKFLOW_INPUT
-                                }
+                                attributes:[]
                             }
                         }).then(function (resources) {
                             return callback(null, resources);
