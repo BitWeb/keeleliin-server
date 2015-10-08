@@ -16,12 +16,16 @@ var User = require(__base + 'src/service/dao/sql').User;
 var WorkflowServiceSubstep = require(__base + 'src/service/dao/sql').WorkflowServiceSubstep;
 var WorkflowServiceModel = require(__base + 'src/service/dao/sql').WorkflowService;
 var WorkflowDefinition = require(__base + 'src/service/dao/sql').WorkflowDefinition;
+
+var WorkflowDefinitionService = require(__base + 'src/service/dao/sql').WorkflowDefinitionService;
+
 var ServiceModel = require(__base + 'src/service/dao/sql').Service;
 var WorkflowDefinitionUser = require(__base + 'src/service/dao/sql').WorkflowDefinitionUser;
 var workflowBuilder = require(__base + 'src/service/workflow/workflowBuilder');
 var WorkflowRunner = require(__base + 'src/service/workflow/workflowRunner');
-var userService = require('./userService');
+var workflowDefinitionService = require('./workflowDefinitionService');
 var apiService = require('./workflow/service/apiService');
+var ObjectUtil = require('./../util/objectUtils');
 
 function WorkflowService() {
 
@@ -31,14 +35,58 @@ function WorkflowService() {
         workflowDaoService.getWorkflowOverview( id, callback );
     };
 
-    this.getWorkflowDefinitionOverview = function ( req, id, callback ) {
-        workflowDaoService.getWorkflowDefinitionOverview( id, function (err, overview) {
-            if(err){
-               logger.error(err);
-               return callback(err);
+    this.getWorkflowDefinitionOverview = function ( req, workflowId, cb ) {
+
+        async.waterfall([
+                function getWorkflow( callback ) {
+                    workflowDaoService.getWorkflow(workflowId, callback);
+                },
+                function ( workflow, callback ) {
+                    workflow.getWorkflowDefinition().then(function (definition) {
+                        if(definition){
+                            callback(null, workflow, definition);
+                        } else {
+                            workflowDefinitionService.createDefinitionToWorkflow(req, workflow, function (err, definition) {
+                                callback(null, workflow, definition);
+                            });
+                        }
+                    });
+                },
+                function (workflow, definition, callback) {
+                    var workflowData = ObjectUtil.mapProperties(workflow, [ 'id', 'projectId', 'status', 'workflowDefinitionId', 'userId', 'name', 'description', 'purpose' ]);
+                    workflowData.workflowDefinitionId = definition.id;
+                    workflowData.workflowDefinition = ObjectUtil.mapProperties(definition, [ 'id', 'editStatus' ]);
+                    callback(null, workflowData);
+                },
+                function (workflowData, callback) {
+
+                    WorkflowDefinitionService.findAll({
+                        where: {
+                            workflowDefinitionId: workflowData.workflowDefinitionId
+                        },
+                        attributes: [
+                            'id',
+                            'serviceId',
+                            'orderNum',
+                            'serviceParamsValues'
+                        ],
+                        order: "order_num ASC",
+                        required: false
+                    }).then(function ( definitionServices ) {
+                        workflowData.workflowDefinition.definitionServices = definitionServices.map(function (item) {
+                            return item.toJSON();
+                        });
+                        return callback(null, workflowData);
+                    });
+                }
+            ],
+            function (err, workflowData) {
+                if(err){
+                    logger.error(err);
+                }
+                cb(err, workflowData);
             }
-            callback(err, overview);
-        });
+        );
     };
 
     this.runWorkflow = function (req, workflowId, callback) {

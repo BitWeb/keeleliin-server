@@ -63,65 +63,73 @@ function WorkflowDefinitionService() {
             function getCurrentUser(callback) {
                 userService.getCurrentUser(req, callback);
             },
-            function createDefinition(user, callback) {
+            function createWorkflow(user, callback) {
+
                 workflowDefinitionData.userId = user.id;
-                var definition = WorkflowDefinition.build(workflowDefinitionData, {fields: ['name', 'description', 'purpose', 'projectId', 'userId', 'accessStatus']});
+                var workflow = Workflow.build(workflowDefinitionData, {fields: ['name', 'description', 'purpose', 'projectId', 'userId', 'accessStatus']});
+                workflow.validate().then(function (err) {
+                    if (err) {
+                        return callback(err.message);
+                    }
+                    workflow.save().then(function () {
+                        callback( null, workflow);
+                    }).catch(function (err) {
+                        callback(err.message);
+                    });
+                });
+            },
+
+            function createDefinition(workflow, callback) {
+                workflowDefinitionData.workflowId = workflow.id;
+                var definition = WorkflowDefinition.build(workflowDefinitionData, {fields: ['name', 'description', 'purpose', 'projectId', 'userId', 'workflowId', 'accessStatus']});
 
                 definition.validate().then(function (err) {
                     if (err) {
                         return callback(err.message);
                     }
                     definition.save().then(function () {
-                        callback(null, definition, user);
+                        callback(null, definition, workflow);
                     }).catch(function (err) {
                         callback(err.message);
                     });
                 });
             },
-            function (definition, user, callback) {
-                logger.debug('Add definition owner user: def:' + definition.id + ' user: ' + user.id);
+            function (definition, workflow, callback) {
+                workflow.updateAttributes({
+                    workflowDefinitionId: definition.id
+                }).then(function(){
+                    callback(null, definition, workflow);
+                });
+            },
+            function (definition, workflow, callback) {
+                logger.debug('Add definition owner user: def:' + definition.id + ' user: ' + workflow.userId);
 
                 WorkflowDefinitionUser.create({
                     role: WorkflowDefinitionUser.roles.OWNER,
-                    userId: user.id,
+                    userId: workflow.userId,
                     workflowDefinitionId: definition.id
                 }).then(function () {
                     logger.debug('Definition user added');
-                    return callback(null, definition);
+                    return callback(null, definition, workflow);
                 }).catch(function (e) {
                     logger.error(e.pop());
                     return callback('Err: ' + e.message);
                 });
             },
-            function (definition, callback) {
+            function (definition, workflow, callback) {
                 logger.debug('Add shared to users users');
                 if(definition.accessStatus == WorkflowDefinition.accessStatuses.SHARED){
-                    return self._updateDefinitionUserRelations( req, definition, workflowDefinitionData.users, callback );
+                    return self._updateDefinitionUserRelations( req, definition, workflowDefinitionData.users, function (err, definition) {
+                        return callback(err, workflow);
+                    });
                 }
                 logger.debug('Not shared definition: ', definition);
-                return callback(null, definition);
-            },
-            function createInitWorkflowBasedOnDefinition(definition, callback) {
-                var workflowData = {
-                    projectId   : definition.projectId,
-                    workflowDefinitionId: definition.id,
-                    userId      : definition.userId,
-                    name        : definition.name,
-                    description : definition.description,
-                    purpose     : definition.purpose
-                };
-                Workflow.create(workflowData).then(function (workflow) {
-                    callback( null, workflow);
-                }).catch(function (err) {
-                    callback(err.message);
-                });
+                return callback(null, workflow);
             }
         ], function (err, workflow) {
-
             if(err){
                logger.error('Create error: ', err);
             }
-
             cb(err, workflow);
         });
     };
@@ -178,9 +186,7 @@ function WorkflowDefinitionService() {
         async.waterfall([
             function (callback) {
 
-                Workflow.find({
-                    where: {id: workflowId}
-                }).then(function (workflow) {
+                Workflow.findById( workflowId ).then(function (workflow) {
                     if(!workflow){
                         return callback('Töövoogu ei leitud');
                     }
@@ -196,18 +202,24 @@ function WorkflowDefinitionService() {
             },
             function (workflow, callback) {
                 workflow.getWorkflowDefinition().then(function(definition){
-                   callback(null, workflow, definition);
+                    if(!definition){
+                        self.createDefinitionToWorkflow(req, workflow, function (err, definition) {
+                            callback(null, workflow, definition);
+                        });
+                    } else {
+                        callback(null, workflow, definition);
+                    }
                 });
             },
-            function (workflow, definition, callback) {
-                var updateFields = ['name', 'description', 'purpose', 'accessStatus'];
-                if(definition.editStatus == WorkflowDefinition.editStatuses.LOCKED){
-                    updateFields = [ 'accessStatus' ];
-                }
-
-                definition.updateAttributes(data, {fields:updateFields}).then(function () {
+            function updateDefinition(workflow, definition, callback) {
+                if(definition.workflowId == workflow.id){
+                    var updateFields = ['name', 'description', 'purpose', 'accessStatus'];
+                    definition.updateAttributes(data, {fields:updateFields}).then(function () {
+                        callback(null, workflow, definition);
+                    });
+                } else {
                     callback(null, workflow, definition);
-                });
+                }
             },
             function (workflow, definition, callback) {
                 if( definition.accessStatus == WorkflowDefinition.accessStatuses.SHARED ){
@@ -362,7 +374,7 @@ function WorkflowDefinitionService() {
                         }
 
                         if(workflowDefinition.editStatus != WorkflowDefinition.editStatuses.EDIT){
-                            return self._createDefinitionToWorkflow(req, workflow, callback);
+                            return self.createDefinitionToWorkflow(req, workflow, callback);
                         }
                         return callback(null, workflowDefinition);
 
@@ -411,7 +423,7 @@ function WorkflowDefinitionService() {
         );
     };
 
-    this._createDefinitionToWorkflow = function(req, workflow, cb){
+    this.createDefinitionToWorkflow = function(req, workflow, cb){
 
         async.waterfall([
             function getCurrentUser(callback) {
@@ -425,11 +437,12 @@ function WorkflowDefinitionService() {
                     purpose: workflow.purpose,
                     projectId: workflow.projectId,
                     userId: user.id,
+                    workflowId: workflow.id,
                     accessStatus: WorkflowDefinition.accessStatuses.PRIVATE
                 };
 
                 WorkflowDefinition.create(
-                    workflowDefinitionData, { fields: ['name', 'description', 'purpose', 'projectId', 'userId', 'accessStatus'] }
+                    workflowDefinitionData, { fields: ['name', 'description', 'purpose', 'projectId', 'userId', 'workflowId', 'accessStatus'] }
                 ).then(function ( definition ) {
                         callback(null, definition, user);
                     }).catch(function (err) {
@@ -437,7 +450,12 @@ function WorkflowDefinitionService() {
                     });
             },
             function addUser(definition, user, callback) {
-                definition.addWorkflowDefinitionUser( user, { role: WorkflowDefinitionUser.roles.OWNER }).then(function () {
+
+                WorkflowDefinitionUser.create({
+                    userId: user.id,
+                    workflowDefinitionId: definition.id,
+                    role: WorkflowDefinitionUser.roles.OWNER
+                }).then(function () {
                     logger.debug('User added');
                     return callback(null, definition);
                 }).catch(function (e) {

@@ -40,6 +40,15 @@ module.exports = function(sequelize, DataTypes) {
             },
             field: 'user_id'
         },
+        workflowId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: 'workflow',
+                key: 'id'
+            },
+            field: 'workflow_id'
+        },
         name: {
             type: DataTypes.STRING,
             allowNull: false,
@@ -91,22 +100,25 @@ module.exports = function(sequelize, DataTypes) {
                 );
                 WorkflowDefinition.hasMany(models.Workflow, {
                         as: 'workflows',
-                        foreignKey: 'workflowDefinitionId'
+                        foreignKey: 'workflowDefinitionId',
+                        constraints:false
                     }
                 );
-
+                WorkflowDefinition.belongsTo(models.Workflow, {
+                        as: 'workflow',
+                        foreignKey: 'workflowId'
+                    }
+                );
                 WorkflowDefinition.belongsTo(models.User, {
                         as: 'user',
                         foreignKey: 'userId'
                     }
                 );
-
                 WorkflowDefinition.belongsTo(models.Project, {
                         as: 'project',
                         foreignKey: 'projectId'
                     }
                 );
-
                 WorkflowDefinition.belongsToMany(models.User, {
                         as: 'workflowDefinitionUsers',
                         through: {

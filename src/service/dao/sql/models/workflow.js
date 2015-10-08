@@ -67,10 +67,6 @@ module.exports = function(sequelize, DataTypes) {
         workflowDefinitionId: {
             type: DataTypes.INTEGER,
             allowNull: true,
-            references: {
-                model: 'workflow_definition',
-                key: 'id'
-            },
             field: 'workflow_definition_id'
         },
         datetimeCreated: {
@@ -106,11 +102,21 @@ module.exports = function(sequelize, DataTypes) {
                         foreignKey: 'userId'
                     }
                 );
-                Workflow.belongsTo(models.WorkflowDefinition, {
-                        foreignKey:'workflowDefinitionId',
-                        as: 'workflowDefinition'
+
+                Workflow.hasOne(models.WorkflowDefinition, {
+                        foreignKey:'workflowId',
+                        as: 'createdWorkflowDefinition'
                     }
                 );
+
+                Workflow.belongsTo(models.WorkflowDefinition, {
+                        foreignKey:'workflowDefinitionId',
+                        as: 'workflowDefinition',
+                        constraints: false
+                    }
+                );
+
+
                 Workflow.belongsTo(models.Project, {
                         foreignKey:'projectId',
                         as: 'project'

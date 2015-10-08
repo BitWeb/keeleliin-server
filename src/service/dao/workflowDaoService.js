@@ -177,68 +177,6 @@ function WorkflowDaoService() {
         });
     };
 
-    this.getWorkflowDefinitionOverview = function( workflowId, cb) {
-
-        Workflow.find({
-            attributes: [
-                'id',
-                'projectId',
-                'status',
-                'workflowDefinitionId',
-                'userId',
-                'name',
-                'description',
-                'purpose'
-            ],
-            where: { id: workflowId },
-            include: [
-                {
-                    model: WorkflowDefinition,
-                    as: 'workflowDefinition',
-                    attributes: [
-                        'id',
-                        'editStatus'
-                    ],
-                    required: false
-                }
-            ]
-        }).then(function (definition) {
-            if(!definition){
-                return cb('Definitsiooni ei leitud');
-            }
-
-            WorkflowDefinitionService.findAll({
-                where: {
-                    workflowDefinitionId: definition.workflowDefinition.id
-                },
-                attributes: [
-                    'id',
-                    'serviceId',
-                    'orderNum',
-                    'serviceParamsValues'
-                ],
-                order: "order_num ASC",
-                required: false
-            }).then(function ( definitionServices ) {
-                var definitionJson = definition.toJSON();
-                definitionJson.workflowDefinition.definitionServices = definitionServices.map(function (item) {
-                    return item.toJSON();
-                });
-                return cb(null, definitionJson);
-            }).catch(function (err) {
-                return cb({
-                    message: err.message,
-                    code: 500
-                });
-            });
-        }).catch(function (err) {
-            return cb({
-                message: err.message,
-                code: 500
-            });
-        });
-    };
-
     this.getProjectWorkflowsList = function (projectId, callback) {
 
         Workflow.findAll({
