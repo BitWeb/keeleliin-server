@@ -245,14 +245,16 @@ function Runner() {
             }
 
             if( stepsCreated == 0 ){
+                logger.error('Järgnevaid samme ei loodud.' + workflowService.id);
                 if(fromSubStep){
-                    fromSubStep.log = 'Teenusele sobivaid sisendressursse ei leitud';
+                    fromSubStep.log = 'Järgnevale teenusele sobivaid sisendressursse ei leitud';
+                    logger.error(fromSubStep.log + ' Alamsammust: ' + fromSubStep.id);
                     return self._breakFromSubstep(fromSubStep, Workflow.statusCodes.ERROR)
                 }
                 workflowService.log = 'Teenusele sobivaid sisendressursse ei leitud';
+                logger.error(workflowService.log);
                 return self._breakFromService(workflowService, Workflow.statusCodes.ERROR);
             }
-
             cb();
         });
     };
@@ -297,6 +299,7 @@ function Runner() {
             function checkStatuses(callback) {
 
                 if(workflow.status == Workflow.statusCodes.CANCELLED){
+                    subStep.log = 'Katkestatud';
                     self._breakFromSubstep(subStep, Workflow.statusCodes.CANCELLED);
                     return callback('Töövoog on katkestatud.');
                 }
@@ -306,7 +309,7 @@ function Runner() {
                 }
 
                 if (err || subStep.status != Workflow.statusCodes.FINISHED) {
-                    logger.debug('Break substep: ' + subStep.id);
+                    logger.error('Break substep: ' + subStep.id);
                     self._breakFromSubstep(subStep, subStep.status);
                     return callback('Töövoog sammus tekkis viga');
                 }
@@ -316,8 +319,12 @@ function Runner() {
     };
 
     this._breakFromSubstep = function (subStep, statusCode) {
-        subStep.getWorkflowService().then(function (workflowService) {
-            self._breakFromService(workflowService, statusCode);
+        logger.debug('Break from substep ' + subStep.id);
+
+        subStep.save().then(function () {
+            subStep.getWorkflowService().then(function (workflowService) {
+                self._breakFromService(workflowService, statusCode);
+            });
         });
     };
 
@@ -435,7 +442,7 @@ function Runner() {
                         logger.trace(canFinish);
                         if(canFinish){
                             self.finishWorkflowService( workflowService, Workflow.statusCodes.FINISHED, function (err, success) {
-                                logger.trace('Viimane töövoo samm lõpetati staatusega', success);
+                                logger.trace('Viimane töövoo samm ' + workflowService.id + ' lõpetati staatusega', success);
                                 callback(err, success);
                             });
                         } else {

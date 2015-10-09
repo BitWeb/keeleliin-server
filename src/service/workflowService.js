@@ -117,29 +117,23 @@ function WorkflowService() {
                     callback(err);
                 });
             },
-            function checkStatus( workflow, callback ) {
-                if(workflow.status != Workflow.statusCodes.RUNNING){
-                    return callback('Töövoog ei käi');
-                }
-                callback(null, workflow);
-            },
             function updateStatus( workflow, callback ) {
-                workflow.updateAttributes({
-                    status: Workflow.statusCodes.CANCELLED
-                }).then(function () {
+                if(workflow.status == Workflow.statusCodes.RUNNING){
+                    workflow.updateAttributes({
+                        status: Workflow.statusCodes.CANCELLED
+                    }).then(function () {
+
+                        self._killWorkflowRunningSubSteps(workflow, function (err) {
+                            logger.info('Signals sent', err);
+                        });
+                        callback(null, workflow);
+                    }).catch(function (err) {
+                        callback(err);
+                    });
+                } else {
                     callback(null, workflow);
-                }).catch(function (err) {
-                    callback(err);
-                });
-            },
-            function sendProcessKillSignals( workflow, callback ) {
-
-                self._killWorkflowRunningSubSteps(workflow, function (err) {
-                    logger.info('Signals sent', err);
-                });
-                callback(null, workflow);
+                }
             }
-
         ], function (err, workflow) {
             if(err){
                 return cb({

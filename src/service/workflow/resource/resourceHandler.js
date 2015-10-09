@@ -227,15 +227,6 @@ function ResourceHandler(project, workflow) {
             junks.push(junk);
         };
 
-        for (i in resources) {
-            var resource = resources[i];
-            if (isResourceTypeNeeded(resource.resourceTypeId) == true) {
-                putResourceToJunk(resource);
-            } else {
-                logger.info('Resource ' + resource.id + ' is not used in current service step.');
-            }
-        }
-
         var fillMissingResourcesInJunk = function (junk, cb) {
 
             async.eachSeries(
@@ -263,6 +254,20 @@ function ResourceHandler(project, workflow) {
                 }
             );
         };
+
+        for (i in resources) {
+            var resource = resources[i];
+            if (isResourceTypeNeeded(resource.resourceTypeId) == true) {
+                putResourceToJunk(resource);
+            } else {
+                logger.info('Resource ' + resource.id + ' is not used in current service step.');
+            }
+        }
+
+        //If last substep gives no suitable output then make one empty junk
+        if(junks.length == 0){
+            junks.push([]);
+        }
 
         //võimalik, et leidub poolikuid junke. Täidame need ajaloost
         async.map(

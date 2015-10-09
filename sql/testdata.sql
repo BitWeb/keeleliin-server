@@ -56,17 +56,17 @@ INSERT INTO service_output_type(key, service_id, resource_type_id) SELECT 'outpu
 INSERT INTO service_output_type(key, service_id, resource_type_id) SELECT 'output', 9, 1 WHERE NOT EXISTS (SELECT 1 FROM service_output_type WHERE service_output_type.id = 9);
 INSERT INTO service_output_type(key, service_id, resource_type_id) SELECT 'output', 10, 1 WHERE NOT EXISTS (SELECT 1 FROM service_output_type WHERE service_output_type.id = 10);
 
-INSERT INTO service_has_parent_service(service_sibling_id, service_parent_id) SELECT 2, 1 WHERE NOT EXISTS (SELECT 1 FROM service_has_parent_service WHERE service_sibling_id = 2 AND  service_parent_id = 1);
-INSERT INTO service_has_parent_service(service_sibling_id, service_parent_id) SELECT 3, 2 WHERE NOT EXISTS (SELECT 1 FROM service_has_parent_service WHERE service_sibling_id = 3 AND  service_parent_id = 2);
-INSERT INTO service_has_parent_service(service_sibling_id, service_parent_id) SELECT 4, 3 WHERE NOT EXISTS (SELECT 1 FROM service_has_parent_service WHERE service_sibling_id = 4 AND  service_parent_id = 3);
-INSERT INTO service_has_parent_service(service_sibling_id, service_parent_id) SELECT 5, 4 WHERE NOT EXISTS (SELECT 1 FROM service_has_parent_service WHERE service_sibling_id = 5 AND  service_parent_id = 4);
-INSERT INTO service_has_parent_service(service_sibling_id, service_parent_id) SELECT 6, 5 WHERE NOT EXISTS (SELECT 1 FROM service_has_parent_service WHERE service_sibling_id = 6 AND  service_parent_id = 5);
-INSERT INTO service_has_parent_service(service_sibling_id, service_parent_id) SELECT 1, 7 WHERE NOT EXISTS (SELECT 1 FROM service_has_parent_service WHERE service_sibling_id = 1 AND  service_parent_id = 7);
-INSERT INTO service_has_parent_service(service_sibling_id, service_parent_id) SELECT 8, 7 WHERE NOT EXISTS (SELECT 1 FROM service_has_parent_service WHERE service_sibling_id = 8 AND  service_parent_id = 7);
-INSERT INTO service_has_parent_service(service_sibling_id, service_parent_id) SELECT 9, 7 WHERE NOT EXISTS (SELECT 1 FROM service_has_parent_service WHERE service_sibling_id = 9 AND  service_parent_id = 7);
-INSERT INTO service_has_parent_service(service_sibling_id, service_parent_id) SELECT 10, 8 WHERE NOT EXISTS (SELECT 1 FROM service_has_parent_service WHERE service_sibling_id = 10 AND  service_parent_id = 8);
-INSERT INTO service_has_parent_service(service_sibling_id, service_parent_id) SELECT 8, 9 WHERE NOT EXISTS (SELECT 1 FROM service_has_parent_service WHERE service_sibling_id = 8 AND  service_parent_id = 9);
-INSERT INTO service_has_parent_service(service_sibling_id, service_parent_id) SELECT 1, 9 WHERE NOT EXISTS (SELECT 1 FROM service_has_parent_service WHERE service_sibling_id = 1 AND  service_parent_id = 9);
+INSERT INTO service_has_parent_service(service_sibling_id, service_parent_id, created_at, updated_at) SELECT 2, 1, NOW(), NOW() WHERE NOT EXISTS (SELECT 1 FROM service_has_parent_service WHERE service_sibling_id = 2 AND  service_parent_id = 1);
+INSERT INTO service_has_parent_service(service_sibling_id, service_parent_id, created_at, updated_at) SELECT 3, 2, NOW(), NOW() WHERE NOT EXISTS (SELECT 1 FROM service_has_parent_service WHERE service_sibling_id = 3 AND  service_parent_id = 2);
+INSERT INTO service_has_parent_service(service_sibling_id, service_parent_id, created_at, updated_at) SELECT 4, 3, NOW(), NOW() WHERE NOT EXISTS (SELECT 1 FROM service_has_parent_service WHERE service_sibling_id = 4 AND  service_parent_id = 3);
+INSERT INTO service_has_parent_service(service_sibling_id, service_parent_id, created_at, updated_at) SELECT 5, 4, NOW(), NOW() WHERE NOT EXISTS (SELECT 1 FROM service_has_parent_service WHERE service_sibling_id = 5 AND  service_parent_id = 4);
+INSERT INTO service_has_parent_service(service_sibling_id, service_parent_id, created_at, updated_at) SELECT 6, 5, NOW(), NOW() WHERE NOT EXISTS (SELECT 1 FROM service_has_parent_service WHERE service_sibling_id = 6 AND  service_parent_id = 5);
+INSERT INTO service_has_parent_service(service_sibling_id, service_parent_id, created_at, updated_at) SELECT 1, 7, NOW(), NOW() WHERE NOT EXISTS (SELECT 1 FROM service_has_parent_service WHERE service_sibling_id = 1 AND  service_parent_id = 7);
+INSERT INTO service_has_parent_service(service_sibling_id, service_parent_id, created_at, updated_at) SELECT 8, 7, NOW(), NOW() WHERE NOT EXISTS (SELECT 1 FROM service_has_parent_service WHERE service_sibling_id = 8 AND  service_parent_id = 7);
+INSERT INTO service_has_parent_service(service_sibling_id, service_parent_id, created_at, updated_at) SELECT 9, 7, NOW(), NOW() WHERE NOT EXISTS (SELECT 1 FROM service_has_parent_service WHERE service_sibling_id = 9 AND  service_parent_id = 7);
+INSERT INTO service_has_parent_service(service_sibling_id, service_parent_id, created_at, updated_at) SELECT 10, 8, NOW(), NOW() WHERE NOT EXISTS (SELECT 1 FROM service_has_parent_service WHERE service_sibling_id = 10 AND  service_parent_id = 8);
+INSERT INTO service_has_parent_service(service_sibling_id, service_parent_id, created_at, updated_at) SELECT 8, 9, NOW(), NOW() WHERE NOT EXISTS (SELECT 1 FROM service_has_parent_service WHERE service_sibling_id = 8 AND  service_parent_id = 9);
+INSERT INTO service_has_parent_service(service_sibling_id, service_parent_id, created_at, updated_at) SELECT 1, 9, NOW(), NOW() WHERE NOT EXISTS (SELECT 1 FROM service_has_parent_service WHERE service_sibling_id = 1 AND  service_parent_id = 9);
 
 
 INSERT INTO notification_type ( application_context, code, url_template, message_template, is_send_email, mail_subject_template, notify_period_days )
