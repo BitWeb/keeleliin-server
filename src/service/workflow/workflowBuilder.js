@@ -14,7 +14,7 @@ function WorkflowBuilder(){
 
         async.waterfall([
                 function (callback) {
-                    Workflow.find({where:{id:workflowId}}).then(function (workflow) {
+                    Workflow.findById( workflowId ).then(function (workflow) {
                         if(!workflow){
                             callback('Töövoogu ei leitud');
                         }

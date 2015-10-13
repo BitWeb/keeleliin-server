@@ -85,6 +85,11 @@ module.exports = function (sequelize, DataTypes) {
             getNextWorkflowService: function (cb) {
                 var self = this;
                 this.getWorkflow().then(function (workflow) {
+
+                    if(!workflow){
+                        cb('Teenuse töövoogu ei leitud');
+                    }
+
                     workflow.getWorkflowServices({
                         where: {
                             workflowId: self.workflowId,

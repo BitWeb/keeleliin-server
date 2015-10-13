@@ -191,6 +191,19 @@ module.exports = function(sequelize, DataTypes) {
                     return cb(err);
                 });
             },
+            getLastWorkflowService: function (cb) {
+                this.getWorkflowServices({
+                    order: [['order_num', 'DESC']],
+                    limit: 1
+                }).then(function (items) {
+                    if (items.length > 0) {
+                        return cb(null, items[0]);
+                    }
+                    return cb();
+                }).catch(function (err) {
+                    return cb(err);
+                });
+            },
             start: function (cb) {
 
                 if (this.status != statusCodes.INIT) {

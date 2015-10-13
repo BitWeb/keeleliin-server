@@ -349,15 +349,18 @@ function SubStepHandler(project, workflow){
                         workflowId: outputAssociation.workflowId
                     };
 
-                    ResourceAssociation.create( outputData).then(function (outputAssociation) {
+                    ResourceAssociation.create( outputData).then(function (wfOutputAssociation) {
+                        logger.debug('Output association created');
                         innerCb();
-                    })
-                    .catch(function (err) {
+                    }).catch(function (err) {
                             innerCb(err.message);
                         }
                     );
 
                 }, function (err) {
+                    if(err){
+                        logger.error('Association mapping failed', err);
+                    }
                     callback(err);
                 });
             }
