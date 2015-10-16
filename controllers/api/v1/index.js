@@ -16,6 +16,7 @@ router.get('/', authMiddleware('guest'), function(req, res) {
 router.use('/user', require(__base + 'controllers/api/v1/user'));
 router.use('/project', require(__base + 'controllers/api/v1/project'));
 router.use('/resource', require(__base + 'controllers/api/v1/resource'));
+router.use('/entu', require(__base + 'controllers/api/v1/entu'));
 router.use('/service', require(__base + 'controllers/api/v1/service'));
 router.use('/notification', require(__base + 'controllers/api/v1/notification'));
 router.use('/workflow', require(__base + 'controllers/api/v1/workflow'));

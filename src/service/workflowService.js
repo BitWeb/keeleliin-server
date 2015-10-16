@@ -264,69 +264,7 @@ function WorkflowService() {
         );
     };
 
-    this.addResources = function(req, workflowId, data, callback){
-
-        logger.trace('Add resources', data);
-
-        async.waterfall([
-            function (callback) {
-                workflowDaoService.getWorkflow(workflowId, callback);
-            },
-            function (workflow, callback) {
-                if(workflow.status != Workflow.statusCodes.INIT){
-                    return callback('Töövoog ei ole init staatusega');
-                }
-                callback(null,workflow);
-            },
-            function (workflow, callback) {
-                workflow.getProject().then(function (project) {
-                    callback(null, workflow, project);
-                });
-            },
-            function (workflow, project, callback) {
-                async.eachLimit(data.resources, 10, function (resourceId, innerCallback) {
-                    if(!resourceId){
-                        return innerCallback();
-                    }
-                    resourceDaoService.getResource(resourceId, function (err, resource) {
-                        if(err){
-                            logger.error(err);
-                           return innerCallback();
-                        }
-
-                        var associationData = {
-                            context: ResourceAssociation.contexts.WORKFLOW_INPUT,
-                            resourceId: resourceId,
-                            userId: workflow.userId,
-                            projectId: project.id,
-                            workflowId: workflow.id
-                        };
-
-                        ResourceAssociation.create(associationData).then(function (association) {
-                            innerCallback();
-                        }).catch(function (err) {
-                            logger.error(err);
-                            innerCallback()
-                        });
-                    });
-                }, function (err) {
-                    callback(err);
-                });
-            }
-        ], function (err) {
-            if(err){
-                logger.error(err);
-            }
-            callback(err);
-        })
-    };
-
     this.deleteWorkflow = function (req, workflowId, cb ) {
-
-        //kustuta töövoo ressursid
-        //kustuta alamsammud
-        //kustuta teenused
-        //kustuta töövoog
 
         async.waterfall([
                 function (callback) {
@@ -365,6 +303,102 @@ function WorkflowService() {
                 cb(err, data);
             }
         );
+    };
+
+    this.addResources = function(req, workflowId, data, callback){
+
+        logger.trace('Add resources', data);
+
+        async.waterfall([
+            function (callback) {
+                workflowDaoService.getWorkflow(workflowId, callback);
+            },
+            function (workflow, callback) {
+                if(workflow.status != Workflow.statusCodes.INIT){
+                    return callback('Töövoog ei ole init staatusega');
+                }
+                callback(null,workflow);
+            },
+            function (workflow, callback) {
+                workflow.getProject().then(function (project) {
+                    callback(null, workflow, project);
+                });
+            },
+            function (workflow, project, callback) {
+                async.eachLimit(data.resources, 10, function (resourceId, innerCallback) {
+                    if(!resourceId){
+                        return innerCallback();
+                    }
+                    resourceDaoService.getResource(resourceId, function (err, resource) {
+                        if(err){
+                            logger.error(err);
+                            return innerCallback();
+                        }
+
+                        var associationData = {
+                            context: ResourceAssociation.contexts.WORKFLOW_INPUT,
+                            resourceId: resourceId,
+                            userId: workflow.userId,
+                            projectId: project.id,
+                            workflowId: workflow.id
+                        };
+
+                        ResourceAssociation.create(associationData).then(function (association) {
+                            innerCallback();
+                        }).catch(function (err) {
+                            logger.error(err);
+                            innerCallback()
+                        });
+                    });
+                }, function (err) {
+                    callback(err);
+                });
+            }
+        ], function (err) {
+            if(err){
+                logger.error(err);
+            }
+            callback(err);
+        })
+    };
+
+    this.addEntuResources = function(req, workflowId, data, callback){
+
+        logger.trace('Add entu resources', data);
+
+        async.waterfall([
+            function (callback) {
+                workflowDaoService.getWorkflow(workflowId, callback);
+            },
+            function (workflow, callback) {
+                if(workflow.status != Workflow.statusCodes.INIT){
+                    return callback('Töövoog ei ole init staatusega');
+                }
+                callback(null,workflow);
+            },
+            function (workflow, callback) {
+                workflow.getProject().then(function (project) {
+                    callback(null, workflow, project);
+                });
+            },
+            function (workflow, project, callback) {
+                async.eachLimit(data.files, 10, function (fileId, innerCallback) {
+                    if(!fileId){
+                        return innerCallback();
+                    }
+                    resourceService.createResourceFromEntu(req, null, workflowId, fileId, function (err, resource) {
+                        innerCallback(err);
+                    });
+                }, function (err) {
+                    callback(err);
+                });
+            }
+        ], function (err) {
+            if(err){
+                logger.error(err);
+            }
+            callback(err);
+        })
     };
 }
 

@@ -51,6 +51,15 @@ router.get('/', authMiddleware('regular'), function(req, res) {
 });
 
 /**
+ * Entu Ressursside nimekiri
+ */
+router.get('/entu/list', authMiddleware('regular'), function(req, res) {
+    resourceService.getEntuResourceTree(req, function(error, resources) {
+        return res.sendApiResponse( error, resources);
+    });
+});
+
+/**
  * Ressursi info vorm
  */
 router.put('/:resourceId', authMiddleware('regular'), function(req, res) {
