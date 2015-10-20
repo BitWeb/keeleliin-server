@@ -1,33 +1,34 @@
-/**
- * Created by priit on 26.05.15.
- */
 
 var config = {};
 
 config.port = 3000;
+
+//Kliendirakenduse url
 config.appUrl = 'http://localhost:8001';
+
+//Api võti wrapperitele
 config.apiKey = 'server-wrapper-api-key';
-
-config.redis = {
-    host: "127.0.0.1",
-    port: 6379
-};
-
-config.sql = {
-    dialect     : 'postgres',
-    database    : 'keeleliin',
-    username    : '',
-    password    : '',
-    port        : 5432
-};
 
 config.entu = {
     apiUrl: 'https://entu.keeleressursid.ee/'
 };
 
+config.redis = {
+    host: process.env.REDIS_PORT_6379_TCP_ADDR || "127.0.0.1",
+    port: process.env.REDIS_PORT_6379_TCP_PORT || 6379
+};
+
+config.sql = {
+    dialect     : 'postgres',
+    database    : 'keeleliin',
+    username    : process.env.POSTGRES_ENV_POSTGRES_USER || 'postgres',
+    password    : process.env.POSTGRES_ENV_POSTGRES_PASSWORD || 'postgres',
+    host        : process.env.POSTGRES_PORT_5432_TCP_ADDR || 'localhost',
+    port        : process.env.POSTGRES_PORT_5432_TCP_PORT || 5432
+};
+
 config.resources = {
-    location: __dirname + '/../keeleliin-files',
-    downloadLocation: __dirname + '/../keeleliin-files/downloads',
+    location: '/keeleliin_files',
     tmp: '/tmp'
 };
 

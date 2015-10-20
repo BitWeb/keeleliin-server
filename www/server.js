@@ -3,8 +3,6 @@
  */
 global.__base = __dirname + '/../';
 
-//require('v8-profiler');
-
 var express = require('express');
 var app = express();
 
@@ -48,14 +46,11 @@ app.use(sessionDebugger);
 app.use(jsonApiResponseMiddleware);
 //app.use(apiAccess); // Using API call for registering API access
 
-
-
-
 app.use(controllers);
 app.use(errorhandlerMiddleware.error404);
 app.use(errorhandlerMiddleware.common);
-
 var workflowServerRestart = require('./../src/service/workflow/workflowServerRestart');
+var sqlInit = require('./../src/service/dao/sql/init');
 
 function startCluster( instanceCount, cb ){
 
@@ -64,28 +59,33 @@ function startCluster( instanceCount, cb ){
     }
 
     if (cluster.isMaster) {
-        log4jsLogger.debug('Instances count: ' + instanceCount);
-        for (var i = 0; i < instanceCount; i++) {
-            cluster.fork();
-        }
 
-        cluster.on('exit', function(deadWorker, code, signal) {
-            // Restart the worker
-            var worker = cluster.fork();
-            // Note the process IDs
-            var newPID = worker.process.pid;
-            var oldPID = deadWorker.process.pid;
+        sqlInit.init(function () {
 
-            // Log the event
-            log4jsLogger.error('worker ' + oldPID + ' died; Code: ' + code + '; Signal: ' + signal);
-            log4jsLogger.error('worker ' + newPID + ' born.');
+            log4jsLogger.debug('Instances count: ' + instanceCount);
+            for (var i = 0; i < instanceCount; i++) {
+                cluster.fork();
+            }
+
+            cluster.on('exit', function(deadWorker, code, signal) {
+                // Restart the worker
+                var worker = cluster.fork();
+                // Note the process IDs
+                var newPID = worker.process.pid;
+                var oldPID = deadWorker.process.pid;
+
+                // Log the event
+                log4jsLogger.error('worker ' + oldPID + ' died; Code: ' + code + '; Signal: ' + signal);
+                log4jsLogger.error('worker ' + newPID + ' born.');
+            });
+
+            workflowChecker.init();
+            workflowServerRestart.start(function (err) {
+                log4jsLogger.debug(' Workflows restarted. ');
+            });
+
         });
 
-        workflowChecker.init();
-        workflowServerRestart.start(function (err) {
-            log4jsLogger.debug(' Workflows restarted. ');
-        });
-        
     } else {
         startInstance(cb);
     }
