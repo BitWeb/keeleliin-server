@@ -23,6 +23,5 @@ EXPOSE  3000
 
 VOLUME ["/tmp","/keeleliin_files","/keeleliin_logs"]
 
-
 # Run app using nodemon
 CMD ["nodemon", "/src/app.js"]

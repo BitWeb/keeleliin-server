@@ -43,6 +43,6 @@ $  docker build -t kl_server .
 
 * RUN KEELELIIN SERVER
 
-$ docker run --name kl_server --rm -p 8000:3000 --link kl_redis:redis --link kl_postgres:postgres -v /keeleliin_server_data:/keeleliin_logs -v /keeleliin_server_data/tmp:/tmp -v /keeleliin_server_data/keeleliin_files:/keeleliin_files --restart=no kl_server
+$ docker run --name kl_server --rm -p 3000:3000 --link kl_redis:redis --link kl_postgres:postgres -v /keeleliin_server_data:/keeleliin_logs -v /keeleliin_server_data/tmp:/tmp -v /keeleliin_server_data/keeleliin_files:/keeleliin_files --restart=no kl_server
 
 
