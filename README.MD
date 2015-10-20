@@ -10,7 +10,7 @@ $ cp config_dist.js config.js
 
 $ cd /
 
-$ sudo mkdir keeleliin_server_data
+$ mkdir keeleliin_server_data
 
 $ cd keeleliin_server_data
 
@@ -27,7 +27,7 @@ $ mkdir keeleliin_files
 *   --rm                Serveri sulgemisel kustuta konteiner
 *   --restart=no
 *   --restart=always
-* Konteineritw taustal jookustamiseks eemalda --rm ja kasuta --restart=always ning lisa -d
+* Konteinerit taustal jookustamiseks eemalda --rm ja kasuta --restart=always ning lisa -d
 
 * RUN REDIS SERVER
 
