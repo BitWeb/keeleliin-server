@@ -7,11 +7,9 @@ RUN apt-get update && \
     curl -sL https://deb.nodesource.com/setup | sudo bash - && \
     apt-get -y install python build-essential nodejs
 
-RUN npm install -g nodemon
-
 # Provides cached layer for node_modules
 ADD package.json /tmp/package.json
-RUN cd /tmp && npm install
+RUN cd /tmp && npm install && npm install -g forever
 RUN mkdir -p /src && cp -a /tmp/node_modules /src/
 
 # Define working directory
@@ -23,5 +21,5 @@ EXPOSE  3000
 
 VOLUME ["/tmp","/keeleliin_files","/keeleliin_logs"]
 
-# Run app using nodemon
-CMD ["nodemon", "/src/app.js"]
+# Run app using forever
+CMD ["forever", "/src/app.js"]
