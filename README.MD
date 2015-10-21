@@ -1,22 +1,18 @@
 # Projekti käivitamine dockeris
 
 * Loo dockeri konteinerite välised kaustad
+ 
+	$ mkdir /keeleliin_server_data
 
-	$ cd /
+	$ mkdir /keeleliin_server_data/config
 
-	$ mkdir keeleliin_server_data
+	$ mkdir /keeleliin_server_data/redis_data
 
-	$ cd keeleliin_server_data
+	$ mkdir /keeleliin_server_data/postgres_data
 
-	$ mkdir config
+	$ mkdir /keeleliin_server_data/tmp
 
-	$ mkdir redis_data
-
-	$ mkdir postgres_data
-
-	$ mkdir tmp
-
-	$ mkdir keeleliin_files
+	$ mkdir /keeleliin_server_data/keeleliin_files
 
 
 
@@ -52,8 +48,6 @@
 # Serveri koodibaasi uuendamine
 
 	$ docker exec <konteineri ID> /src/docker_update.sh
-
-
 
 #   Dockeri run parameetreid
 
