@@ -1,25 +1,24 @@
-FROM    ubuntu
+FROM    ubuntu:14.04
 
 MAINTAINER priit@bitweb.ee
 
 RUN apt-get update && \
     apt-get -y install curl && \
     curl -sL https://deb.nodesource.com/setup | sudo bash - && \
-    apt-get -y install python build-essential nodejs
+    apt-get -y install python build-essential nodejs && \
+    apt-get -y install git
 
-# Provides cached layer for node_modules
-ADD package.json /tmp/package.json
-RUN cd /tmp && npm install && npm install -g forever
-RUN mkdir -p /src && cp -a /tmp/node_modules /src/
+RUN npm install -g forever
+RUN mkdir -p /src
+RUN mkdir -p /config
 
-# Define working directory
-WORKDIR /src
-ADD . /src
+RUN cd /src && \
+git clone 'https://github.com/BitWeb/keeleliin-server.git' . && \
+npm install && echo "Run is Done 2   "
 
-# Expose port
+#Expose port
 EXPOSE  3000
 
-VOLUME ["/tmp","/keeleliin_files","/keeleliin_logs"]
+VOLUME ["/tmp","/keeleliin_files","/keeleliin_logs", "/config"]
 
-# Run app using forever
-CMD ["forever", "/src/app.js"]
+CMD /./src/docker_start.sh && /bin/bash
