@@ -10,7 +10,7 @@ RUN apt-get update && \
 
 RUN npm install -g forever
 RUN mkdir -p /src
-RUN mkdir -p /config
+
 
 RUN cd /src && \
 git clone 'https://github.com/BitWeb/keeleliin-server.git' . && \
