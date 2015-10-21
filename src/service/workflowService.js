@@ -305,7 +305,7 @@ function WorkflowService() {
         );
     };
 
-    this.addResources = function(req, workflowId, data, callback){
+    this.addResources = function(req, workflowId, data, cb){
 
         logger.trace('Add resources', data);
 
@@ -358,11 +358,11 @@ function WorkflowService() {
             if(err){
                 logger.error(err);
             }
-            callback(err);
+            cb(err);
         })
     };
 
-    this.addEntuResources = function(req, workflowId, data, callback){
+    this.addEntuResources = function(req, workflowId, data, cb){
 
         logger.trace('Add entu resources', data);
 
@@ -397,7 +397,7 @@ function WorkflowService() {
             if(err){
                 logger.error(err);
             }
-            callback(err);
+            cb(err);
         })
     };
 }

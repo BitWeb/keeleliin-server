@@ -249,7 +249,7 @@ function ResourceService() {
                         associationData.context = ResourceAssociation.contexts.WORKFLOW_INPUT;
                         associationData.workflowId = workflow.id;
                     } else {
-                        associationData.context = ResourceAssociation.contexts.PROJECT_UPLOAD;
+                        associationData.context = ResourceAssociation.contexts.PROJECT_FILE;
                     }
 
                     ResourceAssociation.create( associationData ).then(function ( inputAssociation ) {
@@ -510,7 +510,7 @@ function ResourceService() {
                             associationData.context = ResourceAssociation.contexts.WORKFLOW_INPUT;
                             associationData.workflowId = workflow.id;
                         } else {
-                            associationData.context = ResourceAssociation.contexts.PROJECT_UPLOAD;
+                            associationData.context = ResourceAssociation.contexts.PROJECT_FILE;
                         }
 
                         ResourceAssociation.create( associationData ).then(function ( inputAssociation ) {

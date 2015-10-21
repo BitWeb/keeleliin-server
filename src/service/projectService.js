@@ -15,6 +15,10 @@ var NotificationType = require(__base + 'src/service/dao/sql').NotificationType;
 var ArrayUtil = require('../util/arrayUtils');
 var ObjectUtil = require('../util/objectUtils');
 
+var ResourceAssociation = require(__base + 'src/service/dao/sql').ResourceAssociation;
+var resourceDaoService = require(__base + 'src/service/dao/resourceDaoService');
+
+
 function ProjectService(){
 
     var self = this;
@@ -337,6 +341,83 @@ function ProjectService(){
                 cb(err);
             }
         );
+    };
+
+    this.addResources = function(req, projectId, data, cb){
+
+        logger.trace('Add resources', data);
+
+        async.waterfall([
+            function (callback) {
+                self.getProject(req, projectId, function (err, project) {
+                    callback(err, project);
+                })
+            },
+            function ( project, callback ) {
+                async.eachLimit(data.resources, 10, function (resourceId, innerCallback) {
+                    if(!resourceId){
+                        return innerCallback();
+                    }
+                    resourceDaoService.getResource(resourceId, function (err, resource) {
+                        if(err){
+                            logger.error(err);
+                            return innerCallback();
+                        }
+
+                        var associationData = {
+                            context: ResourceAssociation.contexts.PROJECT_FILE,
+                            resourceId: resource.id,
+                            userId: req.redisSession.data.userId,
+                            projectId: projectId
+                        };
+
+                        ResourceAssociation.create(associationData).then(function (association) {
+                            innerCallback();
+                        }).catch(function (err) {
+                            logger.error(err);
+                            innerCallback()
+                        });
+                    });
+                }, function (err) {
+                    callback(err);
+                });
+            }
+        ], function (err) {
+            if(err){
+                logger.error(err);
+            }
+            cb(err);
+        })
+    };
+
+    this.addEntuResources = function(req, projectId, data, cb){
+
+        logger.trace('Add entu resources', data);
+
+        async.waterfall([
+            function (callback) {
+                self.getProject(req, projectId, function (err, project) {
+                    callback(err, project);
+                });
+            },
+            function (project, callback) {
+                async.eachLimit(data.files, 10, function (fileId, innerCallback) {
+                    if(!fileId){
+                        return innerCallback();
+                    }
+                    resourceService.createResourceFromEntu(req, projectId, null, fileId, function (err, resource) {
+                        innerCallback(err);
+                    });
+                }, function (err) {
+                    callback(err);
+                });
+            }
+        ], function (err) {
+            if(err){
+                logger.error(err);
+            }
+            cb(err);
+        })
     };
 
 }

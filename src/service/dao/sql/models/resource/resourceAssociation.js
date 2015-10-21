@@ -10,7 +10,7 @@ var fs = require('fs');
 module.exports = function(sequelize, DataTypes) {
 
     var contexts = {
-        PROJECT_UPLOAD  : 'project_upload',
+        PROJECT_FILE  : 'project_file',
         WORKFLOW_INPUT  : 'workflow_input',
         WORKFLOW_OUTPUT  : 'workflow_output',
 
