@@ -10,7 +10,3 @@ fi
 
 forever start /src/app.js
 forever list
-
-forever logs /src/app.js -f
-
-
