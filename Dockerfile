@@ -14,7 +14,7 @@ RUN mkdir -p /src
 
 RUN cd /src && \
 git clone 'https://github.com/BitWeb/keeleliin-server.git' . && \
-npm install && echo "Run is Done 2.1.2"
+npm install && echo "Run is Done 2.2"
 
 #Expose port
 EXPOSE  3000
