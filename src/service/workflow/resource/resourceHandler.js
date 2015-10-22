@@ -300,6 +300,10 @@ function ResourceHandler(project, workflow) {
 
     this._getResourceFromHistoryByResourceTypeId = function (inputResourceTypeId, subStep, callback) {
 
+        if(!subStep){
+            return callback(null, null);
+        }
+
         subStep.getPrevSubstep().then(function (prevSubstep) {
             if (prevSubstep) {
                 prevSubstep.getOutputResources().then(function (outputResources) {
