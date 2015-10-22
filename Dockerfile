@@ -21,4 +21,4 @@ EXPOSE  3000
 
 VOLUME ["/tmp","/keeleliin_files","/keeleliin_logs", "/config"]
 
-CMD /./src/docker_start.sh && /bin/bash
+CMD /./src/docker_start.sh

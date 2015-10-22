@@ -3,5 +3,7 @@
 cd /src
 git pull
 npm install
-forever restartall
+
+forever stopall
+forever /src/app.js
 forever list
