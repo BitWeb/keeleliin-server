@@ -157,17 +157,32 @@ function SubStepHandler(project, workflow){
         }
     };
 
-    this._recheckRequest = function (substep, dto, response, cb) {
-        logger.debug('Recheck request on ' + response.response.recheckInterval);
-        logger.debug(dto);
-        logger.debug(response);
+    this._recheckRequest = function (subStep, dto, response, cb) {
 
-        setTimeout(function () {
-            apiService.recheckRequest(dto, substep.serviceSession, function (error, response) {
-                if(error){return cb(error)}
-                self._handleResponse(substep, dto, response, cb);
-            })
-        }, response.response.recheckInterval * 1000);
+        //is worth to recheck
+        self.workflow.reload().then(function () {
+
+            if(self.workflow.status == Workflow.statusCodes.CANCELLED || self.workflow.status == Workflow.statusCodes.ERROR){
+                logger.debug('Cant continue: Töövoog on katkestatud');
+                subStep.log = 'Töövoog on katkestatud';
+                return self._updateSubstepFinishStatus(subStep, Workflow.statusCodes.CANCELLED, cb);
+            }
+
+            logger.debug('Recheck request on ' + response.response.recheckInterval);
+            logger.debug(dto);
+            logger.debug(response);
+
+            setTimeout(function () {
+                apiService.recheckRequest(dto, subStep.serviceSession, function (error, response) {
+                    if(error){return cb(error)}
+                    self._handleResponse(subStep, dto, response, cb);
+                })
+            }, response.response.recheckInterval * 1000);
+
+        }).catch(function (err) {
+            logger.error( err );
+            callback(err.message);
+        });
     };
 
 

@@ -104,11 +104,7 @@ function WorkflowService() {
     this.setWorkflowStatusCanceled = function (req, workflowId, cb) {
         async.waterfall([
             function getWorkflow( callback ) {
-                Workflow.find({
-                    where: {
-                        id: workflowId
-                    }
-                }).then(function (workflow) {
+                Workflow.findById( workflowId ).then(function (workflow) {
                     if (!workflow) {
                         return callback('Töövoogu ei leitud');
                     }

@@ -239,8 +239,8 @@ function WorkflowHolder( workflowId ){
 
     this.breakFromService = function (workflowService, statusCode) {
 
-        if(statusCode == Workflow.statusCodes.FINISHED || statusCode == Workflow.statusCodes.INIT || statusCode == Workflow.statusCodes.FINISHED){
-            return logger.error('Can not break with not negative statuscode');
+        if(statusCode == Workflow.statusCodes.FINISHED || statusCode == Workflow.statusCodes.INIT || statusCode == Workflow.statusCodes.RUNNING){
+            return logger.error('Can not break with not negative statuscode ', statusCode);
         }
 
         async.waterfall([
