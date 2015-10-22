@@ -34,8 +34,10 @@
 
 * Käivita loodud image kl_server
 
-	$ docker run --name kl_server -d -p 3000:3000 --link kl_redis:redis --link kl_postgres:postgres -v /keeleliin_server_data:/keeleliin_logs -v /keeleliin_server_data/tmp:/tmp -v /keeleliin_server_data/keeleliin_files:/keeleliin_files -v /keeleliin_server_data/config:/config --restart=always kl_server
+	$ docker run -it --name kl_server -p 3000:3000 --link kl_redis:redis --link kl_postgres:postgres -v /keeleliin_server_data:/keeleliin_logs -v /keeleliin_server_data/tmp:/tmp -v /keeleliin_server_data/keeleliin_files:/keeleliin_files -v /keeleliin_server_data/config:/config --restart=always kl_server
 
+* Serverist väljumiseks : Ctrl + P Q
+	
 
 
 * Muuda /keeleliin_server_data/config/config.js failis kliendirakenduse aadressi, api key ja emaili kontode väärtuseid
@@ -43,19 +45,10 @@
 
 * Uuenda konteinerit
 
-	$ docker exec <konteineri ID> /src/docker_update.sh
+	$ docker exec kl_server /src/docker_update.sh
 
 
 # Serveri koodibaasi uuendamine
 
-	$ docker exec <konteineri ID> /src/docker_update.sh
-
-#   Dockeri run parameetreid
-
-*   -d                  Jooksuta taustal
-*   --rm                Serveri sulgemisel kustuta konteiner
-*   --restart=no
-*   --restart=always
-* Konteinerit taustal jookustamiseks eemalda --rm ja kasuta --restart=always ning lisa -d
-
+	$ docker exec kl_server /src/docker_update.sh
 
