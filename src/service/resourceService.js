@@ -140,6 +140,8 @@ function ResourceService() {
             [
                 function parseForm(callback) {
                     var form = new formidable.IncomingForm();
+                    form.uploadDir = config.resources.tmp;
+
                     form.parse(req, function (err, fieldsData, files) {
                         if (err) {
                             return callback(err);
