@@ -215,7 +215,7 @@ function ResourceService() {
                         fs.mkdirSync(resourceFileLocation);
                     }
 
-                    fs.rename(resourceFile.path, config.resources.location + filename, function (err) {
+                    FileUtil.mv(resourceFile.path, config.resources.location + filename, function (err) {
                         if (err) {
                             logger.error(err);
                             return callback(err);
@@ -465,7 +465,7 @@ function ResourceService() {
                         }
                     },
 
-                    function renameFile(callback) {
+                    function downloadFile(callback) {
                         projectLocation = (project != null ? '/project_' + project.id : '');
                         var resourceFileLocation = config.resources.location + projectLocation;
                         //filename = projectLocation + '/' + uniqid() + path.extname(resourceFile.name);
