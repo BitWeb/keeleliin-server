@@ -517,7 +517,108 @@ function WorkflowDefinitionService() {
             cb( null, camelData);
 
         });
-    }
+    };
+
+    this.getCopyFromWorkflow = function (req, oldWorkflowId, cb) {
+
+        var user;
+        var oldWorkflow;
+        var definition;
+
+        async.waterfall([
+                function (callback) {
+                    userService.getCurrentUser(req, callback);
+                },
+                function (userItem, callback) {
+                    user = userItem;
+                    workflowDaoService.getWorkflow(oldWorkflowId, callback);
+                },
+                function (oldWorkflowItem, callback) {
+                    oldWorkflow = oldWorkflowItem;
+
+                    oldWorkflow.getWorkflowDefinition().then(function (fromDefinition) {
+                        definition = fromDefinition;
+                        return callback();
+                    });
+                },
+
+                function (callback) {
+
+                    var workflowData = {
+                        projectId   : oldWorkflow.projectId,
+                        workflowDefinitionId: definition.id,
+                        userId      : user.id,
+                        name        : oldWorkflow.name,
+                        description : oldWorkflow.description,
+                        purpose     : oldWorkflow.purpose
+                    };
+                    Workflow.create(workflowData).then(function (workflow) {
+                        callback( null, workflow);
+                    }).catch(function (err) {
+                        callback(err.message);
+                    });
+                },
+                function (workflow, callback) {
+
+                    if(!definition){
+                        self._createDefinitionFromWorkflow(req, oldWorkflow, function (err, newDefinition) {
+                            definition = newDefinition;
+                            workflow.workflowDefinitionId = newDefinition.id;
+                            workflow.save().then(function () {
+                                callback(err, workflow);
+                            });
+                        });
+                    } else {
+                        callback(null, workflow);
+                    }
+                }
+            ],
+            function (err, workflow) {
+                if(err){
+                    logger.error(err);
+                }
+                cb(err, workflow);
+            }
+        );
+
+        this._createDefinitionFromWorkflow = function (req, workflow, cb) {
+
+            async.waterfall(
+                [
+                    function (callback) {
+                        self.createDefinitionToWorkflow(req, workflow, callback)
+                    },
+                    function (definition, callback) {
+                        workflow.getWorkflowServices().then(function (workflowServices) {
+                            callback(null, definition, workflowServices);
+                        });
+                    },
+                    function (definition, workflowServices, callback) {
+
+                        async.each(workflowServices, function (workflowService, innerCb) {
+
+                            var data = {
+                                serviceId: workflowService.serviceId,
+                                serviceParamsValues: workflowService.serviceParamsValues,
+                                orderNum: workflowService.orderNum,
+                                workflowDefinitionId: definition.id
+                            };
+
+                            WorkflowDefinitionServiceModel.create(data).then(function (definitionService) {
+                                return innerCb();
+                            }).catch(function (err) {
+                                return innerCb( err.message );
+                            });
+                        }, function (err) {
+                            return callback(err, definition);
+                        });
+                    }
+
+                ],
+                cb
+            );
+        };
+    };
 }
 
 module.exports = new WorkflowDefinitionService();

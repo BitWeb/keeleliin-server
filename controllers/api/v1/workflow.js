@@ -125,4 +125,14 @@ router.put('/:workflowId/add-entu-files', authMiddleware('regular'), function(re
     });
 });
 
+/**
+ * Sättete modali sisu
+ */
+router.get('/:workflowId/copy', authMiddleware('regular'), function(req, res) {
+    workflowDefinitionService.getCopyFromWorkflow(req, req.params.workflowId, function(err, settings) {
+        return res.sendApiResponse( err, settings);
+    });
+});
+
+
 module.exports = router;

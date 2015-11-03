@@ -11,7 +11,6 @@ RUN apt-get update && \
 RUN npm install -g forever
 RUN mkdir -p /src
 
-
 RUN cd /src && \
 git clone 'https://github.com/BitWeb/keeleliin-server.git' . && \
 npm install && echo "Run is Done 2.2"
