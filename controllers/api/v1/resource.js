@@ -42,6 +42,15 @@ router.post('/upload', authMiddleware('regular'), function(req, res) {
 });
 
 /**
+ * Ressursi üleslaadimine
+ */
+router.post('/upload-url', authMiddleware('regular'), function(req, res) {
+    resourceService.createResourceFromUrl(req, req.body, function(err, resource) {
+        return res.sendApiResponse(err, resource);
+    });
+});
+
+/**
 * Ressursside nimekiri
  */
 router.get('/', authMiddleware('regular'), function(req, res) {

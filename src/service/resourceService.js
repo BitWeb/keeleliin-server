@@ -3,6 +3,8 @@
  */
 var logger = require('log4js').getLogger('resource_service');
 var fs = require('fs');
+var request = require('request');
+request.debug = true;
 var resourceDaoService = require('./dao/resourceDaoService');
 var Resource = require(__base + 'src/service/dao/sql').Resource;
 var ResourceAssociation = require(__base + 'src/service/dao/sql').ResourceAssociation;
@@ -127,15 +129,6 @@ function ResourceService() {
 
     this.createResourceFromUpload = function (req, cb) {
 
-        var resourceType;
-        var workflow;
-        var project;
-        var resourceFile;
-        var fields;
-        var filename;
-        var resource;
-        var projectLocation;
-
         async.waterfall(
             [
                 function parseForm(callback) {
@@ -147,121 +140,30 @@ function ResourceService() {
                             return callback(err);
                         }
 
-                        resourceFile = files.resourceFile;
-                        fields = fieldsData;
+                        var resourceFile = files.resourceFile;
 
-                        callback();
+                        if (!resourceFile) {
+                            return callback('No file attached');
+                        }
+
+                        var tmpFIle = {
+                            projectId: fieldsData.projectId,
+                            workflowId: fieldsData.workflowId,
+                            path: resourceFile.path,
+                            name: resourceFile.name
+                        };
+
+                        callback(null, tmpFIle);
                     });
                     form.on('error', function (err) {
-                        return cb(err);
+                        return callback(err);
                     });
                 },
-                function checkResourceFile(callback) {
-                    if (!resourceFile) {
-                        return callback('No file attached');
-                    }
-                    callback();
-                },
-                function getResourceType(callback) {
-                    ResourceType.find({where: {value: 'text'}}).then(function (type) {
-                        if (!type) {
-                            return callback('Ressursi tüüpi ei leitud.');
-                        }
-                        resourceType = type;
-                        return callback();
-                    }).catch(function (err) {
-                        callback(err.message);
-                    });
-                },
-                function getProject(callback) {
-                    logger.debug('Got fields: ', fields);
-
-                    if (fields.workflowId) {
-                        Workflow.findById(fields.workflowId).then(function (workflowItem) {
-                            workflow = workflowItem;
-                            if (!workflow) {
-                                return callback('Workflow not found');
-                            }
-                            workflow.getProject().then(function (projectItem) {
-                                project = projectItem;
-                                callback();
-                            }).catch(function (err) {
-                                callback(err.message);
-                            });
-                        }).catch(function (err) {
-                            callback(err.message);
-                        });
-
-                    } else if (fields.projectId) {
-                        Project.findById(fields.projectId).then(function (projectItem) {
-                            project = projectItem;
-                            callback();
-                        }).catch(function (err) {
-                            callback(err.message);
-                        });
-                    } else {
-                        callback('Project not found');
-                    }
-                },
-
-                function renameFile(callback) {
-                    projectLocation = (project != null ? '/project_' + project.id : '');
-                    var resourceFileLocation = config.resources.location + projectLocation;
-                    filename = projectLocation + '/' + uniqid() + path.extname(resourceFile.name);
-                    if (!fs.existsSync(config.resources.location)) {
-                        fs.mkdirSync(config.resources.location);
-                    }
-                    if (!fs.existsSync(resourceFileLocation)) {
-                        fs.mkdirSync(resourceFileLocation);
-                    }
-
-                    FileUtil.mv(resourceFile.path, config.resources.location + filename, function (err) {
-                        if (err) {
-                            logger.error(err);
-                            return callback(err);
-                        }
-                        return callback();
-                    });
-                },
-                function createResource(callback) {
-
-                    var resourceData = {
-                        resourceTypeId: resourceType.id,
-                        filename: filename,
-                        originalName: path.basename(resourceFile.name),
-                        name: resourceFile.name
-                    };
-
-                    Resource.create(resourceData).then(function (resourceItem) {
-                        resource = resourceItem;
-                        callback();
-                    }).catch(function (err) {
-                        callback(err.message);
-                    });
-                },
-                function createAssociations(callback) {
-
-                    var associationData = {
-                        resourceId: resource.id,
-                        userId: req.redisSession.data.userId,
-                        projectId: project.id
-                    };
-
-                    if(workflow){
-                        associationData.context = ResourceAssociation.contexts.WORKFLOW_INPUT;
-                        associationData.workflowId = workflow.id;
-                    } else {
-                        associationData.context = ResourceAssociation.contexts.PROJECT_FILE;
-                    }
-
-                    ResourceAssociation.create( associationData ).then(function ( inputAssociation ) {
-                        callback();
-                    }).catch(function (err) {
-                        callback(err.message);
-                    });
-
-                }],
-            function (err) {
+                function checkResourceFile( tmpFIle, callback) {
+                    self.createResource(req, tmpFIle, callback);
+                }
+            ],
+            function (err, resource) {
                 if (err) {
                     logger.error(err);
                     return cb({
@@ -274,6 +176,176 @@ function ResourceService() {
             }
         );
     };
+
+    this.createResourceFromUrl = function (req, data, cb) {
+
+        async.waterfall([
+                function ( callback ) {
+
+                    var tmpPath = config.resources.tmp + '/' + uniqid();
+                    var tmpFIle = {
+                        projectId: data.projectId,
+                        workflowId: data.workflowId,
+                        path: tmpPath,
+                        name: data.name
+                    };
+
+                    var r = request({ method  : 'GET', uri : data.url });
+                    r.on("response", function (res) {
+                        if (res.statusCode === 200) {
+                            var resourceFile = fs.createWriteStream( tmpPath );
+                            res.pipe(resourceFile);
+                            resourceFile.on('finish', function() {
+                                callback(null, tmpFIle);
+                            });
+                            resourceFile.on('error', function(err) {
+                                logger.error('GOT ERROR: ', + err);
+                                return callback(err);
+                            });
+                        } else {
+                            r.abort();
+                            logger.error('Faili ei leitud');
+                            return callback('Faili ei leitud');
+                        }
+                    }).on('error', function(e) {
+                        logger.debug('problem with request: ' + e);
+                        return callback( e );
+                    });
+                },
+                function ( tmpFIle, callback ) {
+                    self.createResource(req, tmpFIle, callback);
+                }
+            ],
+            function (err, resource) {
+                if (err) {
+                    logger.error(err);
+                    return cb({
+                        code: 500,
+                        message: err
+                    });
+                }
+                cb(null, resource);
+            }
+        );
+    };
+
+    this.createResource = function (req, tmpfile, cb) {
+
+        // tmpfile.name;
+        // tmpfile.path;
+        // tmpfile.projectId;
+        // tmpfile.workflowId;
+
+        var resourceType;
+        var workflow;
+        var project;
+        var filename;
+        var resource;
+        var projectLocation;
+
+        async.waterfall([
+            function getResourceType(callback) {
+                ResourceType.find({where: {value: 'text'}}).then(function (type) {
+                    if (!type) {
+                        return callback('Ressursi tüüpi ei leitud.');
+                    }
+                    resourceType = type;
+                    return callback();
+                }).catch(function (err) {
+                    callback(err.message);
+                });
+            },
+            function getProject(callback) {
+
+                if (tmpfile.workflowId) {
+                    Workflow.findById(tmpfile.workflowId).then(function (workflowItem) {
+                        workflow = workflowItem;
+                        if (!workflow) {
+                            return callback('Workflow not found');
+                        }
+                        workflow.getProject().then(function (projectItem) {
+                            project = projectItem;
+                            callback();
+                        }).catch(function (err) {
+                            callback(err.message);
+                        });
+                    }).catch(function (err) {
+                        callback(err.message);
+                    });
+
+                } else if (tmpfile.projectId) {
+                    Project.findById(tmpfile.projectId).then(function (projectItem) {
+                        project = projectItem;
+                        callback();
+                    }).catch(function (err) {
+                        callback(err.message);
+                    });
+                } else {
+                    callback('Project not found');
+                }
+            },
+
+            function renameFile(callback) {
+                projectLocation = (project != null ? '/project_' + project.id : '');
+                var resourceFileLocation = config.resources.location + projectLocation;
+                filename = projectLocation + '/' + uniqid() + path.extname(tmpfile.name);
+                if (!fs.existsSync(config.resources.location)) {
+                    fs.mkdirSync(config.resources.location);
+                }
+                if (!fs.existsSync(resourceFileLocation)) {
+                    fs.mkdirSync(resourceFileLocation);
+                }
+
+                FileUtil.mv(tmpfile.path, config.resources.location + filename, function (err) {
+                    if (err) {
+                        logger.error(err);
+                        return callback(err);
+                    }
+                    return callback();
+                });
+            },
+            function createResource(callback) {
+
+                var resourceData = {
+                    resourceTypeId: resourceType.id,
+                    filename: filename,
+                    originalName: path.basename(tmpfile.name),
+                    name: tmpfile.name
+                };
+
+                Resource.create(resourceData).then(function (resourceItem) {
+                    resource = resourceItem;
+                    callback();
+                }).catch(function (err) {
+                    callback(err.message);
+                });
+            },
+            function createAssociations(callback) {
+
+                var associationData = {
+                    resourceId: resource.id,
+                    userId: req.redisSession.data.userId,
+                    projectId: project.id
+                };
+
+                if(workflow){
+                    associationData.context = ResourceAssociation.contexts.WORKFLOW_INPUT;
+                    associationData.workflowId = workflow.id;
+                } else {
+                    associationData.context = ResourceAssociation.contexts.PROJECT_FILE;
+                }
+
+                ResourceAssociation.create( associationData ).then(function ( inputAssociation ) {
+                    callback();
+                }).catch(function (err) {
+                    callback(err.message);
+                });
+            }
+        ], function (err) {
+                cb(err, resource);
+        });
+    };
+
 
     this.getConcatedResourcePath = function (req, ids, cb) {
 
@@ -418,7 +490,6 @@ function ResourceService() {
             var resourceType;
             var workflow;
             var project;
-            var fields;
             var filename;
             var resource;
             var projectLocation;
