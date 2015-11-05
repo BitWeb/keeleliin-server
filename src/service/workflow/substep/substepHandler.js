@@ -330,13 +330,13 @@ function SubStepHandler(project, workflow){
                 });
             },
             function (service, callback) {
-                service.getServiceOutputTypes({where: {key: fileData.type}}).then(function (types) {
+                service.getServiceOutputTypes({where: {key: fileData.key}}).then(function (types) {
                     callback(null, types.pop());
                 });
             },
             function (outputType, callback) {
                 if(!outputType){
-                    return callback('Output type for key' + fileData.type +' not found');
+                    return callback('Output type for key' + fileData.key +' not found');
                 }
                 outputType.getResourceType().then(function (resourceType) {
                     callback(null, resourceType);

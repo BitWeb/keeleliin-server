@@ -56,7 +56,7 @@ function ApiService(){
 
     this.loadRequestResponse = function (dto, id, fileData, outputPath, cb) {
 
-        var url = dto.url + 'service' + '/' + id + '/download/' + fileData.key;
+        var url = dto.url + 'service' + '/' + id + '/download/' + fileData.id;
         var file = fs.createWriteStream( config.resources.location + '/' + outputPath );
         var request = http.get(url, function(response) {
             response.pipe(file);
