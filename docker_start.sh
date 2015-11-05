@@ -8,4 +8,6 @@ if [ ! -f /src/config.js ]; then
     ln -s /config/config.js /src/config.js
 fi
 
-forever /src/app.js
+forever start /src/app.js
+forever list
+tail
