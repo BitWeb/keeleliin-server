@@ -59,12 +59,12 @@ function EntuService() {
                         function (node, innerCb) {
                             entuDaoService.getEntity( node.id, entuMeta, function (err, data) {
                                 if(err){
-                                    return callback(err);
+                                    return innerCb(err);
                                 }
 
                                 node.children = [];
                                 var entity = data.result;
-                                if(!entity.properties.file){
+                                if(!entity || !entity.properties.file){
                                     return innerCb( null, node);
                                 }
                                 var files = entity.properties.file.values;

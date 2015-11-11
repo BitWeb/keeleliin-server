@@ -209,7 +209,7 @@ function WorkflowService() {
         logger.debug('Get project workflows list');
         projectService.getProject(req, projectId, function(err, project) {
             if (err) {
-                return callback(err);
+                return cb(err);
             }
             workflowDaoService.getProjectWorkflowsList(project.id, function (err, workflows) {
                 async.map(workflows,
