@@ -47,7 +47,7 @@ function EntuService() {
                             id: item.id,
                             name: item.name,
                             scope: 'entity'
-                        })
+                        });
                     }
 
                     callback(null, list);
