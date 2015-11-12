@@ -9,7 +9,6 @@ var Workflow = require(__base + 'src/service/dao/sql').Workflow;
 var WorkflowServiceSubstep = require(__base + 'src/service/dao/sql').WorkflowServiceSubstep;
 var WorkflowService = require(__base + 'src/service/dao/sql').WorkflowService;
 var Resource = require(__base + 'src/service/dao/sql').Resource;
-var ResourceAssociation = require(__base + 'src/service/dao/sql').ResourceAssociation;
 
 var SubstepHandler = require('./substep/substepHandler');
 var ResourceHandler = require('./resource/resourceHandler');

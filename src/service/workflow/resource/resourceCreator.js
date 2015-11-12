@@ -50,6 +50,7 @@ function ResourceCreator(sourceResource, workflowService, resourceIndex, project
         writer.end();
     };
 
+    //Todo
     this._getNewResource = function( cb ){
 
         async.waterfall([

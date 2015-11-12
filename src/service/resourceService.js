@@ -229,10 +229,52 @@ function ResourceService() {
         );
     };
 
+    this.createResourceFromEntu = function (req, projectId, workflowId, fileId, cb) {
+
+        async.waterfall([
+                function ( callback ) {
+
+                    var tmpPath = config.resources.tmp + '/' + uniqid();
+                    var tmpFIle = {
+                        projectId: projectId,
+                        workflowId: workflowId,
+                        path: tmpPath,
+                        name: 'Entu fail'
+                    };
+
+                    var entuMeta = {
+                        userId: req.redisSession.data.entuUserId,
+                        sessionKey: req.redisSession.data.entuSessionKey
+                    };
+
+                    entuDaoService.downloadFile( fileId, tmpPath, entuMeta, function ( err, name ) {
+                        tmpFIle.name = name;
+                        return callback(err, tmpFIle);
+                    });
+                },
+                function ( tmpFIle, callback ) {
+                    self.createResource(req, tmpFIle, callback);
+                }
+            ],
+            function (err, resource) {
+                if (err) {
+                    logger.error(err);
+                    return cb({
+                        code: 500,
+                        message: err
+                    });
+                }
+                cb(null, resource);
+            }
+        );
+
+    };
+
+
     this.createResource = function (req, tmpfile, cb) {
 
         // tmpfile.name;
-        // tmpfile.path;
+        // tmpfile.path; //tmpPath
         // tmpfile.projectId;
         // tmpfile.workflowId;
 
@@ -335,11 +377,7 @@ function ResourceService() {
                     associationData.context = ResourceAssociation.contexts.PROJECT_FILE;
                 }
 
-                ResourceAssociation.create( associationData ).then(function ( inputAssociation ) {
-                    callback();
-                }).catch(function (err) {
-                    callback(err.message);
-                });
+                self.createAssociation(associationData, callback);
             }
         ], function (err) {
                 cb(err, resource);
@@ -416,6 +454,7 @@ function ResourceService() {
         );
     };
 
+
     this.deleteAssociation = function (association, cb) {
 
         async.waterfall([
@@ -432,10 +471,8 @@ function ResourceService() {
                         });
                 },
                 function (association, resource, callback) {
-                    association.destroy().then(function () {
-                        callback(null, resource);
-                    }).catch(function (err) {
-                        callback(err.message);
+                    self.destroyAssociation(association, function (err) {
+                        callback(err, resource);
                     });
                 },
                 function (resource, callback) {
@@ -485,121 +522,23 @@ function ResourceService() {
         );
     };
 
-    this.createResourceFromEntu = function (req, projectId, workflowId, fileId, cb) {
+    //todo stuff
+    this.createAssociation = function(data, callback) {
+        ResourceAssociation.create( data ).then(function (association) {
+            callback(null, association);
+        }).catch(function (err) {
+            callback(err.message);
+        });
+    };
 
-            var resourceType;
-            var workflow;
-            var project;
-            var filename;
-            var resource;
-            var projectLocation;
-
-            async.waterfall(
-                [
-                    function getResourceType(callback) {
-                        ResourceType.find({where: {value: 'text'}}).then(function (type) {
-                            if (!type) {
-                                return callback('Ressursi tüüpi ei leitud.');
-                            }
-                            resourceType = type;
-                            return callback();
-                        }).catch(function (err) {
-                            callback(err.message);
-                        });
-                    },
-                    function getProject(callback) {
-                        if (workflowId) {
-                            Workflow.findById(workflowId).then(function (workflowItem) {
-                                workflow = workflowItem;
-                                if (!workflow) {
-                                    return callback('Workflow not found');
-                                }
-                                workflow.getProject().then(function (projectItem) {
-                                    project = projectItem;
-                                    callback();
-                                }).catch(function (err) {
-                                    callback(err.message);
-                                });
-                            }).catch(function (err) {
-                                callback(err.message);
-                            });
-
-                        } else if ( projectId ) {
-                            Project.findById( projectId ).then(function (projectItem) {
-                                project = projectItem;
-                                callback();
-                            }).catch(function (err) {
-                                callback(err.message);
-                            });
-                        } else {
-                            callback('Project not found');
-                        }
-                    },
-
-                    function downloadFile(callback) {
-                        projectLocation = (project != null ? '/project_' + project.id : '');
-                        var resourceFileLocation = config.resources.location + projectLocation;
-                        //filename = projectLocation + '/' + uniqid() + path.extname(resourceFile.name);
-                        filename = projectLocation + '/' + uniqid() + '.' + fileId;
-
-                        if (!fs.existsSync(config.resources.location)) {
-                            fs.mkdirSync(config.resources.location);
-                        }
-                        if (!fs.existsSync(resourceFileLocation)) {
-                            fs.mkdirSync(resourceFileLocation);
-                        }
-
-                        var entuMeta = {
-                            userId: req.redisSession.data.entuUserId,
-                            sessionKey: req.redisSession.data.entuSessionKey
-                        };
-
-                        entuDaoService.downloadFile( fileId, config.resources.location + filename, entuMeta, function ( err, name ) {
-                            return callback(err, name);
-                        });
-                    },
-                    function createResource(name, callback) {
-                        var resourceData = {
-                            resourceTypeId: resourceType.id,
-                            filename: filename,
-                            originalName: name,
-                            name: name
-                        };
-                        Resource.create(resourceData).then(function (resourceItem) {
-                            resource = resourceItem;
-                            callback();
-                        }).catch(function (err) {
-                            callback(err.message);
-                        });
-                    },
-                    function createAssociations(callback) {
-                        var associationData = {
-                            resourceId: resource.id,
-                            userId: req.redisSession.data.userId,
-                            projectId: project.id
-                        };
-
-                        if(workflow){
-                            associationData.context = ResourceAssociation.contexts.WORKFLOW_INPUT;
-                            associationData.workflowId = workflow.id;
-                        } else {
-                            associationData.context = ResourceAssociation.contexts.PROJECT_FILE;
-                        }
-
-                        ResourceAssociation.create( associationData ).then(function ( inputAssociation ) {
-                            callback();
-                        }).catch(function (err) {
-                            callback(err.message);
-                        });
-                    }],
-                function (err) {
-                    if (err) {
-                        logger.error(err);
-                    }
-                    cb(err, resource);
-                }
-            );
-        };
+    //todo stuff
+    this.destroyAssociation = function (association, callback) {
+        association.destroy().then(function () {
+            callback();
+        }).catch(function (err) {
+            callback(err.message);
+        });
+    };
 }
 
 module.exports = new ResourceService();

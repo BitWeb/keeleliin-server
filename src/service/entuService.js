@@ -4,7 +4,6 @@
 var logger = require('log4js').getLogger('entu_service');
 var fs = require('fs');
 var Resource = require(__base + 'src/service/dao/sql').Resource;
-var ResourceAssociation = require(__base + 'src/service/dao/sql').ResourceAssociation;
 var Project = require(__base + 'src/service/dao/sql').Project;
 var ResourceType = require(__base + 'src/service/dao/sql').ResourceType;
 var WorkflowServiceSubstep = require(__base + 'src/service/dao/sql').WorkflowServiceSubstep;

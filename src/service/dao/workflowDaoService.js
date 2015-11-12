@@ -9,7 +9,6 @@ var WorkflowDefinition = require(__base + 'src/service/dao/sql').WorkflowDefinit
 var WorkflowDefinitionService = require(__base + 'src/service/dao/sql').WorkflowDefinitionService;
 
 var Resource = require(__base + 'src/service/dao/sql').Resource;
-var ResourceAssociation = require(__base + 'src/service/dao/sql').ResourceAssociation;
 var ServiceModel = require(__base + 'src/service/dao/sql').Service;
 var User = require(__base + 'src/service/dao/sql').User;
 var WorkflowServiceSubstep = require(__base + 'src/service/dao/sql').WorkflowServiceSubstep;

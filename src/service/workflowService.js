@@ -339,12 +339,7 @@ function WorkflowService() {
                             workflowId: workflow.id
                         };
 
-                        ResourceAssociation.create(associationData).then(function (association) {
-                            innerCallback();
-                        }).catch(function (err) {
-                            logger.error(err);
-                            innerCallback()
-                        });
+                        resourceDaoService.createAssociation(associationData, innerCallback);
                     });
                 }, function (err) {
                     callback(err);

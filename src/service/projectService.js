@@ -371,12 +371,7 @@ function ProjectService(){
                             projectId: projectId
                         };
 
-                        ResourceAssociation.create(associationData).then(function (association) {
-                            innerCallback();
-                        }).catch(function (err) {
-                            logger.error(err);
-                            innerCallback()
-                        });
+                        resourceService.createAssociation(associationData, innerCallback);
                     });
                 }, function (err) {
                     callback(err);

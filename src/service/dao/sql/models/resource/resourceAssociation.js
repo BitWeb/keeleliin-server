@@ -5,7 +5,6 @@
 "use strict";
 var logger = require('log4js').getLogger('resource_association');
 var config = require(__base + 'config');
-var fs = require('fs');
 
 module.exports = function(sequelize, DataTypes) {
 
@@ -84,11 +83,11 @@ module.exports = function(sequelize, DataTypes) {
         underscored: true,
 
         hooks: {
-            beforeCreate: function(resource, options) {
-                return;
-            }
+            /*beforeCreate: function(association, options, callback) {
+            },
+            afterDestroy: function(resource, options, callback) {
+            }*/
         },
-
         classMethods: {
             associate: function(models) {
                 ResourceAssociation.belongsTo(models.Resource, {

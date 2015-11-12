@@ -12,3 +12,4 @@ data:    [9]  __tZ /usr/bin/nodejs /var/www/bitweb.ee/keeleliin.bitweb.ee/wrappe
 data:    [10] OmkK /usr/bin/nodejs /var/www/bitweb.ee/keeleliin.bitweb.ee/wrapper/concat/app.js            29845   12849    /root/.forever/OmkK.log 0:0:48:58.29
 
 forever start /var/www/bitweb.ee/keeleliin.bitweb.ee/server/app.js
+

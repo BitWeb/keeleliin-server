@@ -93,13 +93,13 @@ module.exports = function(sequelize, DataTypes) {
             }
         },
         hooks: {
-            beforeCreate: function(resource, options, fn) {
-                resource.createdAt = new Date();
-                fn(null, resource);
+            beforeCreate: function(item, options, fn) {
+                item.createdAt = new Date();
+                fn(null, item);
             },
-            beforeUpdate: function(resource, options, fn) {
-                resource.updatedAt = new Date();
-                fn(null, resource);
+            beforeUpdate: function(item, options, fn) {
+                item.updatedAt = new Date();
+                fn(null, item);
             }
         }
     });
