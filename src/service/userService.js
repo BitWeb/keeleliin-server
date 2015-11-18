@@ -11,6 +11,7 @@ var entuDaoService = require('./dao/entu/daoService');
 var notificationService = require('./notificationService');
 var RedisSession = require( './dao/redis/models/redisSession');
 var ObjectUtils = require('../util/objectUtils');
+var config = require(__base + 'config');
 
 function UserService() {
 
@@ -109,7 +110,6 @@ function UserService() {
 
                 logger.debug('Update user entity');
                 user.name = entity.displayname;
-                user.displaypicture = entity.displaypicture;
 
                 user.save().then(function () {
                     callback(null, user);
@@ -129,7 +129,8 @@ function UserService() {
         var userParams = {
             entuId: entuUser.id,
             email: entuUser.email,
-            name: entuUser.name
+            name: entuUser.name,
+            displaypicture: config.entu.apiUrl + 'api2/entity-' + entuUser.id + '/picture'
         };
 
         self.createNewUser(userParams, cb);
