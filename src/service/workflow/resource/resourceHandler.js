@@ -5,7 +5,6 @@
 var logger = require('log4js').getLogger('resource_handler');
 var async = require('async');
 var ResourceType = require(__base + 'src/service/dao/sql').ResourceType;
-var ResourceAssociation = require(__base + 'src/service/dao/sql').ResourceAssociation;
 var Resource = require(__base + 'src/service/dao/sql').Resource;
 var ServiceInputType = require(__base + 'src/service/dao/sql').ServiceInputType;
 var ResourceCreator = require('./resourceCreator');
@@ -384,6 +383,9 @@ function ResourceHandler(project, workflow) {
             var sendJunk = function (index) {
                 if(resultJunks[ index ]){
                     return resourceJunkCallback(null, resultJunks[ index ], function (err) {
+                        if(err){
+                            return cb(err);
+                        }
                         index = index + 1;
                         sendJunk(index);
                     });
@@ -415,8 +417,11 @@ function ResourceHandler(project, workflow) {
                 }
             );
         }, function (err) {
+            if(err){
+                return junkHandledCb( err );
+            }
             handleBuffer(function ( err ) {
-                junkHandledCb( err )
+                junkHandledCb( err );
             });
         });
     };

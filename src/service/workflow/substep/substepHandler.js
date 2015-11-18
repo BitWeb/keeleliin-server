@@ -13,7 +13,7 @@ var apiService = require('./../service/apiService');
 var substepServiceDtoMapper = require('./substepServiceDtoMapper');
 var config = require(__base + 'config');
 var FileUtil = require('./../../../util/fileUtil');
-
+var resourceService = require(__base + 'src/service/resourceService');
 
 function SubStepHandler(project, workflow){
 
@@ -54,12 +54,8 @@ function SubStepHandler(project, workflow){
                                 workflowServiceSubstepId: substep.id
                             };
 
-                            ResourceAssociation.create(associationData).then(function (association) {
-                                innerCb();
-                            }).catch(function (err) {
-                                logger.error('Association create error: ', err);
-                                logger.error('Association create data: ', associationData);
-                                innerCb( err.message );
+                            resourceService.createAssociation(associationData, function (err, association) {
+                                innerCb(err);
                             });
                         },
                         function (err) {
@@ -191,28 +187,30 @@ function SubStepHandler(project, workflow){
         var filesData = response.response.data.files;
 
         async.waterfall([
-            function loadOutputResources(wfCallback) {
+            function loadOutputResources(callback) {
                 async.eachSeries(
                     filesData,
-                    function iterator(fileData, callback) {
-                        self._loadOutputResource(substep, fileData, dto,  callback);
+                    function iterator(fileData, innerCb) {
+                        self._loadOutputResource(substep, fileData, dto,  innerCb);
                     },
                     function done( err ) {
-                        wfCallback(err);
+                        callback(err);
                     }
                 );
-            },
-            function setFinishStatus(wfCallback) {
-                self._updateSubstepFinishStatus(substep, Workflow.statusCodes.FINISHED, wfCallback);
             }
-        ], function (err, data) {
+        ], function (err) {
             if(err){
-                return self._updateSubstepFinishStatus(substep, Workflow.statusCodes.ERROR, function () {
+                substep.log = err;
+                return self._updateSubstepFinishStatus(substep, Workflow.statusCodes.ERROR, function (substep) {
                     logger.error('Substep finished with error:' + err);
+                    cb(err, substep);
+                });
+            } else {
+                return self._updateSubstepFinishStatus(substep, Workflow.statusCodes.FINISHED, function (err, substep) {
+                    logger.debug('Finished: ' + substep.id);
+                    cb(err, substep);
                 });
             }
-            logger.debug('Finished: ' + substep.id);
-            cb(err, data);
         });
     };
 
@@ -230,11 +228,17 @@ function SubStepHandler(project, workflow){
     };
 
     this._updateSubstepFinishStatus = function (substep, status, cb) {
+
+        logger.debug('Update finish status: ' + status, substep);
+
         substep.status = status;
         substep.datetimeEnd = new Date();
-        substep.save().then(function (substep) {
+        substep.save().then(function () {
+            logger.debug('Update finish status Saved ');
             cb(null, substep);
-        }).catch(cb);
+        }).catch(function (err) {
+            cb('Error happened', err.message);
+        });
     };
 
     this._getOutputResourcePath = function ( substep, fileData) {
@@ -274,7 +278,7 @@ function SubStepHandler(project, workflow){
                     callback(err);
                 });
             },
-            function addSubstepResource(resource, callback) {
+            function addSubStepResource(resource, callback) {
 
                 var associationData = {
                     context: ResourceAssociation.contexts.SUBSTEP_OUTPUT,
@@ -285,14 +289,16 @@ function SubStepHandler(project, workflow){
                     workflowServiceSubstepId: substep.id
                 };
 
-                ResourceAssociation.create( associationData ).then(function (association) {
-                   callback();
-                }).catch(function (err) {
-                    logger.error(err);
-                    callback(err);
+                resourceService.createAssociation( associationData, function (err, association) {
+                    callback( err );
                 });
             }
-        ], cb);
+        ], function (err) {
+            if(err){
+                logger.error( err );
+            }
+            cb(err);
+        });
     };
 
     this._getOutputResourceFilename = function (substep, fileData, resourceType, cb) {
@@ -356,7 +362,7 @@ function SubStepHandler(project, workflow){
             .then(function (outputAssociations) {
                 async.each(outputAssociations, function (outputAssociation, innerCb) {
 
-                    var outputData = {
+                    var associationData = {
                         context: ResourceAssociation.contexts.WORKFLOW_OUTPUT,
                         resourceId: outputAssociation.resourceId,
                         userId: outputAssociation.userId,
@@ -364,13 +370,9 @@ function SubStepHandler(project, workflow){
                         workflowId: outputAssociation.workflowId
                     };
 
-                    ResourceAssociation.create( outputData).then(function (wfOutputAssociation) {
-                        logger.debug('Output association created');
-                        innerCb();
-                    }).catch(function (err) {
-                            innerCb(err.message);
-                        }
-                    );
+                    resourceService.createAssociation(associationData, function (err, association) {
+                        innerCb(err);
+                    });
 
                 }, function (err) {
                     if(err){

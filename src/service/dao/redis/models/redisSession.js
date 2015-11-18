@@ -13,8 +13,8 @@ function RedisSession( id, cb ){
     this.id = id;
 
     this.save = function (callback) {
-        logger.debug('SAVE: ' + self.id);
-        logger.debug(self.data);
+        /*logger.debug('SAVE: ' + self.id);
+        logger.debug(self.data);*/
         daoService.set(self.id, self.data, callback);
     };
 
@@ -38,8 +38,8 @@ function RedisSession( id, cb ){
                     self.data = data;
                 }
 
-                logger.debug('DATA GOT ON INIT');
-                logger.debug(self.data);
+                /*logger.debug('DATA GOT ON INIT');
+                logger.debug(self.data);*/
                 callback();
             });
         }

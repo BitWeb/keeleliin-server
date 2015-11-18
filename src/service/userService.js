@@ -189,12 +189,12 @@ function UserService() {
         return userDaoService.findById(userId, cb);
     };
 
-    this.saveUser = function(req, userId, userData, cb) {
+    this.updateUser = function(req, userId, userData, cb) {
         self.getUser(req, userId, function(error, user) {
             if (error) {
                 return cb(error);
             }
-            user.updateAttributes(userData).then(function(user) {
+            user.updateAttributes(userData, ['role','isActive','discMax']).then(function(user) {
                 return cb(null, user);
             }).catch(function(error) {
                 return cb({
@@ -212,12 +212,18 @@ function UserService() {
             if (error) {
                 return callback(error);
             }
-            return self.saveUser(req, user.id, {dateApiAccessed: new Date()}, function (err, user) {
 
+            user.updateAttributes({dateApiAccessed: new Date()}).then(function(user) {
                 notificationService.getCurrentUserNotificationsSummary(req, function(error, data) {
                     callback( error, data );
                 });
+            }).catch(function(error) {
+                return cb({
+                    message: error.message,
+                    code: 500
+                });
             });
+
         });
     };
 

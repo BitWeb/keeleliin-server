@@ -13,3 +13,7 @@ data:    [10] OmkK /usr/bin/nodejs /var/www/bitweb.ee/keeleliin.bitweb.ee/wrappe
 
 forever start /var/www/bitweb.ee/keeleliin.bitweb.ee/server/app.js
 
+
+nodejs node_modules/.bin/sequelize  migration:create --name user_storage_limit_12_11_15
+
+nodejs node_modules/.bin/sequelize  db:migrate

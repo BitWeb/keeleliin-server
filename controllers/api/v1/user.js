@@ -7,9 +7,7 @@ var router = express.Router();
 var logger = require('log4js').getLogger('user_controller');
 var url     = require('url');
 var authMiddleware = require(__base + 'middlewares/auth');
-var PaginationParameters = require(__base + 'src/util/paginationParameters');
 var userService = require('../../../src/service/userService');
-var userDaoService = require('../../../src/service/dao/userDaoService');
 
 /**
  * Entu auth andmed
@@ -76,7 +74,7 @@ router.get('/:userId/details',authMiddleware('admin'), function(req, res) {
  * Kasutaja muutmise vaade
  */
 router.put('/:userId/details', authMiddleware('admin'), function(req, res) {
-    userService.saveUser(req, req.params.userId, req.body, function(err, user) {
+    userService.updateUser(req, req.params.userId, req.body, function(err, user) {
         res.sendApiResponse(err, user);
     });
 });

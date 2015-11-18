@@ -5,7 +5,6 @@ var logger = require('log4js').getLogger('resource_creator');
 var config = require(__base + 'config');
 var fs = require('fs');
 var Resource = require(__base + 'src/service/dao/sql').Resource;
-var ResourceAssociation = require(__base + 'src/service/dao/sql').ResourceAssociation;
 var FileUtil = require(__base + 'src/util/fileUtil');
 var async = require('async');
 
@@ -50,7 +49,7 @@ function ResourceCreator(sourceResource, workflowService, resourceIndex, project
         writer.end();
     };
 
-    //Todo
+
     this._getNewResource = function( cb ){
 
         async.waterfall([
@@ -73,13 +72,6 @@ function ResourceCreator(sourceResource, workflowService, resourceIndex, project
                     callback(null, resource);
                 }).catch(function (err) {
                     logger.error(err);
-                    callback(err.message);
-                });
-            },
-            function addResourceToProject(resource, callback) {
-                project.addResource(resource).then(function () {
-                    callback(null, resource);
-                }).catch(function (err) {
                     callback(err.message);
                 });
             }

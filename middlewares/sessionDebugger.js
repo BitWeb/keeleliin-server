@@ -6,7 +6,7 @@ var logger = require('log4js').getLogger('session_debugger_middleware');
 
 module.exports = function(req, res, next){
 
-    logger.info('Debug session');
-    logger.info(req.redisSession.data);
+    /*logger.info('Debug session');
+    logger.info(req.redisSession.data);*/
     next();
 };

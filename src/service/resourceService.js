@@ -10,7 +10,7 @@ var Resource = require(__base + 'src/service/dao/sql').Resource;
 var ResourceAssociation = require(__base + 'src/service/dao/sql').ResourceAssociation;
 var Project = require(__base + 'src/service/dao/sql').Project;
 var ResourceType = require(__base + 'src/service/dao/sql').ResourceType;
-
+var User = require(__base + 'src/service/dao/sql').User;
 var WorkflowServiceSubstep = require(__base + 'src/service/dao/sql').WorkflowServiceSubstep;
 var Workflow = require(__base + 'src/service/dao/sql').Workflow;
 var path = require('path');
@@ -476,15 +476,7 @@ function ResourceService() {
                     });
                 },
                 function (resource, callback) {
-                    resource.getAssociations().then(function (associations) {
-                        if(associations.length == 0){
-                            self._deleteResourceEntity(resource, callback);
-                        } else {
-                            callback();
-                        }
-                    }).catch(function (err) {
-                        callback(err.message);
-                    });
+                    self._deleteResourceEntity(resource, callback);
                 }
             ],
             function (err) {
@@ -497,47 +489,166 @@ function ResourceService() {
     };
 
     self._deleteResourceEntity = function( resource, cb ) {
-        async.waterfall([
-                function (callback) {
-                    logger.debug('Unlink file');
-                    fs.unlink(config.resources.location + resource.filename, function (err) {
-                        if(err && err.code == 'ENOENT'){
-                            return callback(null, resource);
+
+        resource.getAssociations().then(function (associations) {
+            if(associations.length == 0){
+
+                async.waterfall([
+                        function (callback) {
+                            logger.debug('Unlink file');
+                            fs.unlink(config.resources.location + resource.filename, function (err) {
+                                if(err && err.code == 'ENOENT'){
+                                    return callback(null, resource);
+                                }
+                                callback(err, resource);
+                            });
+                        },
+                        function deleteResource(resource, callback) {
+                            logger.debug('Delete resource entity');
+                            resource.destroy().then(function () {
+                                callback()
+                            }).catch(function (err) {
+                                return callback( err.message );
+                            });
                         }
-                        callback(err, resource);
+                    ],
+                    function (err) {
+                        cb( err );
+                    }
+                );
+
+            } else {
+                cb();
+            }
+        }).catch(function (err) {
+            cb(err.message);
+        });
+
+    };
+
+    this.createAssociation = function(data, cb) {
+
+        async.waterfall([
+                function countUserResourceAssociations(callback) {
+                    ResourceAssociation.count({where: {
+                        resourceId: data.resourceId,
+                        userId: data.userId
+                    }}).then(function (count) {
+                        callback(null, count);
                     });
                 },
-                function deleteResource(resource, callback) {
-                    logger.debug('Delete resource entity');
-                    resource.destroy().then(function () {
-                        callback()
+                function (count, callback) {
+
+                    logger.debug('User had ' + count + ' associations');
+
+                    if(count == 0){
+                        logger.debug('New resource association');
+
+                        Resource.findById(data.resourceId).then(function (resource) {
+                            User.findById(data.userId).then(function (user) {
+
+                                logger.debug('User disc size ' + user.discCurrent + ' resource size:' + resource.fileSize);
+
+                                if( ( user.discCurrent + resource.fileSize ) > user.discMax ){
+                                    self._deleteResourceEntity(resource, function (err) {
+                                        return callback('Resurssi ei saa lisada. Kasutaja kettaruum on täis.');
+                                    });
+                                } else {
+                                    user.increment({ discCurrent: resource.fileSize}).then(function () {
+                                        user.reload().then(function () {
+                                            if( user.discCurrent  > user.discMax ) {
+                                                user.decrement({ discCurrent: resource.fileSize}).then(function () {
+                                                    return callback('Resurssi ei saa lisada. Kasutaja kettaruum on täis.');
+                                                });
+                                            } else {
+                                                return callback();
+                                            }
+                                        });
+                                    });
+                                }
+                            });
+                        });
+                    } else {
+                        callback();
+                    }
+                },
+                function (callback) {
+                    ResourceAssociation.create( data ).then(function (association) {
+                        callback(null, association);
                     }).catch(function (err) {
-                        return callback( err.message );
+                        callback(err.message);
                     });
                 }
             ],
-            function (err) {
-                cb( err );
+            function (err, association) {
+                if(err){
+                   logger.error(err);
+                }
+
+                logger.debug('association created');
+
+                cb(err, association);
             }
         );
     };
 
-    //todo stuff
-    this.createAssociation = function(data, callback) {
-        ResourceAssociation.create( data ).then(function (association) {
-            callback(null, association);
-        }).catch(function (err) {
-            callback(err.message);
-        });
-    };
 
-    //todo stuff
-    this.destroyAssociation = function (association, callback) {
-        association.destroy().then(function () {
-            callback();
-        }).catch(function (err) {
-            callback(err.message);
-        });
+    this.destroyAssociation = function (association, cb) {
+
+        var user;
+        var resource;
+        async.waterfall([
+                function (callback) {
+                    association.getUser().then(function (userItem) {
+                        user = userItem;
+                        callback();
+                    });
+                },
+                function (callback) {
+                    association.getResource().then(function (resourceItem) {
+                        resource = resourceItem;
+                        callback();
+                    });
+                },
+                function (callback) {
+                    association.destroy().then(function () {
+                        callback();
+                    }).catch(function (err) {
+                        callback(err.message);
+                    });
+                },
+                function (callback) {
+                    ResourceAssociation.count({where: {
+                        resourceId: resource.id,
+                        userId: user.id
+                    }}).then(function (count) {
+                        callback(null, count);
+                    });
+                },
+                function (count, callback) {
+                    if(count == 0){
+                        user.decrement({ discCurrent: resource.fileSize }).then(function () {
+                            user.reload().then(function () {
+                                if(user.discCurrent < 0){
+                                    logger.error('Kasutaja ' +  user.id + ' kettakasutus läks negatiivseks.');
+                                    user.discCurrent = 0;
+                                    user.save().then(function () {
+                                        callback();
+                                    });
+                                } else {
+                                    callback();
+                                }
+                            });
+                        });
+                    } else {
+                        callback();
+                    }
+                }
+            ],
+            function (err) {
+                cb(err);
+            }
+        );
     };
 }
 

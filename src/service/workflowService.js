@@ -333,13 +333,13 @@ function WorkflowService() {
 
                         var associationData = {
                             context: ResourceAssociation.contexts.WORKFLOW_INPUT,
-                            resourceId: resourceId,
+                            resourceId: resource.id,
                             userId: workflow.userId,
                             projectId: project.id,
                             workflowId: workflow.id
                         };
 
-                        resourceDaoService.createAssociation(associationData, innerCallback);
+                        resourceService.createAssociation(associationData, innerCallback);
                     });
                 }, function (err) {
                     callback(err);

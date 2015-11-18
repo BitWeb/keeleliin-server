@@ -1,0 +1,7 @@
+var config = require('./config');
+
+module.exports = {
+    "migrations-path": "sql/migrations",
+    "config": __filename,
+    "development": config.sql
+};

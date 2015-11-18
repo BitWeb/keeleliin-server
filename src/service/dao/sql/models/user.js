@@ -49,6 +49,18 @@ module.exports = function(sequelize, DataTypes) {
             field: 'is_active',
             defaultValue: true
         },
+        discMax: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            field: 'disc_max',
+            defaultValue: 1073741824
+        },
+        discCurrent: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            field: 'disc_current',
+            defaultValue: 0
+        },
         createdAt: {
             type: DataTypes.DATE,
             field: 'created_at'
