@@ -109,7 +109,10 @@ function SubstepServiceDtoMapper(){
                     for(i in inputTypes){
                         var inputype = inputTypes[i];
 
-                        var sizeLeft = inputype.sizeLimit;
+                        var sizeLeft = null;
+                        if(inputype.sizeLimit != 0){
+                            sizeLeft = inputype.sizeLimit;
+                        }
 
                         for(j in resources){
                             var resource = resources[j];
@@ -118,9 +121,11 @@ function SubstepServiceDtoMapper(){
                                 logger.debug('Suitable input resource found: ' + resource.id);
                                 logger.debug('Key: ' + inputype.key + ' Filename: ' + resource.filename);
 
-                                sizeLeft = sizeLeft - resource.fileSize;
-                                if(sizeLeft < 0){
-                                    return callback('Teenusele etteantavate ressursside maht ületati.');
+                                if(sizeLeft != null){
+                                    sizeLeft = sizeLeft - resource.fileSize;
+                                    if(sizeLeft < 0){
+                                        return callback('Teenusele etteantavate ressursside maht ületati.');
+                                    }
                                 }
 
                                 dto.files.push({
