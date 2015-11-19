@@ -553,7 +553,7 @@ function ResourceHandler(project, workflow) {
             globalLineIndex++;
 
             var lineSize;
-            if (serviceInputType.sizeUnit == ServiceInputType.sizeUnits.PIECE) {
+            if (serviceInputType.sizeUnit == ServiceInputType.sizeUnits.PIECE) { // not supported
                 lineSize = 1;
             } else if (serviceInputType.sizeUnit == ServiceInputType.sizeUnits.BYTE) {
                 lineSize = Buffer.byteLength(line);

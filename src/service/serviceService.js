@@ -341,7 +341,7 @@ function ServiceService() {
                         });
                     }
                     if(inputType){
-                        inputType.updateAttributes(serviceInputTypeData, {fields: ['key','doParallel','sizeLimit','sizeUnit','resourceTypeId']}).then(function () {
+                        inputType.updateAttributes(serviceInputTypeData, {fields: ['key','doParallel','sizeLimit','resourceTypeId']}).then(function () {
                             addedTypesIds.push(inputType.id);
                             innerCallback();
                         }).catch(function (err) {
@@ -349,7 +349,7 @@ function ServiceService() {
                         });
                     } else {
                         serviceInputTypeData.serviceId = serviceInstance.id;
-                        ServiceInputType.create(serviceInputTypeData, {fields: ['key','doParallel','sizeLimit','sizeUnit','resourceTypeId', 'serviceId']})
+                        ServiceInputType.create(serviceInputTypeData, {fields: ['key','doParallel','sizeLimit','resourceTypeId', 'serviceId']})
                             .then(function (inputType) {
                                 addedTypesIds.push(inputType.id);
                                 innerCallback();
@@ -574,7 +574,6 @@ function ServiceService() {
                                         key: inputType.key,
                                         resourceTypeId: resourceType.id,
                                         sizeLimit: inputType.sizeLimit,
-                                        sizeUnit: inputType.sizeUnit,
                                         isList: inputType.isList
                                     });
                                     innerCallback();
@@ -584,7 +583,6 @@ function ServiceService() {
                                     key: inputType.key,
                                     resourceTypeId: resourceType.id,
                                     sizeLimit: inputType.sizeLimit,
-                                    sizeUnit: inputType.sizeUnit,
                                     isList: inputType.isList
                                 });
                                 innerCallback();
@@ -634,8 +632,6 @@ function ServiceService() {
                                 });
                                 innerCallback();
                             }
-
-
                         });
                     }, function(error) {
                         if (error) {
