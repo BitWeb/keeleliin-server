@@ -44,7 +44,7 @@ function SubstepServiceDtoMapper(){
         ], function (err, dto) {
             if(err){
                 logger.error(err);
-               cb( err );
+                return cb( err );
             }
             logger.debug('Made dto: ' + JSON.stringify(dto));
 
@@ -108,12 +108,21 @@ function SubstepServiceDtoMapper(){
                 try {
                     for(i in inputTypes){
                         var inputype = inputTypes[i];
+
+                        var sizeLeft = inputype.sizeLimit;
+
                         for(j in resources){
                             var resource = resources[j];
                             logger.debug(' Compare: ' + inputype.resourceTypeId + ' == ' + resource.resourceTypeId );
                             if(inputype.resourceTypeId == resource.resourceTypeId){
                                 logger.debug('Suitable input resource found: ' + resource.id);
                                 logger.debug('Key: ' + inputype.key + ' Filename: ' + resource.filename);
+
+                                sizeLeft = sizeLeft - resource.fileSize;
+                                if(sizeLeft < 0){
+                                    return callback('Teenusele etteantavate ressursside maht ületati.');
+                                }
+
                                 dto.files.push({
                                     key: inputype.key,
                                     path: resource.filename
