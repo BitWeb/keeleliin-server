@@ -31,6 +31,7 @@ function ServiceDaoService() {
             where: { id: serviceId },
             attributes: [
                 'id',
+                'parentVersionId',
                 'name',
                 'description',
                 'url',
@@ -94,7 +95,7 @@ function ServiceDaoService() {
     this.getServicesList = function( callback ) {
 
         var params = {
-            attributes: ['id', 'name', 'description', 'sid', 'createdAt', 'updatedAt', 'isActive'],
+            attributes: ['id', 'name', 'isActive'],
             order: [['name', 'ASC']]
         };
 
@@ -109,11 +110,30 @@ function ServiceDaoService() {
         });
     };
 
+    this.getServicesGridList = function( callback ) {
+
+        var params = {
+            attributes: ['id', 'name', 'description', 'sid', 'createdAt', 'updatedAt', 'isActive', 'parentVersionId'],
+            order: [['name', 'ASC']]
+        };
+
+        ServiceModel.findAll(params)
+            .then(function(services) {
+                return callback(null, services);
+            }).catch(function(error) {
+                return callback({
+                    message: error.message,
+                    code: 500
+                });
+            });
+    };
+
     this.getServicesDetailedList = function( callback ) {
 
         var params = {
             attributes: [
                 'id',
+                'parentVersionId',
                 'name',
                 'description',
                 'isSynchronous',

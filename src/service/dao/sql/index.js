@@ -10,7 +10,7 @@ var sequelize = new Sequelize(config.sql.database, config.sql.username, config.s
     dialect: config.sql.dialect,
     host: config.sql.host,
     port: config.sql.port,
-    omitNull: true
+    omitNull: false
 });
 
 var db = {};

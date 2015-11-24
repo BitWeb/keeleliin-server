@@ -117,6 +117,11 @@ var ServiceForm = function(data) {
                 }
             }
         },
+
+        parentVersionId: {
+            required: false,
+            allowEmpty: true
+        },
         parentServices: {
             required: false,
             allowEmpty: true

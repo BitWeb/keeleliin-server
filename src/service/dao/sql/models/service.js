@@ -12,19 +12,34 @@ module.exports = function(sequelize, DataTypes) {
             primaryKey: true,
             autoIncrement: true
         },
+        parentVersionId: {
+            type: DataTypes.INTEGER,
+            references: {
+                model: 'service',
+                key: 'id'
+            },
+            allowNull: true,
+            defaultValue: null,
+            omitNull: false,
+            field: 'parent_version_id'
+        },
         sid: {
             type: DataTypes.STRING,
-            allowNull: false
+            allowNull: false,
+            omitNull: false
         },
         name: {
-            type: DataTypes.STRING
+            type: DataTypes.STRING,
+            omitNull: false
         },
         description: {
             type: DataTypes.TEXT,
-            allowNull: true
+            allowNull: true,
+            omitNull: false
         },
         url: {
-            type: DataTypes.TEXT
+            type: DataTypes.TEXT,
+            allowNull: true
         },
         isSynchronous: {
             type: DataTypes.BOOLEAN,
@@ -58,6 +73,10 @@ module.exports = function(sequelize, DataTypes) {
 
         classMethods: {
             associate: function(models) {
+
+                Service.hasOne(Service, {as: 'parentVersion', foreignKey: 'parentVersionId'});
+                Service.hasMany(Service, { foreignKey: 'parentVersionId', as: 'childVersions'});
+
                 Service.hasMany(models.ServiceParam, { foreignKey: 'serviceId', as: 'serviceParams', onDelete: 'cascade'});
                 Service.hasMany(models.ServiceInputType, { foreignKey: 'serviceId', as: 'serviceInputTypes',  onDelete: 'cascade'});
                 Service.hasMany(models.ServiceOutputType, { foreignKey: 'serviceId', as: 'serviceOutputTypes',  onDelete: 'cascade'});

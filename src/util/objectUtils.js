@@ -13,10 +13,12 @@ var ObjectUtils = {
 
         var newObject = {};
         for(i in object){
-            newKey = i.replace(/[\-_\s]+(.)?/g, function(match, chr) {
-                return chr ? chr.toUpperCase() : '';
-            });
-            newObject[newKey] = object[i];
+            if (object.hasOwnProperty(i)) {
+                var newKey = i.replace(/[\-_\s]+(.)?/g, function (match, chr) {
+                    return chr ? chr.toUpperCase() : '';
+                });
+                newObject[newKey] = object[i];
+            }
         }
         return newObject;
     },

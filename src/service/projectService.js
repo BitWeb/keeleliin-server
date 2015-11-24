@@ -60,8 +60,7 @@ function ProjectService(){
                         canDelete: false
                     };
 
-                    project = Project.build( newItem );
-
+                    var project = Project.build( newItem );
                     project.getProjectUsers().then(function (projectUsers) {
 
                     async.map(

@@ -10,10 +10,19 @@ var ServiceForm = require(__base + 'src/form/serviceForm');
 var authMiddleware = require(__base + 'middlewares/auth');
 
 /**
- * Teenuste grid list
+ * Teenuste select list
  */
 router.get('/', authMiddleware('regular'), function(req, res) {
     serviceService.getServicesList(req, function(err, services) {
+        return res.sendApiResponse( err, services);
+    });
+});
+
+/**
+ * Teenuste grid list
+ */
+router.get('/grid', authMiddleware('regular'), function(req, res) {
+    serviceService.getServicesGridList(req, function(err, services) {
         return res.sendApiResponse( err, services);
     });
 });

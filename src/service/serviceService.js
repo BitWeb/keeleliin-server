@@ -2,7 +2,6 @@
  * Created by taivo on 15.06.15.
  */
 var logger = require('log4js').getLogger('service_service');
-var PaginationUtil = require(__base + 'src/util/paginationUtil');
 var serviceDaoService = require(__base + 'src/service/dao/serviceDaoService');
 var ServiceModel = require(__base + 'src/service/dao/sql').Service;
 var ServiceModelParam = require(__base + 'src/service/dao/sql').ServiceParam;
@@ -24,6 +23,10 @@ function ServiceService() {
 
     this.getServicesList = function(req, callback) {
         return serviceDaoService.getServicesList(callback);
+    };
+
+    this.getServicesGridList = function(req, callback) {
+        return serviceDaoService.getServicesGridList(callback);
     };
 
     this.getServicesDetailedList = function(req, callback) {
@@ -99,15 +102,19 @@ function ServiceService() {
 
     this.updateService = function(req, serviceId, serviceData, cb) {
 
+
+        logger.trace(serviceData);
+
+
         async.waterfall([
             function getService( callback ) {
                 self.getService( serviceId, callback);
             },
             function(serviceInstance, callback) {
-                serviceInstance.updateAttributes(serviceData, {fields:['name', 'description', 'url','sid','isSynchronous','isActive']}).then(function() {
+                serviceInstance.updateAttributes(serviceData, ['name','parentVersionId', 'description', 'url','sid','isSynchronous','isActive']).then(function() {
                     return callback(null, serviceInstance);
-                }).catch(function(error) {
-                    return callback(error.message);
+                }).catch(function(err) {
+                    return callback(err.message);
                 });
             },
             function(serviceInstance, callback) {
@@ -131,7 +138,7 @@ function ServiceService() {
         var service = null;
         async.waterfall([
             function(callback) {
-                ServiceModel.create(serviceData, {fields:['name', 'description', 'url','sid','isSynchronous','isActive']}).then(function(serviceModel) {
+                ServiceModel.create(serviceData, {fields:['name', 'parentVersionId', 'description', 'url','sid','isSynchronous','isActive']}).then(function(serviceModel) {
                     service = serviceModel;
                     return callback();
                 }).catch(function(error) {

@@ -17,3 +17,16 @@ forever start /var/www/bitweb.ee/keeleliin.bitweb.ee/server/app.js
 nodejs node_modules/.bin/sequelize  migration:create --name user_storage_limit_12_11_15
 
 nodejs node_modules/.bin/sequelize  db:migrate
+
+
+
+forever start /var/www/bitweb.ee/keeleliin.bitweb.ee/wrapper/archive-extractor/app.js
+forever start /var/www/bitweb.ee/keeleliin.bitweb.ee/wrapper/lausestaja/app.js
+forever start /var/www/bitweb.ee/keeleliin.bitweb.ee/wrapper/morfanalyzer/app.js
+forever start /var/www/bitweb.ee/keeleliin.bitweb.ee/wrapper/morfoconcat/app.js
+forever start /var/www/bitweb.ee/keeleliin.bitweb.ee/wrapper/osalausestaja/app.js
+forever start /var/www/bitweb.ee/keeleliin.bitweb.ee/wrapper/pindsyn/app.js
+forever start /var/www/bitweb.ee/keeleliin.bitweb.ee/wrapper/s6ltsyn/app.js
+forever start /var/www/bitweb.ee/keeleliin.bitweb.ee/wrapper/tokenizer/app.js
+forever start /var/www/bitweb.ee/keeleliin.bitweb.ee/wrapper/morph_tagger/app.js
+forever start /var/www/bitweb.ee/keeleliin.bitweb.ee/wrapper/concat/app.js
