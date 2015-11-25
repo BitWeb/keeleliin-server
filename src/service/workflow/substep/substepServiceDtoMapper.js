@@ -110,7 +110,7 @@ function SubstepServiceDtoMapper(){
                         var inputype = inputTypes[i];
 
                         var sizeLeft = null;
-                        if(inputype.sizeLimit != 0){
+                        if(inputype.sizeLimit !== 0 && !isNaN(parseInt(inputype.sizeLimit))){
                             sizeLeft = inputype.sizeLimit;
                         }
 
@@ -121,7 +121,7 @@ function SubstepServiceDtoMapper(){
                                 logger.debug('Suitable input resource found: ' + resource.id);
                                 logger.debug('Key: ' + inputype.key + ' Filename: ' + resource.filename);
 
-                                if(sizeLeft != null){
+                                if(sizeLeft !== null){
                                     sizeLeft = sizeLeft - resource.fileSize;
                                     if(sizeLeft < 0){
                                         return callback('Teenusele etteantavate ressursside maht ületati.');
