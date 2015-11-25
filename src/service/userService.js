@@ -236,7 +236,11 @@ function UserService() {
 
         userDaoService.getUsersWithCount( query , function (err, users) {
             var updatedUsers = [];
-            for(i in users.rows){
+            for(var i in users.rows){
+                if (!users.rows.hasOwnProperty(i)) {
+                    continue;
+                }
+
                 users.rows[i] = ObjectUtils.snakeToCame(users.rows[i])
             }
             cb( err, users );

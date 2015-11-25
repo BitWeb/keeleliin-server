@@ -253,7 +253,10 @@ function NotificationService() {
                     logger.error('Notification texts error: ', err);
                     return cb(err);
                 }
-                for(i in templates){
+                for(var i in templates){
+                    if (!templates.hasOwnProperty(i)) {
+                        continue;
+                    }
                     notification[i] = templates[i];
                 }
                 cb(err, notification);
@@ -262,7 +265,10 @@ function NotificationService() {
     };
 
     this._replaceInObjectValues = function (object, key, value) {
-        for(i in object){
+        for(var i in object){
+            if (!object.hasOwnProperty(i)) {
+                continue;
+            }
             var objectValue = object[i];
             if(!objectValue){
                 continue;

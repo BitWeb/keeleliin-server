@@ -40,7 +40,7 @@ function EntuService() {
                 },
                 function mapRootNodes( entities, callback) {
                     var list = [];
-                    for(i in entities){
+                    for(var i = 0, length = entities.length; i < length; i++){
                         var item = entities[i];
                         list.push({
                             id: item.id,
@@ -63,11 +63,12 @@ function EntuService() {
 
                                 node.children = [];
                                 var entity = data.result;
-                                if(!entity || !entity.properties.file){
+                                if(!entity || !entity.properties.file || !entity.properties.file.values){
                                     return innerCb( null, node);
                                 }
                                 var files = entity.properties.file.values;
-                                for(i in files){
+
+                                for( var i = 0, length = files.length; i < length; i++){
                                     node.children.push({
                                         id: files[i].db_value,
                                         name: files[i].value,

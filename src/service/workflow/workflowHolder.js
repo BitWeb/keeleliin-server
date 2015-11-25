@@ -69,7 +69,12 @@ function WorkflowHolder( workflowId ){
     };
 
     this.getWorkflowServiceById = function (id) {
-        for(i in self.workflow.workflowServices){
+        for(var i in self.workflow.workflowServices){
+
+            if (!self.workflow.workflowServices.hasOwnProperty(i)) {
+                continue;
+            }
+
             if(self.workflow.workflowServices[i].id == id){
                 return self.workflow.workflowServices[i];
             }
@@ -107,7 +112,12 @@ function WorkflowHolder( workflowId ){
         var maxOrderNum = -1;
         var lastService = null;
 
-        for(i in workflowMap.services){
+        for(var i in workflowMap.services){
+
+            if (!workflowMap.services.hasOwnProperty(i)) {
+                continue;
+            }
+
             if( workflowMap.services[i].orderNum > maxOrderNum ){
                 maxOrderNum = workflowMap.services[i].orderNum;
                 lastService = workflowMap.services[i];
@@ -318,7 +328,11 @@ function WorkflowHolder( workflowId ){
         };
 
         workflowMap.services = {};
-        for(i in self.workflow.workflowServices){
+        for(var i in self.workflow.workflowServices){
+            if (!self.workflow.workflowServices.hasOwnProperty(i)) {
+                continue;
+            }
+
             var wfService = self.workflow.workflowServices[i];
             workflowMap.services[wfService.id] = {
                 id: wfService.id,
@@ -350,7 +364,12 @@ function WorkflowHolder( workflowId ){
     };
 
     this.hasFilesToParseCount = function (workflowService) {
-        for(i in workflowMap.services){
+        for(var i in workflowMap.services){
+
+            if (!workflowMap.services.hasOwnProperty(i)) {
+                continue;
+            }
+
             var item = workflowMap.services[i];
             if(item.orderNum <= workflowService.orderNum && item.filesToParse > 0){
                 return true;
@@ -360,7 +379,10 @@ function WorkflowHolder( workflowId ){
     };
 
     this.hasSubStepsToRun = function (workflowService) {
-        for(i in workflowMap.services){
+        for(var i in workflowMap.services){
+            if (!workflowMap.services.hasOwnProperty(i)) {
+                continue;
+            }
             var item = workflowMap.services[i];
             if(item.orderNum <= workflowService.orderNum && item.subStepsToRun > 0){
                 return true;
@@ -370,7 +392,10 @@ function WorkflowHolder( workflowId ){
     };
 
     this.hasPreviousNotFinishedServices = function (workflowService) {
-        for(i in workflowMap.services){
+        for(var i in workflowMap.services){
+            if (!workflowMap.services.hasOwnProperty(i)) {
+                continue;
+            }
             var item = workflowMap.services[i];
             if(item.orderNum < workflowService.orderNum && item.status != Workflow.statusCodes.FINISHED){
                 return true;

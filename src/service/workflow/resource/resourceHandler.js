@@ -169,9 +169,9 @@ function ResourceHandler(project, workflow) {
             },
             function filterResources( resources, callback ) {
                 var filteredResult = [];
-                for(i in resources){
+                for(var i = 0; i < resources.length; i++){
                     var resource = resources[i];
-                    for(j in inputResourceTypes){
+                    for(var j = 0; j < inputResourceTypes.length; j++){
                         var inputType = inputResourceTypes[j];
                         if(resource.resourceTypeId == inputType.id){
                             filteredResult.push(resource);
@@ -210,7 +210,7 @@ function ResourceHandler(project, workflow) {
 
         var putResourceToJunk = function (resource) {
             var junk;
-            for (i in junks) {
+            for (var i = 0; i < junks.length; i++) {
                 junk = junks[i];
                 var resourceWithResourceType = ArrayUtil.find(junk, function (junkResource) {
                     return junkResource.resourceTypeId == resource.resourceTypeId;
@@ -254,7 +254,7 @@ function ResourceHandler(project, workflow) {
             );
         };
 
-        for (i in resources) {
+        for (var i = 0; i < resources.length; i++) {
             var resource = resources[i];
             if (isResourceTypeNeeded(resource.resourceTypeId) == true) {
                 putResourceToJunk(resource);
@@ -284,7 +284,7 @@ function ResourceHandler(project, workflow) {
             function done(err, result) {
                 logger.debug('Junks created: ' + result.length);
                 var filledJunks = [];
-                for (i in result) {
+                for ( var i = 0; i < result.length; i++ ) {
                     if (result[i].length == resourcesCountInJunk) {
                         filledJunks.push(result[i]);
                     } else {
@@ -353,10 +353,10 @@ function ResourceHandler(project, workflow) {
             var init = [];
             this.cross = function (buffer) {
                 var updatedInit = [];
-                for(i in buffer){
+                for(var i in buffer){
                     var item = buffer[i];
                     if(init.length > 0){
-                        for(j in init){
+                        for(var j = 0; j < init.length; j++){
                             var subArray = init[j].slice(0);
                             subArray.push( item );
                             updatedInit.push(subArray);
@@ -376,7 +376,7 @@ function ResourceHandler(project, workflow) {
         var handleBuffer = function (cb) {
 
             var subBufferHandler = new SubBufferHandler();
-            for( i in buffer ){
+            for( var i in buffer ){
                 subBufferHandler.cross( buffer[i] );
             }
             var resultJunks = subBufferHandler.getResult();

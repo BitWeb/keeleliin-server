@@ -36,7 +36,8 @@ function ServiceService() {
             }
 
             var result = [];
-            for(i in data){
+
+            for(var i = 0, length = data.length; i < length; i++){
                 var item = data[i];
                 var itemJSON = item.toJSON();
 
@@ -64,13 +65,14 @@ function ServiceService() {
             //map parentservices to simple list
             var dataJSON = data.toJSON();
             var parentServicesList = [];
-            for(i in dataJSON.parentServices){
+
+            for(var i = 0, length = dataJSON.parentServices.length; i < length; i++){
                 parentServicesList.push( dataJSON.parentServices[i].id );
             }
             dataJSON.parentServices = parentServicesList;
 
             var childServicesList = [];
-            for(i in dataJSON.childServices){
+            for(var i = 0, length = dataJSON.childServices.length; i < length; i++){
                 childServicesList.push( dataJSON.childServices[i].id );
             }
             dataJSON.childServices = childServicesList;
@@ -537,6 +539,10 @@ function ServiceService() {
                 logger.debug('Compose. Map params');
 
                 for (var i in installData.parameters) {
+                    if (!installData.parameters.hasOwnProperty(i)) {
+                        continue;
+                    }
+
                     var param = installData.parameters[i];
                     var paramOptions = [];
                     if(param.type == 'select' && param.options){

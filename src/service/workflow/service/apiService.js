@@ -16,12 +16,20 @@ function ApiService(){
         var formData = {};
 
         for(var i in dto.params){
+            if (!dto.params.hasOwnProperty(i)) {
+                continue;
+            }
             if(dto.params[i] != null){
                 formData[i] = dto.params[i];
             }
         }
 
         for(var j in dto.files){
+
+            if (!dto.files.hasOwnProperty(j)) {
+                continue;
+            }
+
             var file =  dto.files[j];
             var attachment =  fs.createReadStream( config.resources.location + '/' + file.path );
             if(formData[file.key] == undefined){

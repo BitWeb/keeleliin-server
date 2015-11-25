@@ -59,7 +59,9 @@ function StatisticsService() {
                     drives,
                     function (err, data) {
                         for(var i in data) {
-
+                            if (!data.hasOwnProperty(i)) {
+                                continue;
+                            }
                             var drive = {
                                 name: data[i].drive,
                                 total: data[i].total,
@@ -76,7 +78,11 @@ function StatisticsService() {
 
     this.getCPULoad = function (callback) {
         var loads = os.loadavg();
-        for(i in loads){
+        for(var i in loads){
+            if (!loads.hasOwnProperty(i)) {
+                continue;
+            }
+
             var load = loads[i];
             loads[i] = Math.round(load * 100) / 100;
         }

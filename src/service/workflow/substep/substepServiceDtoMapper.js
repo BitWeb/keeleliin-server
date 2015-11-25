@@ -106,15 +106,25 @@ function SubstepServiceDtoMapper(){
             function mapInputs(callback) {
 
                 try {
-                    for(i in inputTypes){
+                    for(var i in inputTypes){
+
+                        if (!inputTypes.hasOwnProperty(i)) {
+                            continue;
+                        }
+
                         var inputype = inputTypes[i];
 
                         var sizeLeft = null;
-                        if(inputype.sizeLimit !== 0 && !isNaN(parseInt(inputype.sizeLimit))){
+                        if(inputype.sizeLimit !== 0 && !isNaN(parseInt(inputype.sizeLimit, 10))){
                             sizeLeft = inputype.sizeLimit;
                         }
 
-                        for(j in resources){
+                        for(var j in resources){
+
+                            if (!resources.hasOwnProperty(j)) {
+                                continue;
+                            }
+
                             var resource = resources[j];
                             logger.debug(' Compare: ' + inputype.resourceTypeId + ' == ' + resource.resourceTypeId );
                             if(inputype.resourceTypeId == resource.resourceTypeId){

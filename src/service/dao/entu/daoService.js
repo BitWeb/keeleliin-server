@@ -100,7 +100,19 @@ var DaoService = function(){
         };
 
         request(options, function (error, response, body) {
-            return callback( error, JSON.parse(body) );
+            if(error){
+                return callback( error );
+            }
+
+            var parsedBody = null;
+
+            try {
+                parsedBody = JSON.parse(body);
+            } catch (e){
+                return callback( e);
+            }
+
+            return callback( null, parsedBody );
         }).on('error', function(e) {
             logger.debug('problem with request: ' + e);
             return callback( e );

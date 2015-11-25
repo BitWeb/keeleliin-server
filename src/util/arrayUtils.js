@@ -19,7 +19,11 @@ var ArrayUtils = {
 
     find: function(array, cb){
 
-        for(i in array){
+        for(var i in array){
+            if (!array.hasOwnProperty(i)) {
+                continue;
+            }
+
             if(cb(array[i], i , array)){
                 return array[i];
             }
