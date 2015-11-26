@@ -17,7 +17,7 @@ function EntuService() {
 
     var self = this;
 
-    this.getResourcesList = function ( req, cb ) {
+    this.getResourcesList = function ( req, query, cb ) {
 
         var entuMeta = {
             userId: req.redisSession.data.entuUserId,
@@ -28,7 +28,8 @@ function EntuService() {
             [
                 function getEntitiesList( callback ) {
                     var params = {
-                        definition: 'resource'
+                        definition: 'resource',
+                        query: query.query
                     };
 
                     entuDaoService.getEntities( params, entuMeta, function (err, data) {
@@ -50,39 +51,51 @@ function EntuService() {
                     }
 
                     callback(null, list);
-                },
-                function (rootNodes, callback) {
-
-                    async.map(
-                        rootNodes,
-                        function (node, innerCb) {
-                            entuDaoService.getEntity( node.id, entuMeta, function (err, data) {
-                                if(err){
-                                    return innerCb(err);
-                                }
-
-                                node.children = [];
-                                var entity = data.result;
-                                if(!entity || !entity.properties.file || !entity.properties.file.values){
-                                    return innerCb( null, node);
-                                }
-                                var files = entity.properties.file.values;
-
-                                for( var i = 0, length = files.length; i < length; i++){
-                                    node.children.push({
-                                        id: files[i].db_value,
-                                        name: files[i].value,
-                                        scope: 'file'
-                                    });
-                                }
-                                innerCb( null, node);
-                            });
-                        },
-                        function (err, map) {
-                            callback( err, map );
-                        }
-                    );
                 }
+            ],
+            function (err, list) {
+                if(err){
+                    logger.error(err);
+                }
+                cb(err, list);
+            }
+        );
+    };
+
+    this.getResourceFilesList = function ( req, resourceId, cb ) {
+        var entuMeta = {
+            userId: req.redisSession.data.entuUserId,
+            sessionKey: req.redisSession.data.entuSessionKey
+        };
+
+        async.waterfall(
+            [
+             function (callback) {
+
+                 entuDaoService.getEntity(resourceId, entuMeta, function (err, data) {
+                     if (err) {
+                         return callback(err);
+                     }
+
+                     var children = [];
+                     var entity = data.result;
+                     if (!entity || !entity.properties.file || !entity.properties.file.values) {
+                         return callback(null, children);
+                     }
+
+                     var files = entity.properties.file.values;
+
+                     for (var i = 0, length = files.length; i < length; i++) {
+                         children.push({
+                             id: files[i].db_value,
+                             name: files[i].value,
+                             scope: 'file'
+                         });
+                     }
+
+                     callback(null, children);
+                 });
+             }
             ],
             function (err, list) {
                 if(err){
