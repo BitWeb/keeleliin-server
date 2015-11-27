@@ -16,12 +16,14 @@ function WorkflowBuilder(){
 
         async.waterfall([
                 function (callback) {
-
                     Workflow.findById( workflowId ).then(function (workflow) {
                         if(!workflow){
                             callback('Töövoogu ei leitud');
                         }
                         callback(null, workflow);
+                    }).catch(function (err) {
+                        logger.error(err);
+                        callback( err.message );
                     });
                 },
                 function (workflow, callback) {
@@ -35,12 +37,16 @@ function WorkflowBuilder(){
 
                     workflow.getWorkflowDefinition().then(function (workflowDefinition) {
                         callback(null, workflow, workflowDefinition);
+                    }).catch(function (err) {
+                        logger.error(err);
+                        callback( err.message );
                     });
                 },
                 function (workflow, workflowDefinition, callback) {
 
                     workflowDefinition.getFirstDefinitionService(function (err, definitionService) {
                         if(err){
+                            logger.error(err);
                             return callback(err);
                         }
                         self.validateWorkflowDefinitionFirstService(workflow, definitionService, function (err) {
@@ -57,6 +63,7 @@ function WorkflowBuilder(){
                             callback(null, workflow, workflowDefinition);
                         });
                     }).catch(function (err) {
+                        logger.error(err);
                         callback(err.message);
                     });
                 },
@@ -65,20 +72,20 @@ function WorkflowBuilder(){
                     workflowDefinition.updateAttributes({editStatus: WorkflowDefinition.editStatuses.LOCKED}).then(function () {
                         callback(null, workflow);
                     }).catch(function (err) {
+                        logger.error(err);
                         callback( err.message );
                     });
                 }
             ],
             function(err, workflow){
-
-                logger.debug('Create callback');
-
                 if(err){
-                    logger.error(err);
                     return cb(err);
                 }
-                cb(null, workflow);
+                cb( null, workflow );
         });
+
+
+
     };
 
     this.validateWorkflowDefinitionFirstService = function(workflow, definitionService, cb){
@@ -96,6 +103,9 @@ function WorkflowBuilder(){
                         callback('Töövool puuduvad sisendressursid.');
                     }
                     callback(null, resources);
+                }).catch(function (err) {
+                    logger.error(err);
+                    callback( err.message );
                 });
             },
             function (resources, callback) {
@@ -114,7 +124,13 @@ function WorkflowBuilder(){
                             }
                         }
                         return callback();
+                    }).catch(function (err) {
+                        logger.error(err);
+                        callback( err.message );
                     });
+                }).catch(function (err) {
+                    logger.error(err);
+                    callback( err.message );
                 });
             }
         ], function (err) {
@@ -148,7 +164,8 @@ function WorkflowBuilder(){
         WorkflowService.build(data).save().then(function (workflowService) {
             cb(null, workflow);
         }).catch(function (err) {
-            cb(err.message);
+            logger.error(err);
+            cb( err.message );
         });
     };
 }
