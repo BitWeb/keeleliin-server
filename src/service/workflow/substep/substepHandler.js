@@ -215,8 +215,17 @@ function SubStepHandler(project, workflow){
     };
 
     this._loadOutputResource = function (substep, fileData, dto,  callback) {
+
+        logger.debug('Load output resources');
+
         self._getSubstepOutputResourceType(substep, fileData, function (err, resourceType) {
-            if(err) return callback(null, substep); //SKIP if not used
+            if(err){
+
+                logger.debug('Skip: ', fileData);
+                logger.debug('Skip error: ', err);
+
+                return callback(null, substep); //SKIP if not used
+            }
             var outputPath = self._getOutputResourcePath(substep, fileData);
             apiService.loadRequestResponse(dto, substep.serviceSession, fileData, outputPath, function (err) {
                 self._addSubstepOutputResource(substep, outputPath, fileData, resourceType, function (err) {
@@ -229,7 +238,7 @@ function SubStepHandler(project, workflow){
 
     this._updateSubstepFinishStatus = function (substep, status, cb) {
 
-        logger.debug('Update finish status: ' + status, substep);
+        logger.debug('Update finish status: ' + status, substep.id);
 
         substep.status = status;
         substep.datetimeEnd = new Date();

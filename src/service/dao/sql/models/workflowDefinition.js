@@ -135,8 +135,22 @@ module.exports = function(sequelize, DataTypes) {
                     }
                 );
             }
+        },
+        instanceMethods: {
+            getFirstDefinitionService: function (cb) {
+                this.getDefinitionServices({
+                    order: [['order_num', 'ASC']],
+                    limit: 1
+                }).then(function (items) {
+                    if (items.length > 0) {
+                        return cb(null, items[0]);
+                    }
+                    return cb();
+                }).catch(function (err) {
+                    return cb(err);
+                });
+            }
         }
-
     });
 
     WorkflowDefinition.editStatuses = editStatuses;

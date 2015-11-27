@@ -93,7 +93,7 @@ function WorkflowService() {
 
         workflowBuilder.create( workflowId, function (err, workflow) {
             if(err){
-                return callback(callback);
+                return callback( err );
             }
 
             var workflowRunner = new WorkflowRunner();

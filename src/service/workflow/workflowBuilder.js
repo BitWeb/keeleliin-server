@@ -12,8 +12,11 @@ function WorkflowBuilder(){
 
     this.create = function (workflowId, cb) {
 
+        logger.debug('Create workflow');
+
         async.waterfall([
                 function (callback) {
+
                     Workflow.findById( workflowId ).then(function (workflow) {
                         if(!workflow){
                             callback('Töövoogu ei leitud');
@@ -22,19 +25,43 @@ function WorkflowBuilder(){
                     });
                 },
                 function (workflow, callback) {
+
                     if(workflow.status != Workflow.statusCodes.INIT){
                         return callback('Töövoog ei ole INIT staatusega!');
                     }
                     callback(null, workflow);
                 },
                 function getWorkflowDefinition(workflow, callback) {
+
                     workflow.getWorkflowDefinition().then(function (workflowDefinition) {
-                        self.setServices(workflow, workflowDefinition, function (err, workflow) {
+                        callback(null, workflow, workflowDefinition);
+                    });
+                },
+                function (workflow, workflowDefinition, callback) {
+
+                    workflowDefinition.getFirstDefinitionService(function (err, definitionService) {
+                        if(err){
+                            return callback(err);
+                        }
+                        self.validateWorkflowDefinitionFirstService(workflow, definitionService, function (err) {
                             callback(err, workflow, workflowDefinition);
-                        })
+                        });
+                    });
+                },
+                function (workflow, workflowDefinition, callback) {
+
+                    logger.debug('Copy definition services. workflow: ' + workflow.id);
+
+                    workflowDefinition.getDefinitionServices().then(function (definitionServices) {
+                        self.copyDefinitionServicesToServices(definitionServices, workflow, function () {
+                            callback(null, workflow, workflowDefinition);
+                        });
+                    }).catch(function (err) {
+                        callback(err.message);
                     });
                 },
                 function lockDefinition(workflow, workflowDefinition, callback) {
+
                     workflowDefinition.updateAttributes({editStatus: WorkflowDefinition.editStatuses.LOCKED}).then(function () {
                         callback(null, workflow);
                     }).catch(function (err) {
@@ -43,6 +70,9 @@ function WorkflowBuilder(){
                 }
             ],
             function(err, workflow){
+
+                logger.debug('Create callback');
+
                 if(err){
                     logger.error(err);
                     return cb(err);
@@ -51,12 +81,44 @@ function WorkflowBuilder(){
         });
     };
 
-    this.setServices = function (workflow, workflowDefinition, cb) {
+    this.validateWorkflowDefinitionFirstService = function(workflow, definitionService, cb){
 
-        workflowDefinition.getDefinitionServices().then(function (definitionServices) {
-            self.copyDefinitionServicesToServices(definitionServices, workflow, cb);
-        }).catch(function (err) {
-            cb(err.message);
+        async.waterfall([
+            function (callback) {
+                if(!definitionService){
+                    return callback('Töövoos puuduvad teenused.');
+                }
+                callback();
+            },
+            function (callback) {
+                workflow.getInputResources().then(function(resources){
+                    if(resources.length == 0){
+                        callback('Töövool puuduvad sisendressursid.');
+                    }
+                    callback(null, resources);
+                });
+            },
+            function (resources, callback) {
+
+                definitionService.getService().then(function (service) {
+                    service.getServiceInputTypes().then(function (inputTypes) {
+                        for(var i = 0, iLength = inputTypes.length; i < iLength; i++ ){
+                            var hasResource = false;
+                            for(var j = 0, jLength = resources.length; j < jLength; j++){
+                                if(inputTypes[i].resourceTypeId == resources[j].resourceTypeId ){
+                                    hasResource = true;
+                                }
+                            }
+                            if(hasResource === false){
+                                return callback('Töövoole sobivat sisendresurssi ei leitud.');
+                            }
+                        }
+                        return callback();
+                    });
+                });
+            }
+        ], function (err) {
+            cb(err);
         });
     };
 
