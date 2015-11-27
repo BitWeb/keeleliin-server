@@ -16,4 +16,16 @@ router.put('/read', authMiddleware('regular'), function(req, res) {
     });
 });
 
+router.put('/read-all', authMiddleware('regular'), function(req, res) {
+    notificationService.readAllNotifications(req, function(error) {
+        return res.sendApiResponse(error);
+    });
+});
+
+router.delete('/:notificationId', authMiddleware('regular'), function(req, res) {
+    notificationService.deleteNotification(req, req.params.notificationId, function(error) {
+        return res.sendApiResponse(error);
+    });
+});
+
 module.exports = router;

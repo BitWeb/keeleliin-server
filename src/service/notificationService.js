@@ -109,6 +109,38 @@ function NotificationService() {
         });
     };
 
+    this.readAllNotifications = function (req, callback) {
+
+        Notification.update(
+            {
+            isRead: true,
+            dateRead: new Date()
+            },
+            { where: {
+                    toUserId: req.redisSession.data.userId
+                }
+            }
+        ).then(function () {
+            return callback(null);
+        }).catch(function(error) {
+            return callback( error.message )
+        });
+    };
+
+    this.deleteNotification = function (req, notificationId, callback) {
+        self.getNotification(req, notificationId, function(error, notification) {
+            if (error) {
+                return callback(error);
+            }
+            notification.destroy().then(function () {
+                return callback(null);
+            }).catch(function(error) {
+                return callback( error.message )
+            });
+        });
+    };
+
+
 
     this.addNotification = function(userId, code, modelId, cb) {
         logger.debug('Add notification. user: ' + userId + ' code: ' + code + ' modelId: ' + modelId);
