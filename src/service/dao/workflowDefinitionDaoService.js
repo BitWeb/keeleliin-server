@@ -19,7 +19,7 @@ function WorkflowDefinitionDaoService() {
             " wfd.description as description," +
             " wfd.purpose as purpose," +
             " wfd.edit_status as edit_status," +
-            " wfd.access_status as access_status" +
+            " wfd.access_status as access_status " +
             " FROM workflow_definition as wfd " +
             " WHERE " +
             " wfd.access_status = '" + WorkflowDefinition.accessStatuses.PUBLIC + "'";
@@ -31,7 +31,7 @@ function WorkflowDefinitionDaoService() {
             " wfd.description as description," +
             " wfd.purpose as purpose," +
             " wfd.edit_status as edit_status," +
-            " '" + WorkflowDefinition.accessStatuses.PRIVATE + "' as access_status" +
+            " '" + WorkflowDefinition.accessStatuses.PRIVATE + "' as access_status " +
             " FROM workflow_definition as wfd " +
             " WHERE " +
             " wfd.user_id = :userId ";
@@ -43,7 +43,7 @@ function WorkflowDefinitionDaoService() {
             " wfd.description as description," +
             " wfd.purpose as purpose," +
             " wfd.edit_status as edit_status," +
-            " wfd.access_status as access_status" +
+            " wfd.access_status as access_status " +
             " FROM workflow_definition as wfd " +
             " JOIN workflow_definition_user AS wfdu ON ( wfdu.user_id = :userId AND wfdu.workflow_definition_id = wfd.id )" +
             " WHERE " +
@@ -56,8 +56,11 @@ function WorkflowDefinitionDaoService() {
             " definition.description, " +
             " definition.purpose, " +
             " definition.edit_status, " +
-            " definition.access_status " +
+            " definition.access_status, " +
+            " u.name AS owner " +
             " FROM ((" + publicQuery + ") UNION ALL ("+ personalQuery + ") UNION ALL ("+ sharedQuery + ") ) as definition " +
+            " JOIN workflow_definition_user AS wdu ON (wdu.workflow_definition_id = definition.id AND wdu.role = '"+ WorkflowDefinitionUser.roles.OWNER +"')" +
+            " JOIN \"user\" AS u ON (u.id = wdu.user_id)" +
             " WHERE NOT EXISTS ( " +
             "   SELECT wds.id FROM workflow_definition_service as wds " +
             "   JOIN service ON (service.id = wds.service_id AND service.is_active = FALSE)  " +
