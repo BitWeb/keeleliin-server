@@ -25,24 +25,6 @@ function ResourceDaoService() {
                     >>>Sisendressursid
                     >>>Väljundressursid
 */
-
-        var conditions = [];
-        if( query.projectId ){
-            conditions.push("ra.project_id = " + query.projectId);
-        }
-        if( query.workflowId ){
-            conditions.push("ra.workflow_id = " + query.workflowId);
-        }
-        if( query.userId ){
-            conditions.push("ra.user_id = " + query.userId);
-        }
-
-        var where = "";
-
-        if(conditions.length > 0){
-            where = " WHERE " + conditions.join(" AND ");
-        }
-
         var totalQuery = " SELECT " +
             " CASE WHEN (ra.context = 'public') THEN 'Avalik' WHEN (ra.context = 'shared') THEN 'Jagatud' ELSE project.name END as level_0, " +
             " workflow.name as level_1, " +
@@ -60,8 +42,21 @@ function ResourceDaoService() {
             " LEFT JOIN workflow ON (ra.workflow_id = workflow.id)" +
             " LEFT JOIN workflow_service_substep as ws_substep ON (ra.workflow_service_substep_id = ws_substep.id) " +
             " LEFT JOIN workflow_service as ws ON (ws_substep.workflow_service_id = ws.id)" +
-            " LEFT JOIN service ON (ws.service_id = service.id)" +
-            "" + where;
+            " LEFT JOIN service ON (ws.service_id = service.id)" ;
+
+
+        var condition = null;
+        if( query.projectId ){
+            totalQuery += "WHERE ra.project_id = " + query.projectId + " ";
+        } else if( query.workflowId ){
+            totalQuery += "WHERE ra.workflow_id = " + query.workflowId + " ";
+        } else if( query.userId ){
+            totalQuery += " " +
+            " LEFT JOIN project_user ON (project_user.project_id = project.id AND project_user.user_id = "+ query.userId + " )" +
+            " WHERE ( ra.user_id = " + query.userId + " OR ra.context = 'public' OR project_user.user_id IS NOT NULL)" +
+            "";
+        }
+
 
         var start = new Date().getTime();
         sequelize.query( totalQuery, { type: sequelize.QueryTypes.SELECT}).then(function (resources) {

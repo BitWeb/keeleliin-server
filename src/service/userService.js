@@ -171,7 +171,7 @@ function UserService() {
 
     this.getCurrentUser = function (request, cb) {
         var userId = request.redisSession.data.userId;
-        return userDaoService.findById(userId, cb);
+        self.getUser(request, userId, cb);
     };
 
     this.getCurrentUserMainProperties = function (request, cb) {
@@ -187,7 +187,14 @@ function UserService() {
     };
 
     this.getUser = function(req, userId, cb) {
-        return userDaoService.findById(userId, cb);
+        User.findById( userId ).then(function (user) {
+            if(!user){
+                return cb("Kasutajat ei leitud");
+            }
+            return cb(null, user);
+        }).catch(function(error) {
+            return cb( error.message );
+        });
     };
 
     this.updateUser = function(req, userId, userData, cb) {

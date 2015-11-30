@@ -93,22 +93,23 @@ function ResourceService() {
 
     this.getResources = function (req, cb) {
 
-        var query = req.query;
-
         async.waterfall([
-            function setQueryUserId(callback) {
+            function setQueryParams(callback) {
+
+                var query = req.query;
+                var params = {};
+
                 if (query.workflowId) {
-                    Workflow.findById(query.workflowId).then(function (workflow) {
-                        if(!workflow){
-                            return callback('Töövoogu ei leitud');
-                        }
-                        query.userId = workflow.userId;
-                        callback(null, query);
-                    });
+                    params.workflowId = query.workflowId;
+                } else if(query.projectId) {
+                    params.projectId = query.projectId;
+                } else if(query.userId){
+                    params.userId = query.userId;
                 } else {
-                    query.userId = req.redisSession.data.userId;
-                    callback(null, query);
+                    params.userId = req.redisSession.data.userId;
                 }
+
+                callback(null, params);
             },
             function queryData(query, callback) {
                 return resourceDaoService.getResources(query, function (err, resources) {

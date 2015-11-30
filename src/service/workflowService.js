@@ -9,6 +9,7 @@ var projectService = require(__base + 'src/service/projectService');
 var workflowDaoService = require(__base + 'src/service/dao/workflowDaoService');
 var resourceDaoService = require(__base + 'src/service/dao/resourceDaoService');
 var resourceService = require(__base + 'src/service/resourceService');
+var userService = require(__base + 'src/service/userService');
 var Workflow = require(__base + 'src/service/dao/sql').Workflow;
 var Resource = require(__base + 'src/service/dao/sql').Resource;
 var ResourceAssociation = require(__base + 'src/service/dao/sql').ResourceAssociation;
@@ -31,8 +32,51 @@ function WorkflowService() {
 
     var self = this;
 
+    this.canViewWorkflowById = function (req, workflowId, cb) {
+        Workflow.findById(workflowId).then(function (workflow) {
+            if(!workflow){
+                cb(null, false);
+            }
+            projectService.canViewProjectById( req, workflow.projectId, function (err, success) {
+                cb(err, success);
+            });
+        });
+    };
+
+    this.canEditWorkflowById = function (req, workflowId, cb) {
+        Workflow.findById(workflowId).then(function (workflow) {
+            if(!workflow){
+                cb(null, false);
+            }
+            projectService.canEditProjectById( req, workflow.projectId, function (err, success) {
+                cb(err, success);
+            });
+        });
+    };
+
     this.getWorkflowOverview = function ( req, id, callback ) {
-        workflowDaoService.getWorkflowOverview( id, callback );
+
+        self.canViewWorkflowById(req, id, function (err, canView) {
+            if(err){
+                return callback(err);
+            }
+            if(!canView){
+                return callback('Kasutajal puudub ligipääsuõigus');
+            }
+
+            return workflowDaoService.getWorkflowOverview( id, function (err, overview) {
+                self.canEditWorkflowById(req, id, function (err, canEdit) {
+                    if(err){
+                        return callback(err);
+                    }
+                    overview = overview.toJSON();
+                    overview.canEdit = canEdit;
+                    logger.trace( overview );
+                    callback(err, overview);
+
+                });
+            });
+        });
     };
 
     this.getWorkflowDefinitionOverview = function ( req, workflowId, cb ) {
@@ -91,18 +135,40 @@ function WorkflowService() {
 
     this.runWorkflow = function (req, workflowId, callback) {
 
-        workflowBuilder.create( workflowId, function (err, workflow) {
+        self.canEditWorkflowById(req, workflowId, function (err, canView) {
             if(err){
-                return callback( err );
+               logger.error(err);
+               return callback(err);
+            }
+            if(canView === false){
+                return callback('Kasutajal ei ole õigust antud tövoogu käivitada');
             }
 
-            var workflowRunner = new WorkflowRunner();
-            workflowRunner.run(workflow.id, callback);
+            workflowBuilder.create( workflowId, function (err, workflow) {
+                if(err){
+                    return callback( err );
+                }
+
+                var workflowRunner = new WorkflowRunner();
+                workflowRunner.run(workflow.id, callback);
+            });
         });
     };
 
     this.setWorkflowStatusCanceled = function (req, workflowId, cb) {
         async.waterfall([
+            function ( callback ) {
+                self.canEditWorkflowById(req, workflowId, function (err, canView) {
+                    if(err){
+                        logger.error(err);
+                        return callback(err);
+                    }
+                    if(canView === false){
+                        return callback('Kasutajal ei ole õigust antud tövoogu käivitada');
+                    }
+                    callback();
+                });
+            },
             function getWorkflow( callback ) {
                 Workflow.findById( workflowId ).then(function (workflow) {
                     if (!workflow) {
@@ -143,64 +209,75 @@ function WorkflowService() {
 
     this._killWorkflowRunningSubSteps = function ( workflow, cb ) {
 
-        WorkflowServiceSubstep.findAll(
-            {
-                attributes: ['id', 'serviceSession'],
-                where: {
-                    status: Workflow.statusCodes.RUNNING
-                },
-                include: [
-                    {
-                        model: WorkflowServiceModel,
-                        as: 'workflowService',
-                        attributes: ['id'],
-                        include: [
-                            {
-                                model: ServiceModel,
-                                as: 'service',
-                                attributes: ['url'],
-                                required: true
-                            },
-                            {
-                                model: Workflow,
-                                as: 'workflow',
-                                attributes: ['id'],
-                                where: {
-                                    id: workflow.id
-                                },
-                                required: true
-                            }
-                        ],
-                        required: true
-                    }
-                ]
+        self.canEditWorkflowById(req, workflowId, function (err, canView) {
+            if(err){
+                logger.error(err);
+                return cb(err);
             }
-        ).then(function (runningSubSteps) {
-            async.each(
-                runningSubSteps,
-                function (substep, callback) {
 
-                    if(!substep.serviceSession){
-                        return callback();
-                    }
+            if(canView === false){
+                return cb('Kasutajal ei ole õigust antud tövoogu käivitada');
+            }
 
-                    var dto = {
-                        id: substep.serviceSession,
-                        url: substep.workflowService.service.url
-                    };
+            WorkflowServiceSubstep.findAll(
+                {
+                    attributes: ['id', 'serviceSession'],
+                    where: {
+                        status: Workflow.statusCodes.RUNNING
+                    },
+                    include: [
+                        {
+                            model: WorkflowServiceModel,
+                            as: 'workflowService',
+                            attributes: ['id'],
+                            include: [
+                                {
+                                    model: ServiceModel,
+                                    as: 'service',
+                                    attributes: ['url'],
+                                    required: true
+                                },
+                                {
+                                    model: Workflow,
+                                    as: 'workflow',
+                                    attributes: ['id'],
+                                    where: {
+                                        id: workflow.id
+                                    },
+                                    required: true
+                                }
+                            ],
+                            required: true
+                        }
+                    ]
+                }
+            ).then(function (runningSubSteps) {
+                async.each(
+                    runningSubSteps,
+                    function (substep, callback) {
 
-                    apiService.killRequest(dto, function (err, respBody) {
-                        if(err){
+                        if(!substep.serviceSession){
                             return callback();
                         }
-                        logger.debug(respBody);
-                        callback();
-                    });
-                },
-                function (err) {
-                    cb( err );
-                }
-            );
+
+                        var dto = {
+                            id: substep.serviceSession,
+                            url: substep.workflowService.service.url
+                        };
+
+                        apiService.killRequest(dto, function (err, respBody) {
+                            if(err){
+                                return callback();
+                            }
+                            logger.debug(respBody);
+                            callback();
+                        });
+                    },
+                    function (err) {
+                        cb( err );
+                    }
+                );
+            });
         });
     };
 

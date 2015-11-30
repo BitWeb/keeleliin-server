@@ -5,6 +5,7 @@
 var logger = require('log4js').getLogger('project_service');
 var projectDaoService = require('./dao/projectDaoService');
 var Project = require(__base + 'src/service/dao/sql').Project;
+var User = require(__base + 'src/service/dao/sql').User;
 var ProjectUser = require(__base + 'src/service/dao/sql').ProjectUser;
 var userService = require('./userService');
 var userDaoService = require('./dao/userDaoService');
@@ -23,10 +24,58 @@ function ProjectService(){
 
     var self = this;
 
+    this.canViewProjectById = function (req, projectId, cb) {
+        userService.getCurrentUser(req, function (err, user) {
+            if(err){
+                return cb(err);
+            }
+            if(user.role == User.roles.ROLE_ADMIN){
+                return cb( null, true);
+            }
+            self.getProject(req, projectId, function (err, project) {
+                if(err){
+                    return cb(err);
+                }
+                project.getProjectUserRelations({ where: { userId: user.id } }).then(function (relations) {
+                    return cb(null, relations.length === 1);
+                });
+            });
+        });
+    };
+
+    this.canEditProjectById = function (req, projectId, cb) {
+        userService.getCurrentUser(req, function (err, user) {
+            if(err){
+                return cb(err);
+            }
+            if(user.role == User.roles.ROLE_ADMIN){
+                return cb( null, true);
+            }
+
+            self.getProject(req, projectId, function (err, project) {
+                if(err){
+                    return cb(err);
+                }
+                project.getProjectUserRelations({
+                    where: {
+                        userId: user.id,
+                        $or: [
+                            { role: ProjectUser.roles.ROLE_EDITOR },
+                            { role: ProjectUser.roles.ROLE_OWNER }
+                        ]
+                    }
+                }).then(function (relations) {
+                    return cb(null, relations.length === 1);
+                });
+            });
+        });
+    };
+
+
     this.getProject = function(req, projectId, callback) {
-        Project.find({ where: { id: projectId }}).then(function(project) {
+        Project.findById( projectId ).then(function(project) {
             if (!project) {
-                return callback('Project not found.');
+                return callback('Projekti ei leitud');
             }
             return callback(null, project);
         }).catch(function(error) {
@@ -38,13 +87,10 @@ function ProjectService(){
 
         var userId = req.redisSession.data.userId;
         return projectDaoService.getUserProjectsList( userId, req.query, function (err, result) {
-
             if(err){
                 logger.error(err);
                 return cb(err);
             }
-
-            logger.debug('Projects result: ', result);
 
             async.map(
                 result.rows,
@@ -67,7 +113,7 @@ function ProjectService(){
                         projectUsers,
                         function (projectUser, puCallback) {
 
-                            if(projectUser.id == userId && projectUser.projectUser.role == ProjectUser.roles.ROLE_OWNER){
+                            if( projectUser.id == userId && projectUser.projectUser.role == ProjectUser.roles.ROLE_OWNER ){
                                 newItem.canDelete = true;
                             }
 
@@ -94,11 +140,17 @@ function ProjectService(){
 
     this.getCurrentUserProject = function (req, projectId, callback) {
         var userId = req.redisSession.data.userId;
-        return projectDaoService.getUserProject( userId, projectId, function( err, project ){
+        self._getUserProjectViewData(userId, projectId, callback);
+    };
+
+    this._getUserProjectViewData = function (userId, projectId, callback) {
+
+        projectDaoService.getProjectViewData(userId, projectId, function( err, project ){
             if(!project){
                 return callback('Kasutaja projekti ei leitud');
             }
             project = project.toJSON();
+
             project.projectUsers = project.projectUsers.map(function (projectUser) {
                 var updatedUser = {};
                 updatedUser.id = projectUser.id;
@@ -107,9 +159,11 @@ function ProjectService(){
                 updatedUser.role = projectUser.projectUser.role;
                 return updatedUser;
             });
+
             callback(err, project);
         });
     };
+
 
     this.createCurrentUserProject = function(req, projectData, cb){
 
@@ -170,7 +224,8 @@ function ProjectService(){
                     logger.error(err);
                     return cb(err);
                 }
-                return projectDaoService.getUserProject( userId, projectId, cb);
+
+                return self._getUserProjectViewData(userId, projectId, cb);
             }
         );
     };
@@ -205,24 +260,30 @@ function ProjectService(){
                 });
             },
             function isCurrentUserInOwnerRelation(existingRelations, callback) {
-                logger.debug('Is current user in owner');
-                var currentOwnerRelation = ArrayUtil.find(existingRelations, function (projectUser) {
-                   return projectUser.userId == currentUser.id && projectUser.role == ProjectUser.roles.ROLE_OWNER
+                logger.debug('Is current user in editor');
+
+                var currentEditorRelation = ArrayUtil.find(existingRelations, function (projectUser) {
+                   return projectUser.userId == currentUser.id && ( projectUser.role == ProjectUser.roles.ROLE_OWNER || projectUser.role == ProjectUser.roles.ROLE_EDITOR );
                 });
 
-                if(currentOwnerRelation){
+                if(currentEditorRelation){
                     return callback( null, existingRelations);
                 }
 
-                logger.info('User is not owner in projectuser relation');
+                logger.info('User is not editor in projectuser relations');
                 return cb(null, project);
             },
 
             function removeOrUpdateRelations(existingRelations, callback) {
+
+                if(project.accessStatus == Project.accessStatuses.PRIVATE){
+                    newRelations = [];
+                }
+
                 logger.debug('Remove or update relations');
                 async.eachOfSeries(existingRelations, function (existingRelation, key, innerCb) {
 
-                    if(existingRelation.userId == currentUser.id) { // do not update current user record
+                    if(existingRelation.role == ProjectUser.roles.ROLE_OWNER) { // do not update owner user record
                         return innerCb();
                     }
 
@@ -269,10 +330,7 @@ function ProjectService(){
                            if(!oldRelation && ObjectUtil.hasKeyValue(ProjectUser.roles, newRelation.role)){
                                logger.debug('No relation for: ', newRelation);
 
-                                userDaoService.findById(newRelation.userId, function (err, user) {
-                                    if(err){
-                                        return innerCb(err.message);
-                                    }
+                                User.findById(newRelation.userId).then(function ( user ) {
 
                                     ProjectUser.create({
                                         userId: user.id,
@@ -308,6 +366,7 @@ function ProjectService(){
         async.waterfall([
                 function (callback) {
                     var userId = req.redisSession.data.userId;
+
                     projectDaoService.getUserProject( userId, projectId, function (err, project) {
                         callback( err, project )
                     });

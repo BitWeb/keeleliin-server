@@ -21,20 +21,6 @@ function UserDaoService() {
         });
     };
 
-    this.findById = function (id, callback) {
-        User.find({where:{id:id}}).then(function (user) {
-            if(!user){
-                return callback("User not found");
-            }
-            return callback(null, user);
-        }).catch(function(error) {
-            return callback({
-                message: error.message,
-                code: 500
-            });
-        });
-    };
-
     this.getActiveUsersList = function (pagination, callback) {
         pagination = pagination || {};
         var limit = pagination.limit || null;

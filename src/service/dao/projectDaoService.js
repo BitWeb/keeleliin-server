@@ -57,7 +57,7 @@ function ProjectDaoService() {
         });
     };
 
-    this.getUserProject = function (userId, projectId, callback) {
+    this.getProjectViewData = function(userId, projectId, callback) {
         Project.find({
             attributes: [
                 'id',
@@ -68,7 +68,7 @@ function ProjectDaoService() {
                 'accessStatus'
             ],
             where: {
-                id: projectId/*, userId: userId*/
+                id: projectId
             },
             include: [
                 {
