@@ -228,9 +228,9 @@ function ResourceHandler(project, workflow) {
 
         var fillMissingResourcesInJunk = function (junk, cb) {
 
-            async.eachSeries(
-                inputResourceTypes,
-                function fillMissing(inputResourceType, eCallback) {
+            logger.debug('Fill missing resources in junk');
+
+            async.eachSeries( inputResourceTypes, function fillMissing(inputResourceType, eCallback) {
 
                     var resourceFromJunk = ArrayUtil.find(junk, function (item) {
                         return item.resourceTypeId == inputResourceType.id
@@ -238,12 +238,14 @@ function ResourceHandler(project, workflow) {
 
                     if (resourceFromJunk == null) {
                         self._getResourceFromHistoryByResourceTypeId(inputResourceType.id, fromSubStep, function (err, resource) {
+                            logger.debug('Resource found from history: ' + (resource ? resource.id: null) );
                             if (resource) {
                                 junk.push(resource);
                             }
                             eCallback(err);
                         });
                     } else {
+                        logger.debug('Resource found from junk');
                         eCallback();
                     }
                 },
@@ -299,36 +301,50 @@ function ResourceHandler(project, workflow) {
 
     this._getResourceFromHistoryByResourceTypeId = function (inputResourceTypeId, subStep, callback) {
 
+        logger.debug('getResourceFromHistoryByResourceTypeId: ' + inputResourceTypeId);
+
         if(!subStep){
+            logger.debug('No substep. Return null');
             return callback(null, null);
         }
 
         subStep.getPrevSubstep().then(function (prevSubstep) {
+
             if (prevSubstep) {
+
+                logger.debug('got prev substep: ' + prevSubstep.id);
+
                 prevSubstep.getOutputResources().then(function (outputResources) {
                     var resource = ArrayUtil.find(outputResources, function (element) {
                         return element.resourceTypeId == inputResourceTypeId
                     });
                     if (resource) {
+                        logger.debug('got prev substep output resource: ' + resource.id);
                         return callback(null, resource);
                     } else {
+                        logger.debug('prev substep output resource not found');
                         prevSubstep.getInputResources().then(function (inputResources) {
                             var resource = ArrayUtil.find(inputResources, function (element) {
                                 return element.resourceTypeId == inputResourceTypeId
                             });
                             if (resource) {
+                                logger.debug('get prev substep input resource');
                                 return callback(null, resource);
                             } else {
+                                logger.debug('prev substep input resource not found');
                                 return self._getResourceFromHistoryByResourceTypeId(inputResourceTypeId, prevSubstep, callback);
                             }
                         });
                     }
                 });
             } else {
+                logger.debug(' no prev substep ');
                 subStep.getWorkflowService().then(function (workflowService) {
                     workflowService.getWorkflow().then(function (workflow) {
                         workflow.getInputResources().then(function (resources) {
-                            var resource = self.filterResourceByTypeId(resources, inputResourceTypeId);
+                            var resource = ArrayUtil.find(resources, function (element) {
+                                return element.resourceTypeId == inputResourceTypeId
+                            });
                             return callback(null, resource);
                         });
                     })

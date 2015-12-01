@@ -212,12 +212,12 @@ function Runner() {
             }
 
             if( stepsCreated == 0 ){
-                logger.error('Järgnevaid samme ei loodud.' + workflowService.id);
-                if(fromSubStep){
+                logger.error('Järgnevaid samme ei loodud. teenus: ' + workflowService.id);
+                /*if(fromSubStep){
                     fromSubStep.errorLog = 'Järgnevale teenusele sobivaid sisendressursse ei leitud';
                     logger.error(fromSubStep.errorLog + ' Alamsammust: ' + fromSubStep.id);
                     return workflowHolder.breakFromSubstep(fromSubStep, Workflow.statusCodes.ERROR)
-                }
+                }*/
                 workflowService.log = 'Teenusele sobivaid sisendressursse ei leitud';
                 logger.error(workflowService.log);
                 return workflowHolder.breakFromService(workflowService, Workflow.statusCodes.ERROR);

@@ -150,7 +150,7 @@ function WorkflowHolder( workflowId ){
 
                 callback();
             },
-            function (callback) {
+            function checkStatuses(callback) {
 
                 if(!canContinue){
                     return callback();
