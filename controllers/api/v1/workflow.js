@@ -62,6 +62,13 @@ router.get('/:workflowId/definition', authMiddleware('regular'), function(req, r
     });
 });
 
+router.get('/:workflowId/log', authMiddleware('regular'), function(req, res) {
+    workflowService.getWorkflowLog(req, req.params.workflowId, function(err, log) {
+        res.setHeader('Content-disposition', 'attachment; filename=' + req.params.workflowId + '_logi.json');
+        return res.sendApiResponse(err, log);
+    });
+});
+
 /**
  * Definitsiooni teenuste uuendamine
  */

@@ -64,17 +64,48 @@ function WorkflowService() {
                 return callback('Kasutajal puudub ligipääsuõigus');
             }
 
-            return workflowDaoService.getWorkflowOverview( id, function (err, overview) {
+            return workflowDaoService.getWorkflowOverview( id, {}, function (err, overview) {
                 self.canEditWorkflowById(req, id, function (err, canEdit) {
                     if(err){
                         return callback(err);
                     }
                     overview = overview.toJSON();
                     overview.canEdit = canEdit;
-                    logger.trace( overview );
                     callback(err, overview);
 
                 });
+            });
+        });
+    };
+
+    this.getWorkflowLog = function ( req, id, callback ) {
+        self.canViewWorkflowById(req, id, function (err, canView) {
+            if(err){
+                return callback(err);
+            }
+            if(!canView){
+                return callback('Kasutajal puudub ligipääsuõigus');
+            }
+            return workflowDaoService.getWorkflowOverview( id, {showLog: true}, function (err, overview) {
+                if(err){
+                    return callback(err);
+                }
+
+                if(overview.workflowServices){
+                    for(var i = 0, iLength = overview.workflowServices.length; i < iLength; i++){
+                        var service = overview.workflowServices[i];
+                        if(service.subSteps){
+                            for(var j = 0, jLength = service.subSteps.length; j < jLength; j++ ){
+                                var substep = service.subSteps[j];
+                                if(substep.log){
+                                    substep.log = JSON.parse(substep.log);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                callback(err, overview);
             });
         });
     };
@@ -185,12 +216,12 @@ function WorkflowService() {
                         status: Workflow.statusCodes.CANCELLED
                     }).then(function () {
 
-                        self._killWorkflowRunningSubSteps(workflow, function (err) {
+                        self._killWorkflowRunningSubSteps(req, workflow, function (err) {
                             logger.info('Signals sent', err);
                         });
                         callback(null, workflow);
                     }).catch(function (err) {
-                        callback(err);
+                        callback(err.message);
                     });
                 } else {
                     callback(null, workflow);
@@ -198,18 +229,15 @@ function WorkflowService() {
             }
         ], function (err, workflow) {
             if(err){
-                return cb({
-                    code: 404,
-                    message: err
-                });
+                return cb( err );
             }
             self.getWorkflowOverview(req, workflowId, cb);
         });
     };
 
-    this._killWorkflowRunningSubSteps = function ( workflow, cb ) {
+    this._killWorkflowRunningSubSteps = function ( req, workflow, cb ) {
 
-        self.canEditWorkflowById(req, workflowId, function (err, canView) {
+        self.canEditWorkflowById(req, workflow.id, function (err, canView) {
             if(err){
                 logger.error(err);
                 return cb(err);

@@ -95,7 +95,7 @@ function SubStepHandler(project, workflow){
         ], function (err) {
             if(err){
                 logger.error(err);
-                substep.log = err;
+                substep.errorLog = err;
                 return self._updateSubstepFinishStatus(substep, Workflow.statusCodes.ERROR, cb);
             }
 
@@ -107,7 +107,9 @@ function SubStepHandler(project, workflow){
 
         async.waterfall([
             function makeInitialRequest(callback) {
-                apiService.makeRequest(dto, callback);
+                substep.addLog('request', dto).then(function () {
+                    apiService.makeRequest(dto, callback);
+                });
             },
             function storeSubStepServiceSessionId(response, callback) {
                 if(response && response.response){
@@ -121,6 +123,16 @@ function SubStepHandler(project, workflow){
                 }
             },
             function (response, callback) {
+
+                if(response && response.response && response.response.message == Workflow.statusCodes.RUNNING){
+                    substep.addLog('response', response.response).then(function () {
+                        return callback(null, response);
+                    });
+                } else {
+                    return callback(null, response);
+                }
+            },
+            function (response, callback) {
                 logger.debug('Response: ', response);
                 self._handleResponse(substep, dto, response, callback);
             }
@@ -130,26 +142,35 @@ function SubStepHandler(project, workflow){
     this._handleResponse = function (substep, dto, response, cb){
 
         if(!response || !response.response){
-            logger.error('TODO:: No valid response', response);
-            substep.log = JSON.stringify(response);
-            return self._updateSubstepFinishStatus(substep, Workflow.statusCodes.ERROR, cb);
+            return substep.addLog('response', response).then(function () {
+                logger.error('TODO:: No valid response', response);
+                substep.errorLog = JSON.stringify(response);
+                return self._updateSubstepFinishStatus(substep, Workflow.statusCodes.ERROR, cb);
+            });
         }
 
-        if(response.response.message == 'OK') {
-            logger.info('Message OK');
-            self._finishSubstepRequest(substep, dto, response, cb);
-        } else if(response.response.message == 'RUNNING'){
+        if(response.response.message == 'RUNNING'){
             logger.info('Message RUNNING');
             self._recheckRequest(substep, dto, response, cb);
-        } else if(response.response.message == 'ERROR'){
-            logger.info('Message ERROR');
-            logger.error(dto, response.response);
-            substep.log = 'Got service error: ' + JSON.stringify(response.response.errors);
-            self._updateSubstepFinishStatus(substep, Workflow.statusCodes.ERROR, cb);
         } else {
-            logger.error('TODO:: Not OK');
-            substep.log = 'No service response message not mapped: ' + response.response.message;
-            self._updateSubstepFinishStatus(substep, Workflow.statusCodes.ERROR, cb);
+            substep.addLog('response', response.response).then(function () {
+                if(response.response.message == 'OK') {
+                    logger.info('Message OK');
+                    self._finishSubstepRequest(substep, dto, response, cb);
+                } else if(response.response.message == 'RUNNING'){
+                    logger.info('Message RUNNING');
+                    self._recheckRequest(substep, dto, response, cb);
+                } else if(response.response.message == 'ERROR'){
+                    logger.info('Message ERROR');
+                    logger.error(dto, response.response);
+                    substep.errorLog = 'Teenuse viga: ' + JSON.stringify(response.response.errors);
+                    self._updateSubstepFinishStatus(substep, Workflow.statusCodes.ERROR, cb);
+                } else {
+                    logger.error('TODO:: Not OK');
+                    substep.errorLog = 'Tundmatu vastus: ' + response.response.message;
+                    self._updateSubstepFinishStatus(substep, Workflow.statusCodes.ERROR, cb);
+                }
+            });
         }
     };
 
@@ -160,7 +181,7 @@ function SubStepHandler(project, workflow){
 
             if(self.workflow.status == Workflow.statusCodes.CANCELLED || self.workflow.status == Workflow.statusCodes.ERROR){
                 logger.debug('Cant continue: Töövoog on katkestatud');
-                subStep.log = 'Töövoog on katkestatud';
+                subStep.errorLog = 'Töövoog on katkestatud';
                 return self._updateSubstepFinishStatus(subStep, Workflow.statusCodes.CANCELLED, cb);
             }
 
@@ -200,7 +221,7 @@ function SubStepHandler(project, workflow){
             }
         ], function (err) {
             if(err){
-                substep.log = err;
+                substep.errorLog = err;
                 return self._updateSubstepFinishStatus(substep, Workflow.statusCodes.ERROR, function (substep) {
                     logger.error('Substep finished with error:' + err);
                     cb(err, substep);

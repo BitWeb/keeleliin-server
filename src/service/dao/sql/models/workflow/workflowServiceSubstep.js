@@ -43,10 +43,15 @@ module.exports = function(sequelize, DataTypes) {
             defaultValue: '',
             field: 'service_session'
         },
-        log: {
+        errorLog: {
             type: DataTypes.TEXT,
             allowNull: true,
-            defaultValue: ''
+            field: 'error_log'
+        },
+        log: {
+            type: DataTypes.TEXT,
+            defaultValue: '',
+            allowNull: true
         },
         datetimeStart: {
             type: DataTypes.DATE,
@@ -114,6 +119,24 @@ module.exports = function(sequelize, DataTypes) {
                         }
                     }
                 );
+            }
+        },
+
+        instanceMethods: {
+            addLog: function(key, value){
+                var logs = this.log ? JSON.parse(this.log): null;
+                if(!logs){
+                    logs = [];
+                }
+                var log = {
+                    key: key,
+                    date: new Date().toISOString(),
+                    value: value
+                };
+                logs.push(log);
+
+                this.log = JSON.stringify(logs);
+                return this.save();
             }
         }
     });

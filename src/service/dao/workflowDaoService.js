@@ -43,7 +43,20 @@ function WorkflowDaoService() {
         });
     };
 
-    this.getWorkflowOverview = function( workflowId, cb) {
+    this.getWorkflowOverview = function( workflowId, options, cb) {
+
+        var subStepAttributes = [
+            'id',
+            'status',
+            'errorLog',
+            'datetimeStart',
+            'datetimeEnd'
+        ];
+
+        if(options.showLog){
+            subStepAttributes.push('log');
+        }
+
         async.waterfall([
             function overviewQuery(callback) {
 
@@ -115,13 +128,7 @@ function WorkflowDaoService() {
                                 {
                                     model: WorkflowServiceSubstep,
                                     as: 'subSteps',
-                                    attributes: [
-                                        'id',
-                                        'status',
-                                        'log',
-                                        'datetimeStart',
-                                        'datetimeEnd'
-                                    ],
+                                    attributes: subStepAttributes,
                                     where: {},
                                     required: false,
                                     include: [

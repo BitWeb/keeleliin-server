@@ -144,7 +144,7 @@ function WorkflowHolder( workflowId ){
                     canContinue = false;
                 } else if (workflowMap.status != Workflow.statusCodes.RUNNING) {
                     logger.debug('Cant continue: Töövoog ei ole RUNNING staatusega');
-                    subStep.log = 'Töövoog ei ole RUNNING staatusega';
+                    subStep.errorLog = 'Töövoog ei ole RUNNING staatusega';
                     canContinue = false;
                 }
 
@@ -159,7 +159,7 @@ function WorkflowHolder( workflowId ){
                 self.workflow.reload().then(function () {
 
                     if(self.workflow.status == Workflow.statusCodes.CANCELLED){
-                        subStep.log = 'Töövoog on katkestatud';
+                        subStep.errorLog = 'Töövoog on katkestatud';
                         logger.debug('Cant continue: Töövoog on katkestatud');
                         canContinue = false;
                         return callback();
