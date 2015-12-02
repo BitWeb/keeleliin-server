@@ -12,7 +12,7 @@ var authMiddleware = require(__base + 'middlewares/auth');
 /**
  * Ressursside nimekiri
  */
-router.get('/resource-list', authMiddleware('regular'), function(req, res) {
+router.get('/resource', authMiddleware('regular'), function(req, res) {
     entuService.getResourcesList(req, req.query, function(error, resources) {
         return res.sendApiResponse( error, resources);
     });
@@ -21,7 +21,7 @@ router.get('/resource-list', authMiddleware('regular'), function(req, res) {
 /**
  * Ressursifailide nimekiri
  */
-router.get('/resource-files-list/:resourceId', authMiddleware('regular'), function(req, res) {
+router.get('/resource/:resourceId/files', authMiddleware('regular'), function(req, res) {
     entuService.getResourceFilesList(req, req.params.resourceId, function(error, files) {
         return res.sendApiResponse( error, files);
     });

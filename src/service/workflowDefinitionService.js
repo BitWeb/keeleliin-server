@@ -8,6 +8,7 @@ var workflowDaoService = require(__base + 'src/service/dao/workflowDaoService');
 var WorkflowDefinition = require(__base + 'src/service/dao/sql').WorkflowDefinition;
 var Workflow = require(__base + 'src/service/dao/sql').Workflow;
 var User = require(__base + 'src/service/dao/sql').User;
+var ServiceModel = require(__base + 'src/service/dao/sql').Service;
 var WorkflowDefinitionServiceModel = require(__base + 'src/service/dao/sql').WorkflowDefinitionService;
 var WorkflowDefinitionUser = require(__base + 'src/service/dao/sql').WorkflowDefinitionUser;
 var async = require('async');
@@ -20,6 +21,47 @@ var config = require(__base + 'config');
 function WorkflowDefinitionService() {
 
     var self = this;
+
+    this.canViewDefinitionById = function (req, definitionId, cb) {
+
+        if( req.redisSession.data.role == User.roles.ROLE_ADMIN ){
+            return cb(null, true);
+        }
+
+        WorkflowDefinition.find({
+            where: {
+                id: definitionId
+            },
+            attributes: ['id', 'userId', 'accessStatus', 'projectId']
+        }).then(function (item) {
+            if(!item){
+                return cb(null, false);
+            }
+
+            if(item.accessStatus == WorkflowDefinition.accessStatuses.PUBLIC){
+                return cb(null, true);
+            }
+
+            if(item.accessStatus == WorkflowDefinition.accessStatuses.PRIVATE && item.userId == req.redisSession.data.userId){
+                return cb(null, true);
+            }
+
+            item.getWorkflowDefinitionUserRelations({where:{userId: req.redisSession.data.userId}}).then(function (relations) {
+                if(relations.length == 0){
+                    return cb(null, false);
+                }
+
+                if(item.accessStatus == WorkflowDefinition.accessStatuses.SHARED){
+                    return callback(null, true);
+                }
+                return cb(null, false);
+            }).catch(function (err) {
+                cb(err.message);
+            });
+        }).catch(function (err) {
+            cb(err.message);
+        });
+    };
 
     this.createNewWorkflow = function (req, data, cb) {
 
@@ -188,8 +230,25 @@ function WorkflowDefinitionService() {
 
     this.getWorkflowDefinitionOverview = function (req, definitionId, cb) {
 
+        var userId = req.redisSession.data.userId;
+
+
         async.waterfall(
             [
+                function (callback) {
+                    self.canViewDefinitionById(req, definitionId, function (err, canView) {
+                        if(err){
+                            return callback(err);
+                        }
+                        if(!canView){
+                            return callback({
+                                code: 404,
+                                message: 'Töövoo definitsiooni ei leitud'
+                            });
+                        }
+                        return callback();
+                    });
+                },
                 function (callback) {
                     WorkflowDefinition.find({
                         where: {
@@ -207,7 +266,22 @@ function WorkflowDefinitionService() {
                             {
                                 model: User,
                                 as: 'user',
-                                attributes:['id','name', 'displaypicture']
+                                attributes:['id','name', 'displaypicture'],
+                                required: false
+                            },
+                            {
+                                model: WorkflowDefinitionServiceModel,
+                                as: 'definitionServices',
+                                attributes:['id','orderNum'],
+                                required: false,
+                                include: [
+                                    {
+                                        model: ServiceModel,
+                                        as: 'service',
+                                        attributes:['id','name'],
+                                        required: false
+                                    }
+                                ]
                             }
                         ]
                     }).then(function (item) {
@@ -217,6 +291,7 @@ function WorkflowDefinitionService() {
                     });
                 },
                 function (item, callback) {
+
                     if(!item){
                         return callback({
                             code: 404,
