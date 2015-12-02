@@ -7,12 +7,15 @@ var userDaoService = require('./dao/userDaoService');
 var workflowDaoService = require(__base + 'src/service/dao/workflowDaoService');
 var WorkflowDefinition = require(__base + 'src/service/dao/sql').WorkflowDefinition;
 var Workflow = require(__base + 'src/service/dao/sql').Workflow;
+var User = require(__base + 'src/service/dao/sql').User;
 var WorkflowDefinitionServiceModel = require(__base + 'src/service/dao/sql').WorkflowDefinitionService;
 var WorkflowDefinitionUser = require(__base + 'src/service/dao/sql').WorkflowDefinitionUser;
 var async = require('async');
 var ArrayUtil = require(__base + 'src/util/arrayUtils');
 var ObjectUtil = require(__base + 'src/util/objectUtils');
 var userService = require('./userService');
+var config = require(__base + 'config');
+
 
 function WorkflowDefinitionService() {
 
@@ -146,7 +149,7 @@ function WorkflowDefinitionService() {
                             {
                                 model: WorkflowDefinition,
                                 as: 'workflowDefinition',
-                                attributes:['id','accessStatus']
+                                attributes:['id','accessStatus', 'workflowId']
                             }
                         ]
                     }).then(function (item) {
@@ -162,7 +165,8 @@ function WorkflowDefinitionService() {
                         name: workflow.name,
                         description: workflow.description,
                         purpose: workflow.purpose,
-                        accessStatus: workflow.workflowDefinition.accessStatus
+                        accessStatus: workflow.workflowDefinition.accessStatus,
+                        canEditAccessStatus: workflow.workflowDefinition.workflowId == workflow.id
                     };
                     workflow.workflowDefinition.getWorkflowDefinitionUsers().then(function (relations) {
                         result.users = relations.map(function (item) {
@@ -170,6 +174,56 @@ function WorkflowDefinitionService() {
                         });
                         callback(null, result);
                     });
+                }
+            ],
+            function (err, data) {
+                if(err){
+                    logger.error(err);
+                }
+
+                cb(err, data);
+            }
+        );
+    };
+
+    this.getWorkflowDefinitionOverview = function (req, definitionId, cb) {
+
+        async.waterfall(
+            [
+                function (callback) {
+                    WorkflowDefinition.find({
+                        where: {
+                            id: definitionId
+                        },
+                        attributes:[
+                            'id',
+                            'name',
+                            'description',
+                            'purpose',
+                            'accessStatus',
+                            'createdAt'
+                        ],
+                        include: [
+                            {
+                                model: User,
+                                as: 'user',
+                                attributes:['id','name', 'displaypicture']
+                            }
+                        ]
+                    }).then(function (item) {
+                        callback(null, item);
+                    }).catch(function (err) {
+                        callback(err.message);
+                    });
+                },
+                function (item, callback) {
+                    if(!item){
+                        return callback({
+                            code: 404,
+                            message: 'Töövoo definitsiooni ei leitud'
+                        });
+                    }
+                    callback(null, item);
                 }
             ],
             function (err, data) {
@@ -512,11 +566,20 @@ function WorkflowDefinitionService() {
                 return cb(err);
             }
             var camelData = data.map(function (item) {
-                return ObjectUtil.snakeToCame(item);
+                item = ObjectUtil.snakeToCame(item);
+                item.publicUrl = self.getDefinitionPublicUrl(item);
+                return item;
             });
             cb( null, camelData);
 
         });
+    };
+
+    this.getDefinitionPublicUrl = function (definition) {
+        if(definition.accessStatus == WorkflowDefinition.accessStatuses.PUBLIC){
+            return config.appUrl + '/#/public/definition/' + definition.id;
+        }
+        return null;
     };
 
     this.getCopyFromWorkflow = function (req, oldWorkflowId, cb) {

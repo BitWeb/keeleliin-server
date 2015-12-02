@@ -13,6 +13,9 @@ function ProjectDaoService() {
 
     this.getUserProjectsList = function (userId, params, cb) {
 
+        logger.trace(params);
+
+
         var sql = "SELECT " +
             " project.id as id, " +
             " project.name as name, " +
@@ -25,6 +28,14 @@ function ProjectDaoService() {
             " ";
 
         var where = " WHERE project.id IS NOT NULL ";
+
+
+        logger.trace(params.canEdit);
+        logger.trace(true);
+
+        if(params.canEdit == true){
+            where += " AND ( pu.role = '" + ProjectUser.roles.ROLE_EDITOR + "' OR pu.role = '" + ProjectUser.roles.ROLE_OWNER + "' ) "
+        }
 
         if(params.name){
             where += " AND project.name ILIKE '"+ params.name +"%'"

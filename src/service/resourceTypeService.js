@@ -1,7 +1,7 @@
 /**
  * Created by taivo on 11.06.15.
  */
-var logger = require('log4js').getLogger('resource_service');
+var logger = require('log4js').getLogger('resource_type_service');
 var ResourceType = require(__base + 'src/service/dao/sql').ResourceType;
 var async = require('async');
 var config = require(__base + 'config');
@@ -46,32 +46,43 @@ function ResourceTypeService() {
                 function ( resourceType, callback ) {
                     overview = resourceType.dataValues;
                     resourceType.getInputTypes().then(function (inputTypes) {
-                        async.map(inputTypes, function (inputType, innerCb) {
+
+                        logger.debug('InputTypes count: '  + inputTypes.length);
+
+                        overview.useAsInput = [];
+
+                        async.eachSeries(inputTypes, function (inputType, innerCb) {
                             inputType.getService().then(function (service) {
-                                var serviceData = {
+                                if(!service){
+                                    return innerCb();
+                                }
+                                overview.useAsInput.push({
                                     id: service.id,
                                     name: service.name
-                                };
-                                innerCb( null, serviceData);
+                                });
+                                innerCb( null);
                             });
-                        }, function (err, inputMap) {
-                            overview.useAsInput = inputMap;
+                        }, function (err) {
                             callback(err, resourceType);
                         });
                     });
                 },
                 function ( resourceType, callback ) {
                     resourceType.getOutputTypes().then(function (outputTypes) {
-                        async.map(outputTypes, function (outputType, innerCb) {
+                        logger.debug('OutputTypes count: '  + outputTypes.length);
+                        overview.useAsOutput = [];
+                        async.eachSeries(outputTypes, function (outputType, innerCb) {
                             outputType.getService().then(function (service) {
-                                var serviceData = {
+                                if(!service){
+                                    return innerCb();
+                                }
+                                overview.useAsOutput.push({
                                     id: service.id,
                                     name: service.name
-                                };
-                                innerCb( null, serviceData);
+                                });
+                                innerCb();
                             });
-                        }, function (err, outputMap) {
-                            overview.useAsOutput = outputMap;
+                        }, function (err) {
                             callback(err, resourceType);
                         });
                     });

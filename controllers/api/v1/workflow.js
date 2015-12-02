@@ -57,7 +57,7 @@ router.delete('/:workflowId', authMiddleware('regular'), function(req, res) {
  * Definitsiooni lisamise vaade
  */
 router.get('/:workflowId/definition', authMiddleware('regular'), function(req, res) {
-    workflowService.getWorkflowDefinitionOverview(req, req.params.workflowId, function(err, overview) {
+    workflowService.getWorkflowsDefinitionOverview(req, req.params.workflowId, function(err, overview) {
         return res.sendApiResponse( err, overview);
     });
 });

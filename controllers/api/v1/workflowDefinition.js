@@ -12,4 +12,13 @@ router.get('/', authMiddleware('regular'), function(req, res) {
     });
 });
 
+/**
+ * Avaliku urli vaade
+ */
+router.get('/:definitionId', authMiddleware('regular'), function(req, res) {
+    workflowDefinitionService.getWorkflowDefinitionOverview(req, req.params.definitionId, function(err, overview) {
+        return res.sendApiResponse( err, overview);
+    });
+});
+
 module.exports = router;

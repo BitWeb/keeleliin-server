@@ -110,7 +110,7 @@ function WorkflowService() {
         });
     };
 
-    this.getWorkflowDefinitionOverview = function ( req, workflowId, cb ) {
+    this.getWorkflowsDefinitionOverview = function ( req, workflowId, cb ) {
 
         async.waterfall([
                 function getWorkflow( callback ) {
@@ -317,11 +317,15 @@ function WorkflowService() {
                 return cb(err);
             }
             workflowDaoService.getProjectWorkflowsList(project.id, function (err, workflows) {
+                if (err) {
+                    return cb(err);
+                }
                 async.map(workflows,
                     function(workflow, innerCb){
                         var resultItem = workflow.dataValues;
                         workflow.getProgress(function (err, progress) {
                             resultItem.progress = progress;
+                            resultItem.canEditAccessStatus = workflow.workflowDefinition && workflow.id == workflow.workflowDefinition.workflowId;
                             innerCb(err, resultItem);
                         });
                     },

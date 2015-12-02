@@ -194,6 +194,12 @@ function WorkflowDaoService() {
                 'datetimeStart',
                 'datetimeEnd'
             ],
+            include: [{
+               model: WorkflowDefinition,
+               as: 'workflowDefinition',
+               attributes: ['id', 'workflowId'],
+                required: false
+            }],
             where: {
                 projectId: projectId
             },
@@ -203,10 +209,8 @@ function WorkflowDaoService() {
         }).then(function (workflows) {
             return callback(null, workflows);
         }).catch(function (err) {
-            return callback({
-                message: err.message,
-                code: 500
-            });
+            logger.error('Error: ', err);
+            return callback( err.message );
         });
     };
 
