@@ -19,7 +19,7 @@ router.get('/resource-list', authMiddleware('regular'), function(req, res) {
 });
 
 /**
- * Ressursside nimekiri
+ * Ressursifailide nimekiri
  */
 router.get('/resource-files-list/:resourceId', authMiddleware('regular'), function(req, res) {
     entuService.getResourceFilesList(req, req.params.resourceId, function(error, files) {

@@ -75,23 +75,4 @@ router.get('/:projectId/workflows', authMiddleware('regular'), function(req, res
     });
 });
 
-/**
- * Olemasolevate ressurside lisamine
- */
-router.put('/:projectId/add-resources', authMiddleware('regular'), function(req, res) {
-    projectService.addResources(req, req.params.projectId, req.body, function(err, data) {
-        return res.sendApiResponse( err, data );
-    });
-});
-
-/**
- * Olemasolevate Entu ressurside lisamine
- */
-router.put('/:projectId/add-entu-files', authMiddleware('regular'), function(req, res) {
-    projectService.addEntuResources(req, req.params.projectId, req.body, function(err, data) {
-        return res.sendApiResponse( err, data );
-    });
-});
-
-
 module.exports = router;

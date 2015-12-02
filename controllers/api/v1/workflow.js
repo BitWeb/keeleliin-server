@@ -124,15 +124,6 @@ router.put('/:workflowId/add-resources', authMiddleware('regular'), function(req
 });
 
 /**
- * Olemasolevate ressurside lisamine
- */
-router.put('/:workflowId/add-entu-files', authMiddleware('regular'), function(req, res) {
-    workflowService.addEntuResources(req, req.params.workflowId, req.body, function(err, data) {
-        return res.sendApiResponse( err, data );
-    });
-});
-
-/**
  * Sättete modali sisu
  */
 router.get('/:workflowId/copy', authMiddleware('regular'), function(req, res) {

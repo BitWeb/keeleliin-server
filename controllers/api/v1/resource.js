@@ -51,19 +51,19 @@ router.post('/upload-url', authMiddleware('regular'), function(req, res) {
 });
 
 /**
-* Ressursside nimekiri
+ * Ressursi üleslaadimine
  */
-router.get('/', authMiddleware('regular'), function(req, res) {
-    resourceService.getResources(req, function(error, resources) {
-        return res.sendApiResponse( error, resources);
+router.post('/load-entu-files', authMiddleware('regular'), function(req, res) {
+    resourceService.loadEntuFiles(req, req.body, function(err, data) {
+        return res.sendApiResponse( err, data );
     });
 });
 
 /**
- * Entu Ressursside nimekiri
+* Ressursside nimekiri
  */
-router.get('/entu/list', authMiddleware('regular'), function(req, res) {
-    resourceService.getEntuResourceTree(req, function(error, resources) {
+router.get('/', authMiddleware('regular'), function(req, res) {
+    resourceService.getResources(req, function(error, resources) {
         return res.sendApiResponse( error, resources);
     });
 });
@@ -82,6 +82,15 @@ router.put('/:resourceId', authMiddleware('regular'), function(req, res) {
  */
 router.delete('/association/:associationId', authMiddleware('regular'), function(req, res) {
     resourceService.deleteResourceAssociation(req, req.params.associationId, function(error, resource) {
+        return res.sendApiResponse( error, resource);
+    });
+});
+
+/**
+ * Ressursi olemasolevate lisamine
+ */
+router.post('/association', authMiddleware('regular'), function(req, res) {
+    resourceService.addInputAssociations(req, req.body, function(error, resource) {
         return res.sendApiResponse( error, resource);
     });
 });
