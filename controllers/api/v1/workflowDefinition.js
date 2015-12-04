@@ -13,10 +13,28 @@ router.get('/', authMiddleware('regular'), function(req, res) {
 });
 
 /**
+ * Töövoogude haldus
+ */
+router.get('/management-list', authMiddleware('admin'), function(req, res) {
+    workflowDefinitionService.getWorkflowDefinitionsManagementList(req, req.query, function(err, data) {
+        return res.sendApiResponse( err, data);
+    });
+});
+
+/**
  * Avaliku urli vaade
  */
 router.get('/:definitionId', authMiddleware('regular'), function(req, res) {
     workflowDefinitionService.getWorkflowDefinitionOverview(req, req.params.definitionId, function(err, overview) {
+        return res.sendApiResponse( err, overview);
+    });
+});
+
+/**
+ * Definitsiooni sätted
+ */
+router.put('/:definitionId', authMiddleware('regular'), function(req, res) {
+    workflowDefinitionService.updateWorkflowDefinitionSettings(req, req.body, function(err, overview) {
         return res.sendApiResponse( err, overview);
     });
 });

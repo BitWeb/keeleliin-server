@@ -1,7 +1,7 @@
 var notificationDaoService = require('./dao/notificationDaoService');
 var Notification = require(__base + 'src/service/dao/sql').Notification;
 var NotificationType = require(__base + 'src/service/dao/sql').NotificationType;
-
+var WorkflowDefinition = require(__base + 'src/service/dao/sql').WorkflowDefinition;
 var User = require(__base + 'src/service/dao/sql').User;
 var Project = require(__base + 'src/service/dao/sql').Project;
 var Workflow = require(__base + 'src/service/dao/sql').Workflow;
@@ -278,7 +278,35 @@ function NotificationService() {
                     }).catch(function(err) {
                         callback(err.message);
                     });
+                },
+                function isWorkflowDefinitionNotification( callback ) {
+                    if(notificationType.applicationContext != NotificationType.applicationContexts.WORKFLOW_DEFINITION){
+                        return callback();
+                    }
+                    self._replaceInObjectValues(templates, '{workflowDefinitionId}', notification.modelId);
+
+                    WorkflowDefinition.findById( notification.modelId).then(function (workflowDefinition) {
+                        if(!workflowDefinition){
+                            return callback('Workflow definition not found');
+                        }
+
+                        self._replaceInObjectValues(templates, '{workflowDefinitionName}', workflowDefinition.name );
+                        self._replaceInObjectValues(templates, '{projectId}', workflowDefinition.projectId );
+
+                        workflowDefinition.getProject().then(function (project) {
+                            if(!project){
+                                return callback('Project not found');
+                            }
+                            self._replaceInObjectValues(templates, '{projectName}', project.name );
+                            callback();
+                        }).catch(function(err) {
+                            callback(err.message);
+                        });
+                    }).catch(function(err) {
+                        callback(err.message);
+                    });
                 }
+
             ],
             function (err) {
                 if(err){

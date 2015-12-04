@@ -5,14 +5,16 @@ module.exports = function(sequelize, DataTypes) {
     var applicationContexts = {
         PROJECT: 'project',
         USER: 'user',
-        WORKFLOW: 'workflow'
+        WORKFLOW: 'workflow',
+        WORKFLOW_DEFINITION: 'workflow-definition'
     };
 
     var codes = {
         WORKFLOW_FINISHED : 'workflow-finished',
         WORKFLOW_STILL_RUNNING : 'workflow-still-running',
         WORKFLOW_ERROR : 'workflow-error',
-        PROJECT_USER_ADDED : 'project-user-added'
+        PROJECT_USER_ADDED : 'project-user-added',
+        WORKFLOW_DEFINITION_UNPUBLISHED : 'workflow-definition-unpublished'
     };
 
     var NotificationType = sequelize.define("NotificationType", {

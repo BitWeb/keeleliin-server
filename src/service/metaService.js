@@ -3,6 +3,7 @@ var logger = require('log4js').getLogger('meta_service');
 
 var Project = require(__base + 'src/service/dao/sql').Project;
 var Workflow = require(__base + 'src/service/dao/sql').Workflow;
+var WorkflowDefinition = require(__base + 'src/service/dao/sql').WorkflowDefinition;
 var User = require(__base + 'src/service/dao/sql').User;
 var ResourceType = require(__base + 'src/service/dao/sql').ResourceType;
 var Service = require(__base + 'src/service/dao/sql').Service;
@@ -31,6 +32,15 @@ function MetaService() {
                 }
                 Workflow.find({where:{id: query.workflowId},attributes:['id','name','projectId']}).then(function (item) {
                     response.workflowId = item ? item.name : '';
+                    callback();
+                });
+            },
+            function (callback) {
+                if(!query.definitionId){
+                    return callback();
+                }
+                WorkflowDefinition.find({where:{id: query.definitionId},attributes:['id','name']}).then(function (item) {
+                    response.definitionId = item ? item.name : '';
                     callback();
                 });
             },

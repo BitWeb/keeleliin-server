@@ -11,10 +11,14 @@ var User = require(__base + 'src/service/dao/sql').User;
 var ServiceModel = require(__base + 'src/service/dao/sql').Service;
 var WorkflowDefinitionServiceModel = require(__base + 'src/service/dao/sql').WorkflowDefinitionService;
 var WorkflowDefinitionUser = require(__base + 'src/service/dao/sql').WorkflowDefinitionUser;
+var NotificationType = require(__base + 'src/service/dao/sql').NotificationType;
 var async = require('async');
 var ArrayUtil = require(__base + 'src/util/arrayUtils');
 var ObjectUtil = require(__base + 'src/util/objectUtils');
 var userService = require('./userService');
+var notificationService = require('./notificationService');
+var projectService = require('./projectService');
+
 var config = require(__base + 'config');
 
 
@@ -46,13 +50,13 @@ function WorkflowDefinitionService() {
                 return cb(null, true);
             }
 
-            item.getWorkflowDefinitionUserRelations({where:{userId: req.redisSession.data.userId}}).then(function (relations) {
+            item.getSharedUsers({where:{userId: req.redisSession.data.userId}}).then(function (relations) {
                 if(relations.length == 0){
                     return cb(null, false);
                 }
 
                 if(item.accessStatus == WorkflowDefinition.accessStatuses.SHARED){
-                    return callback(null, true);
+                    return cb(null, true);
                 }
                 return cb(null, false);
             }).catch(function (err) {
@@ -111,7 +115,7 @@ function WorkflowDefinitionService() {
             function createWorkflow(user, callback) {
 
                 workflowDefinitionData.userId = user.id;
-                var workflow = Workflow.build(workflowDefinitionData, {fields: ['name', 'description', 'purpose', 'projectId', 'userId', 'accessStatus']});
+                var workflow = Workflow.build(workflowDefinitionData, {fields: ['name', 'description', 'purpose', 'projectId', 'userId']});
                 workflow.validate().then(function (err) {
                     if (err) {
                         return callback(err.message);
@@ -127,6 +131,9 @@ function WorkflowDefinitionService() {
             function createDefinition(workflow, callback) {
                 workflowDefinitionData.workflowId = workflow.id;
                 var definition = WorkflowDefinition.build(workflowDefinitionData, {fields: ['name', 'description', 'purpose', 'projectId', 'userId', 'workflowId', 'accessStatus']});
+                /*if(definition.accessStatus == WorkflowDefinition.accessStatuses.PUBLIC){
+                    definition.publishedAt = new Date();
+                }*/
 
                 definition.validate().then(function (err) {
                     if (err) {
@@ -232,7 +239,6 @@ function WorkflowDefinitionService() {
 
         var userId = req.redisSession.data.userId;
 
-
         async.waterfall(
             [
                 function (callback) {
@@ -256,23 +262,33 @@ function WorkflowDefinitionService() {
                         },
                         attributes:[
                             'id',
+                            'projectId',
                             'name',
                             'description',
                             'purpose',
                             'accessStatus',
-                            'createdAt'
+                            'editStatus',
+                            'createdAt',
+                            'updatedAt',
+                            'publishedAt'
                         ],
                         include: [
                             {
-                                model: User,
-                                as: 'user',
-                                attributes:['id','name', 'displaypicture'],
-                                required: false
+                                model: WorkflowDefinitionUser,
+                                as: 'sharedUsers',
+                                attributes:[ 'role' ],
+                                required: false,
+                                include: [{
+                                    model: User,
+                                    as: 'user',
+                                    attributes:['id','name', 'displaypicture'],
+                                    required: false
+                                }]
                             },
                             {
                                 model: WorkflowDefinitionServiceModel,
                                 as: 'definitionServices',
-                                attributes:['id','orderNum'],
+                                attributes:['id','orderNum','serviceParamsValues'],
                                 required: false,
                                 include: [
                                     {
@@ -299,13 +315,19 @@ function WorkflowDefinitionService() {
                         });
                     }
                     callback(null, item);
+                },
+                function (item, callback) {
+                    item = item.toJSON();
+                    if(item.accessStatus == WorkflowDefinition.accessStatuses.PUBLIC){
+                        item.publicUrl = self.getDefinitionPublicUrl(item);
+                    }
+                    callback(null, item);
                 }
             ],
             function (err, data) {
                 if(err){
                     logger.error(err);
                 }
-
                 cb(err, data);
             }
         );
@@ -366,6 +388,76 @@ function WorkflowDefinitionService() {
         });
     };
 
+    
+    this.updateWorkflowDefinitionSettings = function (req, data, cb) {
+
+        logger.debug('Update settings');
+
+        async.waterfall(
+            [
+                function (callback) {
+                    self.canViewDefinitionById(req, data, function (err, canView) {
+                       if(err || !canView){
+                           return callback('Kasutajal puudub töövoo muutmiseks ligipääs');
+                       }
+                        callback()
+                    });
+                },
+                function (callback) {
+                    WorkflowDefinition.findById( data.id).then(function (definition) {
+                        logger.debug('Definition found');
+                        callback(null, definition);
+                    }).catch(function (err) {
+                        callback(err.message);
+                    });
+                },
+
+                function (definition, callback) {
+
+                    if( definition.accessStatus == WorkflowDefinition.accessStatuses.PUBLIC &&
+                        data.accessStatus != WorkflowDefinition.accessStatuses.PUBLIC &&
+                        req.redisSession.data.role == User.roles.ROLE_ADMIN &&
+                        req.redisSession.data.userId != definition.userId ){
+
+                        notificationService.addNotification(definition.userId, NotificationType.codes.WORKFLOW_DEFINITION_UNPUBLISHED, definition.id, function (err, notification) {
+                            if(err){
+                                logger.error(err);
+                            }
+                            return callback(null, definition);
+                        });
+                    } else {
+                        return callback(null, definition);
+                    }
+                },
+                function (definition, callback) {
+                    logger.debug('Update attributes');
+
+                    definition.updateAttributes(data, {fields:['name', 'description', 'purpose', 'accessStatus']}).then(function () {
+                        logger.debug('Attributes Updated ');
+                        callback(null, definition);
+                    })
+                },
+                function (definition, callback) {
+                    if( definition.accessStatus == WorkflowDefinition.accessStatuses.SHARED ){
+                        return self._updateDefinitionUserRelations( req, definition, data.users, function (err, definition) {
+                            return callback(null, definition);
+                        });
+                    }
+                    return callback(null, definition);
+                },
+                function (definition, callback) {
+                    self.getWorkflowDefinitionOverview(req, definition.id, callback);
+                }
+            ], 
+            function (err, overview) {
+                if(err){
+                    return logger.error(err);
+                }
+                cb(err, overview);
+            }
+        );
+    };
+    
     /**
      * @param req
      * @param definition
@@ -393,7 +485,7 @@ function WorkflowDefinitionService() {
             },
             function getRelations( callback ) {
                 logger.debug('Get relations');
-                definition.getWorkflowDefinitionUserRelations().then(function (existingRelations) {
+                definition.getSharedUsers().then(function (existingRelations) {
                     callback(null, existingRelations);
                 });
             },
@@ -442,7 +534,7 @@ function WorkflowDefinitionService() {
             function addNewUserRelations( callback ){
                 logger.debug('Add new relations');
 
-                definition.getWorkflowDefinitionUserRelations().then(function (existingRelations) {
+                definition.getSharedUsers().then(function (existingRelations) {
 
                     logger.debug('New relations', userIds);
 
@@ -461,9 +553,9 @@ function WorkflowDefinitionService() {
 
                             logger.debug('No relation for: ', newRelationUserId);
 
-                            userDaoService.findById(newRelationUserId, function (err, user) {
-                                if(err){
-                                    return innerCb(err.message);
+                            User.findById(newRelationUserId).then(function (user) {
+                                if(!user){
+                                    return innerCb('Kasutajat ei leitud');
                                 }
 
                                 WorkflowDefinitionUser.create({
@@ -475,6 +567,8 @@ function WorkflowDefinitionService() {
                                 }).catch(function (e) {
                                     return innerCb('Err' + e.message);
                                 });
+                            }).catch(function (e) {
+                                return innerCb('Err' + e.message);
                             });
                         },
                         function (err) {
@@ -718,45 +812,96 @@ function WorkflowDefinitionService() {
                 cb(err, workflow);
             }
         );
-
-        this._createDefinitionFromWorkflow = function (req, workflow, cb) {
-
-            async.waterfall(
-                [
-                    function (callback) {
-                        self.createDefinitionToWorkflow(req, workflow, callback)
-                    },
-                    function (definition, callback) {
-                        workflow.getWorkflowServices().then(function (workflowServices) {
-                            callback(null, definition, workflowServices);
-                        });
-                    },
-                    function (definition, workflowServices, callback) {
-
-                        async.each(workflowServices, function (workflowService, innerCb) {
-
-                            var data = {
-                                serviceId: workflowService.serviceId,
-                                serviceParamsValues: workflowService.serviceParamsValues,
-                                orderNum: workflowService.orderNum,
-                                workflowDefinitionId: definition.id
-                            };
-
-                            WorkflowDefinitionServiceModel.create(data).then(function (definitionService) {
-                                return innerCb();
-                            }).catch(function (err) {
-                                return innerCb( err.message );
-                            });
-                        }, function (err) {
-                            return callback(err, definition);
-                        });
-                    }
-
-                ],
-                cb
-            );
-        };
     };
+
+
+    this._createDefinitionFromWorkflow = function (req, workflow, cb) {
+
+        async.waterfall(
+            [
+                function (callback) {
+                    self.createDefinitionToWorkflow(req, workflow, callback)
+                },
+                function (definition, callback) {
+                    workflow.getWorkflowServices().then(function (workflowServices) {
+                        callback(null, definition, workflowServices);
+                    });
+                },
+                function (definition, workflowServices, callback) {
+
+                    async.each(workflowServices, function (workflowService, innerCb) {
+
+                        var data = {
+                            serviceId: workflowService.serviceId,
+                            serviceParamsValues: workflowService.serviceParamsValues,
+                            orderNum: workflowService.orderNum,
+                            workflowDefinitionId: definition.id
+                        };
+
+                        WorkflowDefinitionServiceModel.create(data).then(function (definitionService) {
+                            return innerCb();
+                        }).catch(function (err) {
+                            return innerCb( err.message );
+                        });
+                    }, function (err) {
+                        return callback(err, definition);
+                    });
+                }
+
+            ],
+            cb
+        );
+    };
+
+
+    this.getProjectWorkflowDefinitionsList = function(req, projectId, cb) {
+        logger.debug('Get project workflowdefinitions list');
+
+        projectService.canViewProjectById(req, projectId, function(err, canView) {
+            if (err) {
+                return cb(err);
+            }
+            if(!canView){
+                return cb('Kasutajal puudub projektile ligipääs');
+            }
+
+            workflowDefinitionDaoService.getProjectWorkflowDefinitionsList(projectId, function (err, definitions) {
+                if (err) {
+                    return cb(err);
+                }
+                async.map(definitions,
+                    function(definition, innerCb){
+                        definition = ObjectUtil.snakeToCame(definition);
+                        innerCb(null, definition);
+                    },
+                    function(err, result){
+                        cb(null, result);
+                    }
+                );
+            });
+        });
+    };
+
+    this.getWorkflowDefinitionsManagementList = function ( req, params, cb ) {
+        logger.debug('Get definitionsList management list');
+
+        workflowDefinitionDaoService.getWorkflowDefinitionsManagementList( params, function (err, listData) {
+            if (err) {
+                return cb(err);
+            }
+            async.map(listData.rows,
+                function(row, innerCb){
+                    row = ObjectUtil.snakeToCame( row );
+                    innerCb(null, row);
+                },
+                function(err, result){
+                    listData.rows = result;
+                    cb(null, listData);
+                }
+            );
+        });
+    }
+
 }
 
 module.exports = new WorkflowDefinitionService();

@@ -354,7 +354,7 @@ function WorkflowService() {
                             });
                         },
                         function (err, resultRows) {
-                        logger.debug(resultRows);
+                        //logger.debug(resultRows);
                             data.rows = resultRows;
                         callback(null, data);
                     });

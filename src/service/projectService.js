@@ -8,17 +8,14 @@ var Project = require(__base + 'src/service/dao/sql').Project;
 var User = require(__base + 'src/service/dao/sql').User;
 var ProjectUser = require(__base + 'src/service/dao/sql').ProjectUser;
 var userService = require('./userService');
-var userDaoService = require('./dao/userDaoService');
+
 var async = require('async');
 var notificationService = require(__base + 'src/service/notificationService');
 var resourceService = require(__base + 'src/service/resourceService');
 var NotificationType = require(__base + 'src/service/dao/sql').NotificationType;
 var ArrayUtil = require('../util/arrayUtils');
 var ObjectUtil = require('../util/objectUtils');
-
 var ResourceAssociation = require(__base + 'src/service/dao/sql').ResourceAssociation;
-var resourceDaoService = require(__base + 'src/service/dao/resourceDaoService');
-
 
 function ProjectService(){
 

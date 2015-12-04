@@ -84,6 +84,10 @@ module.exports = function(sequelize, DataTypes) {
         updatedAt: {
             type: DataTypes.DATE,
             field: 'updated_at'
+        },
+        publishedAt: {
+            type: DataTypes.DATE,
+            field: 'published_at'
         }
     }, {
         tableName: 'workflow_definition',
@@ -130,7 +134,7 @@ module.exports = function(sequelize, DataTypes) {
                     }
                 );
                 WorkflowDefinition.hasMany(models.WorkflowDefinitionUser, {
-                        as: 'workflowDefinitionUserRelations',
+                        as: 'sharedUsers',
                         foreignKey: 'workflowDefinitionId'
                     }
                 );
@@ -150,7 +154,24 @@ module.exports = function(sequelize, DataTypes) {
                     return cb(err);
                 });
             }
+        },
+        hooks: {
+            beforeValidate: function(item, options, cb) {
+                if(item.changed('accessStatus') && item.accessStatus == accessStatuses.PUBLIC){
+                    if(options.fields.indexOf('publishedAt') === -1){
+                        options.fields.push('publishedAt');
+                    }
+                    if(options.skip.indexOf('publishedAt') !== -1){
+                        var index = options.skip.indexOf('publishedAt');
+                        options.skip = options.skip.splice(index, 1);
+                    }
+                    item.publishedAt = new Date();
+                }
+
+                cb();
+            }
         }
+
     });
 
     WorkflowDefinition.editStatuses = editStatuses;

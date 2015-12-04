@@ -5,6 +5,7 @@ var express = require('express');
 var router = express.Router();
 var logger = require('log4js').getLogger('project_controller');
 var workflowService = require(__base + 'src/service/workflowService');
+var workflowDefinitionService = require(__base + 'src/service/workflowDefinitionService');
 var projectService = require('../../../src/service/projectService');
 var authMiddleware = require(__base + 'middlewares/auth');
 
@@ -72,6 +73,16 @@ router.delete('/:id', authMiddleware('regular'), function(req, res) {
 router.get('/:projectId/workflows', authMiddleware('regular'), function(req, res) {
     workflowService.getProjectWorkflowsList(req, req.params.projectId, function(error, workflows) {
         return res.sendApiResponse(error, workflows);
+    });
+});
+
+/**
+ * Projekti vaate töövoo kirjelduste nimekiri
+ */
+router.get('/:projectId/definitions', authMiddleware('regular'), function(req, res) {
+
+    workflowDefinitionService.getProjectWorkflowDefinitionsList(req, req.params.projectId, function(error, definitions) {
+        return res.sendApiResponse(error, definitions);
     });
 });
 
