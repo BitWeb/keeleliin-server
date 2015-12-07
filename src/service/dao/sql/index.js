@@ -31,10 +31,10 @@ db['User'] = sequelize.import('./models/user');
 db['WorkflowDefinition'] = sequelize.import('./models/workflowDefinition');
 db['WorkflowDefinitionService'] = sequelize.import('./models/workflowDefinition/workflowDefinitionService');
 db['WorkflowDefinitionUser'] = sequelize.import('./models/workflowDefinition/workflowDefinitionUser');
+
 db['Workflow'] = sequelize.import('./models/workflow');
 db['WorkflowService'] = sequelize.import('./models/workflow/workflowService');
 db['WorkflowServiceSubstep'] = sequelize.import('./models/workflow/workflowServiceSubstep');
-
 
 Object.keys(db).forEach(function(modelName) {
     if ("associate" in db[modelName]) {

@@ -108,6 +108,26 @@ module.exports = function(sequelize, DataTypes) {
                     }
                 );
 
+                /*User.belongsToMany(models.WorkflowDefinition, {
+                        as: 'bookmarkedDefinitions',
+                        through: {
+                            model: models.UserBookmarkDefinition,
+                            foreignKey: 'userId',
+                            otherKey: 'workflowDefinitionId',
+                            unique: true
+                        }
+                    }
+                );*/
+
+                User.belongsToMany(models.WorkflowDefinition, {
+                    through: 'user_bookmark_definition',
+                    as: 'bookmarkedDefinitions',
+                    foreignKey: 'user_id',
+                    timestamps: true,
+                    updatedAt: false,
+                    deletedAt: false
+                });
+
             }
         }
     });

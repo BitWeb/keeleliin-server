@@ -54,7 +54,71 @@ function WorkflowService() {
         });
     };
 
-    this.getWorkflowOverview = function ( req, id, callback ) {
+    this.getWorkflowOverview = function ( req, id, cb ) {
+
+        async.waterfall([
+                function (callback) {
+                    self.canViewWorkflowById(req, id, function (err, canView) {
+                        if(err){
+                            return callback(err);
+                        }
+                        if(!canView){
+                            return callback('Kasutajal puudub ligipääsuõigus');
+                        }
+                        callback();
+                    });
+                },
+                function (callback) {
+                    return workflowDaoService.getWorkflowOverview( id, {}, callback);
+                },
+                function (overview, callback) {
+                    self.canEditWorkflowById(req, id, function (err, canEdit) {
+                        if(err){
+                            return callback(err);
+                        }
+                        overview = overview.toJSON();
+                        overview.canEdit = canEdit;
+                        callback(err, overview);
+
+                    });
+                },
+                function (overview, callback) {
+                    var definitionId = overview.workflowDefinitionId;
+                    delete overview.workflowDefinitionId;
+
+                    WorkflowDefinition.find({
+                        where: {
+                            id: definitionId
+                        },
+                        include: [{
+                            model: User,
+                            as: 'bookmarkedUsers',
+                            where: {
+                                id: req.redisSession.data.userId
+                            },
+                            required:false
+                        }]
+                    }).then(function (definition) {
+
+                        if(!definition){
+                            return callback(null, overview);
+                        }
+
+                        overview.workflowDefinition = {
+                            id: definition.id,
+                            isBookmarked: definition.bookmarkedUsers.length > 0
+                        };
+                        return callback(null, overview);
+                    }).catch(function (err) {
+                        callback(err.message);
+                    });
+                }
+            ],
+            function (err, overview) {
+                cb(err, overview);
+            }
+        );
+
 
         self.canViewWorkflowById(req, id, function (err, canView) {
             if(err){
@@ -345,19 +409,19 @@ function WorkflowService() {
                     workflowDaoService.getWorkflowsManagementList( params, callback );
                 },
                 function (data, callback) {
-                    async.map(
+
+                    async.forEachOf(
                         data.rows,
-                        function (row, innerCb) {
+                        function (row, key, innerCb) {
                             row.getProgress(function (err, progress) {
-                                row.dataValues.progress = progress;
-                                innerCb(err, row);
+                                data.rows[key].dataValues.progress = progress;
+                                innerCb(err);
                             });
                         },
-                        function (err, resultRows) {
-                        //logger.debug(resultRows);
-                            data.rows = resultRows;
-                        callback(null, data);
-                    });
+                        function (err) {
+                            callback(err, data);
+                        }
+                    );
                 }
             ],
             function (err, data) {

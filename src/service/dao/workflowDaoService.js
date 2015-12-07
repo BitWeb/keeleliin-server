@@ -73,7 +73,8 @@ function WorkflowDaoService() {
                         'datetimeUpdated',
                         'datetimeStart',
                         'datetimeEnd',
-                        'projectId'
+                        'projectId',
+                        'workflowDefinitionId'
                     ],
                     where: {
                         id: workflowId

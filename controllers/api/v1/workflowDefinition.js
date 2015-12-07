@@ -39,4 +39,13 @@ router.put('/:definitionId', authMiddleware('regular'), function(req, res) {
     });
 });
 
+/**
+ * Definitsiooni valik / töövoo vaade
+ */
+router.put('/:definitionId/toggle-bookmark', authMiddleware('regular'), function(req, res) {
+    workflowDefinitionService.toggleWorkflowDefinitionBookmark(req, req.params.definitionId, function(err, status) {
+        return res.sendApiResponse( err, status);
+    });
+});
+
 module.exports = router;

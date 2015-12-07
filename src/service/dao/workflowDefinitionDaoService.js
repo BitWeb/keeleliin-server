@@ -61,10 +61,12 @@ function WorkflowDefinitionDaoService() {
             " definition.edit_status, " +
             " definition.access_status, " +
             " definition.published_at as published_at, " +
-            " u.name AS owner " +
+            " u.name AS owner, " +
+            " CASE WHEN ubd.user_id > 0 THEN TRUE ELSE FALSE END AS is_bookmarked " +
             " FROM ((" + publicQuery + ") UNION ALL ("+ personalQuery + ") UNION ALL ("+ sharedQuery + ") ) as definition " +
             " JOIN workflow_definition_user AS wdu ON (wdu.workflow_definition_id = definition.id AND wdu.role = '"+ WorkflowDefinitionUser.roles.OWNER +"')" +
             " JOIN \"user\" AS u ON (u.id = wdu.user_id)" +
+            " LEFT JOIN user_bookmark_definition as ubd ON ( ubd.user_id = :userId AND ubd.workflow_definition_id = definition.id ) " +
             " WHERE NOT EXISTS ( " +
             "   SELECT wds.id FROM workflow_definition_service as wds " +
             "   JOIN service ON (service.id = wds.service_id AND service.is_active = FALSE)  " +
@@ -82,7 +84,7 @@ function WorkflowDefinitionDaoService() {
         });
     };
 
-    this.getProjectWorkflowDefinitionsList = function (projectId, cb) {
+    this.getProjectWorkflowDefinitionsList = function (projectId, userId, cb) {
 
         var query = " SELECT " +
             " wfd.id as id," +
@@ -94,16 +96,18 @@ function WorkflowDefinitionDaoService() {
             " wfd.published_at as published_at, " +
             " wfd.created_at as created_at, " +
             " wfd.updated_at as updated_at, " +
-            " COUNT( wf.id ) as usage_count" +
+            " COUNT( wf.id ) as usage_count," +
+            " CASE WHEN ubd.user_id > 0 THEN TRUE ELSE FALSE END AS is_bookmarked " +
             " FROM workflow_definition as wfd " +
             " LEFT JOIN workflow AS wf ON ( wf.workflow_definition_id = wfd.id ) " +
+            " LEFT JOIN user_bookmark_definition as ubd ON ( ubd.user_id = :userId AND ubd.workflow_definition_id = wfd.id ) " +
             " WHERE " +
             " wfd.project_id = :projectId " +
-            " GROUP BY wfd.id " +
+            " GROUP BY wfd.id, ubd.user_id " +
             " ORDER BY wfd.name;";
 
         sequelize.query( query, {
-            replacements: { projectId: projectId },
+            replacements: { projectId: projectId, userId: userId },
             type: sequelize.QueryTypes.SELECT
         }).then(function (workflowDefinitions) {
             return cb(null, workflowDefinitions);
@@ -144,9 +148,11 @@ function WorkflowDefinitionDaoService() {
             " wfd.published_at as published_at, " +
             " wfd.created_at as created_at, " +
             " wfd.updated_at as updated_at, " +
-            " COUNT( wf.id ) as usage_count" +
+            " COUNT( DISTINCT wf.id ) as usage_count, " +
+            " COUNT( DISTINCT ubd.workflow_definition_id ) as bookmarked_count" +
             " FROM workflow_definition as wfd " +
             " LEFT JOIN workflow AS wf ON ( wf.workflow_definition_id = wfd.id ) " +
+            " LEFT JOIN user_bookmark_definition as ubd ON ( ubd.workflow_definition_id = wfd.id ) " +
             " " + where + " " +
             " GROUP BY wfd.id " +
             " ORDER BY wfd.name " + limits + ";";

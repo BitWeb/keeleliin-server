@@ -133,11 +133,22 @@ module.exports = function(sequelize, DataTypes) {
                         }
                     }
                 );
+
                 WorkflowDefinition.hasMany(models.WorkflowDefinitionUser, {
                         as: 'sharedUsers',
                         foreignKey: 'workflowDefinitionId'
                     }
                 );
+
+                WorkflowDefinition.belongsToMany(models.User, {
+                    through: 'user_bookmark_definition',
+                    as: 'bookmarkedUsers',
+                    foreignKey: 'workflow_definition_id',
+                    timestamps: true,
+                    updatedAt: false,
+                    deletedAt: false
+
+                });
             }
         },
         instanceMethods: {
