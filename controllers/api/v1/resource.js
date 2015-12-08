@@ -24,6 +24,15 @@ router.get('/:resourceId/download', authMiddleware('regular'), function(req, res
 });
 
 /**
+ * Ressursi info aknas
+ */
+router.get('/:resourceId/public-url', authMiddleware('regular'), function(req, res) {
+    resourceService.getResourcePublicUrl(req, req.params.resourceId, function(error, data) {
+        return res.sendApiResponse( error, data);
+    });
+});
+
+/**
  * Ressursi info
  */
 router.get('/:resourceId', authMiddleware('regular'), function(req, res) {

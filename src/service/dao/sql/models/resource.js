@@ -96,6 +96,10 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: false,
             defaultValue: false,
             field: 'is_public'
+        },
+        hash: {
+            type: DataTypes.STRING,
+            allowNull: true
         }
     }, {
         tableName: 'resource',

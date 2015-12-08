@@ -22,6 +22,7 @@ var FileUtil = require('../util/fileUtil');
 var ObjectUtils = require('../util/objectUtils');
 var sequelize = require(__base + 'src/service/dao/sql').sequelize;
 var entuDaoService = require('./dao/entu/daoService');
+var uid = require('uid-safe').sync;
 
 function ResourceService() {
 
@@ -51,6 +52,15 @@ function ResourceService() {
             return callback(error);
         });
     };
+
+    this.getResourceByHash = function (req, resourceHash, callback) {
+        Resource.find({where: {hash: resourceHash}}).then(function (resource) {
+            return callback(null, resource);
+        }).catch(function (error) {
+            return callback(error);
+        });
+    };
+
 
     this.updateResource = function (req, resourceId, data, cb) {
 
@@ -740,6 +750,45 @@ function ResourceService() {
             ],
             function (err) {
                 cb(err);
+            }
+        );
+    };
+
+    this.getResourcePublicUrl = function( req, resourceId, cb ){
+
+        async.waterfall([
+                function (callback) {
+                    self.getResource(req, resourceId, function (err, resource) {
+                        if(!resource){
+                            return callback('Resurssi ei leitud');
+                        }
+                        return callback(err, resource);
+                    });
+                },
+                function (resource, callback) {
+                    if(!resource.hash){
+                        resource.hash = uid(24) + '-' + resource.id;
+                        resource.save().then(function () {
+                            return callback(null, resource);
+                        })
+                    } else {
+                        return callback(null, resource);
+                    }
+                },
+                function (resource, callback) {
+
+                    var response = {
+                        id: resource.id,
+                        url: config.url + '/resource/' + resource.hash
+                    };
+                    return callback(null, response);
+                }
+            ],
+            function (err, data) {
+                if(err){
+                    logger.error(err);
+                }
+                return cb(err, data);
             }
         );
     };
