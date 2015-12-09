@@ -12,68 +12,70 @@ function WorkflowDefinitionDaoService() {
 
     this.getUserWorkflowDefinitionsList = function (params, callback) {
 
-        //Avalikud
-        var publicQuery = " SELECT " +
+        var order;
+        if(params.order == 'name_asc'){
+            order = ' wfd.name ASC ';
+        } else if(params.order == 'name_desc'){
+            order = ' wfd.name DESC ';
+        } else if(params.order == 'created_at_asc'){
+            order = ' wfd.created_at ASC ';
+        } else if(params.order == 'created_at_desc'){
+            order = ' wfd.created_at DESC ';
+        } else if(params.order == 'used_asc'){
+            order = ' usage_count DESC ';
+        } else if(params.order == 'used_desc'){
+            order = ' usage_count ASC ';
+        } else if(params.order == 'bookmarked_asc'){
+            order = ' bookmarked_count DESC ';
+        } else if(params.order == 'bookmarked_desc'){
+            order = ' bookmarked_count ASC ';
+        } else {
+            order = ' wfd.name ASC ';
+        }
+
+        var andContitions = [];
+        if(params.type == WorkflowDefinition.accessStatuses.PUBLIC){
+            andContitions.push(" wfd.access_status = '" + WorkflowDefinition.accessStatuses.PUBLIC + "' ");
+        } else if(params.type == WorkflowDefinition.accessStatuses.PRIVATE){
+            andContitions.push(" wfd.user_id = :userId ");
+        } else if(params.type == WorkflowDefinition.accessStatuses.SHARED){
+            andContitions.push(" wfd.user_id != :userId ");
+            andContitions.push(" wfd.access_status = '" + WorkflowDefinition.accessStatuses.SHARED + "' ");
+        } else if(params.type == 'bookmarked'){
+            andContitions.push(" ubd.user_id > 0 ");
+        }
+
+        if(params.name){
+            andContitions.push(" wfd.name ILIKE '%"+params.name+"%' ");
+        }
+
+        var where = "";
+        if(andContitions.length > 0){
+            where = " WHERE " + andContitions.join(" AND ");
+        }
+
+        var query = " SELECT " +
             " wfd.id as id," +
             " wfd.name as name," +
             " wfd.description as description," +
             " wfd.purpose as purpose," +
             " wfd.edit_status as edit_status," +
             " wfd.access_status as access_status, " +
-            " wfd.published_at as published_at " +
+            " wfd.published_at as published_at, " +
+            " wfd.created_at as created_at, " +
+            " COUNT( DISTINCT wf.id ) as usage_count, " +
+            " COUNT( DISTINCT ubd2.workflow_definition_id ) as bookmarked_count," +
+            " CASE WHEN ubd.user_id > 0 THEN TRUE ELSE FALSE END AS is_bookmarked, " +
+            " u.name AS owner " +
             " FROM workflow_definition as wfd " +
-            " WHERE " +
-            " wfd.access_status = '" + WorkflowDefinition.accessStatuses.PUBLIC + "'";
+            " LEFT JOIN workflow AS wf ON ( wf.workflow_definition_id = wfd.id ) " +
+            " LEFT JOIN user_bookmark_definition as ubd ON ( ubd.user_id = :userId AND ubd.workflow_definition_id = wfd.id ) " +
+            " LEFT JOIN user_bookmark_definition as ubd2 ON ( ubd2.workflow_definition_id = wfd.id ) " +
+            " JOIN \"user\" AS u ON (u.id = wfd.user_id)" +
+            where +
+            " GROUP BY wfd.id, ubd.user_id, u.name ORDER BY "+ order +" ";
 
-        //Isiklikud
-        var personalQuery = " SELECT " +
-            " wfd.id as id," +
-            " wfd.name as name," +
-            " wfd.description as description," +
-            " wfd.purpose as purpose," +
-            " wfd.edit_status as edit_status," +
-            " '" + WorkflowDefinition.accessStatuses.PRIVATE + "' as access_status, " +
-            " null as published_at " +
-            " FROM workflow_definition as wfd " +
-            " WHERE " +
-            " wfd.user_id = :userId ";
-
-        //Mulle jagatud
-        var sharedQuery = " SELECT " +
-            " wfd.id as id," +
-            " wfd.name as name," +
-            " wfd.description as description," +
-            " wfd.purpose as purpose," +
-            " wfd.edit_status as edit_status," +
-            " wfd.access_status as access_status, " +
-            " null as published_at " +
-            " FROM workflow_definition as wfd " +
-            " JOIN workflow_definition_user AS wfdu ON ( wfdu.user_id = :userId AND wfdu.workflow_definition_id = wfd.id )" +
-            " WHERE " +
-            " wfd.access_status = '" + WorkflowDefinition.accessStatuses.SHARED + "' " +
-            " AND wfd.user_id != :userId ";
-
-        var totalQuery = " SELECT " +
-            " definition.id, " +
-            " definition.name, " +
-            " definition.description, " +
-            " definition.purpose, " +
-            " definition.edit_status, " +
-            " definition.access_status, " +
-            " definition.published_at as published_at, " +
-            " u.name AS owner, " +
-            " CASE WHEN ubd.user_id > 0 THEN TRUE ELSE FALSE END AS is_bookmarked " +
-            " FROM ((" + publicQuery + ") UNION ALL ("+ personalQuery + ") UNION ALL ("+ sharedQuery + ") ) as definition " +
-            " JOIN workflow_definition_user AS wdu ON (wdu.workflow_definition_id = definition.id AND wdu.role = '"+ WorkflowDefinitionUser.roles.OWNER +"')" +
-            " JOIN \"user\" AS u ON (u.id = wdu.user_id)" +
-            " LEFT JOIN user_bookmark_definition as ubd ON ( ubd.user_id = :userId AND ubd.workflow_definition_id = definition.id ) " +
-            " WHERE NOT EXISTS ( " +
-            "   SELECT wds.id FROM workflow_definition_service as wds " +
-            "   JOIN service ON (service.id = wds.service_id AND service.is_active = FALSE)  " +
-            "   WHERE wds.workflow_definition_id = definition.id )" +
-            " ORDER BY definition.name; ";
-
-        sequelize.query(totalQuery, {
+        sequelize.query( query, {
             replacements: { userId: params.userId },
             type: sequelize.QueryTypes.SELECT
         }).then(function (workflowDefinitions) {
@@ -138,6 +140,27 @@ function WorkflowDefinitionDaoService() {
             " COUNT(wfd.id) as total_count" +
             " FROM workflow_definition as wfd " + where + " ;";
 
+        var order;
+        if(params.order == 'name_asc'){
+            order = ' wfd.name ASC ';
+        } else if(params.order == 'name_desc'){
+            order = ' wfd.name DESC ';
+        } else if(params.order == 'created_at_asc'){
+            order = ' wfd.created_at ASC ';
+        } else if(params.order == 'created_at_desc'){
+            order = ' wfd.created_at DESC ';
+        } else if(params.order == 'used_asc'){
+            order = ' usage_count DESC ';
+        } else if(params.order == 'used_desc'){
+            order = ' usage_count ASC ';
+        } else if(params.order == 'bookmarked_asc'){
+            order = ' bookmarked_count DESC ';
+        } else if(params.order == 'bookmarked_desc'){
+            order = ' bookmarked_count ASC ';
+        } else {
+            order = ' wfd.name ASC ';
+        }
+
         var query = " SELECT " +
             " wfd.id as id," +
             " wfd.name as name," +
@@ -155,7 +178,7 @@ function WorkflowDefinitionDaoService() {
             " LEFT JOIN user_bookmark_definition as ubd ON ( ubd.workflow_definition_id = wfd.id ) " +
             " " + where + " " +
             " GROUP BY wfd.id " +
-            " ORDER BY wfd.name " + limits + ";";
+            " ORDER BY " + order + " " + limits + ";";
 
         var result = {
             count: 0,

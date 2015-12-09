@@ -14,7 +14,7 @@ var User = require(__base + 'src/service/dao/sql').User;
 var WorkflowServiceSubstep = require(__base + 'src/service/dao/sql').WorkflowServiceSubstep;
 var WorkflowServiceModel = require(__base + 'src/service/dao/sql').WorkflowService;
 var ServiceParam = require(__base + 'src/service/dao/sql').ServiceParam;
-var sequelize = require('sequelize');
+var sequelize = require(__base + 'src/service/dao/sql').sequelize;
 var ArrayUtils = require(__base + 'src/util/arrayUtils');
 
 function WorkflowDaoService() {
@@ -216,54 +216,82 @@ function WorkflowDaoService() {
     };
 
 
-    this.getWorkflowsManagementList = function ( params, callback) {
+    this.getWorkflowsManagementList = function ( params, cb) {
 
-        var conditions = {
-            attributes: [
-                'id',
-                'name',
-                'status',
-                'datetimeCreated',
-                'datetimeStart',
-                'datetimeEnd'
-            ],
-            where: {},
-            include: [{
-                model: User,
-                as: 'user',
-                attributes: [
-                    'id',
-                    'name',
-                    'displaypicture',
-                    'email'
-                ],
-                required: true
-            }],
-            orderBy: [['id', 'DESC']]
+        //'name_asc','name_desc','created_at_asc','created_at_desc'
+
+
+        var where = '';
+
+        if(params.name && params.status){
+            where = " WHERE wf.name ILIKE '%" + params.name + "%' AND  wf.status = '" + params.status + "' ";
+        } else if( params.name ){
+            where = " WHERE wf.name ILIKE '%" + params.name + "%' ";
+        } else if( params.status ){
+            where = " WHERE wf.status = '" + params.status + "' ";
+        }
+
+        var limits = "";
+        if( params.page && params.perPage ){
+            limits = " LIMIT " + params.perPage + " OFFSET " + ((params.page - 1) * params.perPage);
+        }
+
+        var countQuery = " SELECT " +
+            " COUNT(wf.id) as total_count" +
+            " FROM workflow as wf " + where + " ;";
+
+        var order;
+        if(params.order == 'name_asc'){
+            order = " wf.name ASC ";
+        } else if(params.order == 'name_desc'){
+            order = " wf.name DESC ";
+        } else if(params.order == 'created_at_asc'){
+            order = " wf.datetime_created ASC ";
+        } else if(params.order == 'created_at_desc'){
+            order = " wf.datetime_created DESC ";
+        } else {
+            order = " wf.name ASC ";
+        }
+
+        var query = " SELECT " +
+            " wf.id, " +
+            " wf.name, " +
+            " wf.status, " +
+            " wf.datetime_created, " +
+            " wf.datetime_start, " +
+            " wf.datetime_end, " +
+            " u.name as user_id, " +
+            " u.name as user_name, " +
+            " u.email as user_email" +
+            " FROM workflow AS wf " +
+            " JOIN \"user\" AS u ON (wf.user_id = u.id) " +
+            where +
+            " GROUP BY wf.id, u.id ORDER BY " + order + " " + limits
+            ;
+
+        var result = {
+            count: 0,
+            rows: []
         };
 
-        if(params.perPage){
-            params.page = params.page ? params.page : 1;
-            conditions.limit = params.perPage;
-            if(params.page){
-                conditions.offset = params.perPage * (params.page - 1);
-            }
-        }
-
-        if(params.name){
-            conditions.where.name = {
-                $iLike: '%'+params.name+'%'
-            }
-        }
-
-        if(params.status){
-            conditions.where.status = params.status;
-        }
-
-        Workflow.findAndCountAll( conditions ).then(function (data) {
-            callback(null, data);
+        sequelize.query(countQuery, {
+            replacements: {/*projectId: projectId*/},
+            type: sequelize.QueryTypes.SELECT
+        }).then(function (countResult) {
+            result.count = countResult.pop().total_count;
+            sequelize.query(query, {
+                replacements: {/*projectId: projectId*/},
+                type: sequelize.QueryTypes.SELECT
+            }).then(function (workflowDefinitions) {
+                result.rows = workflowDefinitions;
+                return cb(null, result);
+            }).catch(function (err) {
+                logger.error(err);
+                return cb(err.message);
+            });
         }).catch(function (err) {
-            callback(err.message);
+            logger.error(err);
+            return cb(err.message);
         });
     };
 }

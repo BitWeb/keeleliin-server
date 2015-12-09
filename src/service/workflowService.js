@@ -409,12 +409,13 @@ function WorkflowService() {
                     workflowDaoService.getWorkflowsManagementList( params, callback );
                 },
                 function (data, callback) {
-
                     async.forEachOf(
                         data.rows,
                         function (row, key, innerCb) {
-                            row.getProgress(function (err, progress) {
-                                data.rows[key].dataValues.progress = progress;
+                            data.rows[key] = ObjectUtil.snakeToCame(row);
+
+                            Workflow.build({id: row.id, status: row.status}).getProgress(function (err, progress) {
+                                data.rows[key].progress = progress;
                                 innerCb(err);
                             });
                         },
