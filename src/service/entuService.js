@@ -79,6 +79,9 @@ function EntuService() {
 
                      var children = [];
                      var entity = data.result;
+
+                     /**logger.debug(entity);**/
+
                      if (!entity || !entity.properties.file || !entity.properties.file.values) {
                          return callback(null, children);
                      }
@@ -93,7 +96,33 @@ function EntuService() {
                          });
                      }
 
-                     callback(null, children);
+                     entuDaoService.getEntityChilds(resourceId, entuMeta, function (err, data) {
+                         if (err) {
+                             return callback(err);
+                         }
+                         var result = data.result;
+                         var resource = result.resource;
+                         if(!resource){
+                            return callback(null, children);
+                         }
+                         var entities = resource.entities;
+                         if(!entities){
+                             return callback(null, children);
+                         }
+
+                         for(var i = 0, l = entities.length; i < l; i++ ){
+                             var entity = entities[i];
+                             children.push({
+                                 id: entity.id,
+                                 name: entity.name,
+                                 scope: 'entity'
+                             });
+                         }
+
+                         logger.debug(children);
+
+                         return callback(null, children);
+                     });
                  });
              }
             ],

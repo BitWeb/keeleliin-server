@@ -119,6 +119,36 @@ var DaoService = function(){
         });
     };
 
+    this.getEntityChilds = function(id, meta, callback){
+
+        logger.debug('Get entu entity');
+
+        var options = {
+            method  : 'GET',
+            uri     : config.entu.apiUrl + 'api2/entity-' + id + '/childs',
+            headers : self._getRequestHeaders(meta)
+        };
+
+        request(options, function (error, response, body) {
+            if(error){
+                return callback( error );
+            }
+
+            var parsedBody = null;
+
+            try {
+                parsedBody = JSON.parse(body);
+            } catch (e){
+                return callback( e);
+            }
+
+            return callback( null, parsedBody );
+        }).on('error', function(e) {
+            logger.debug('problem with request: ' + e);
+            return callback( e );
+        });
+    };
+
     this.downloadFile = function ( fileId, targetPath, meta, cb) {
 
         logger.debug('Get entu file');
