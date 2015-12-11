@@ -11,7 +11,7 @@ data:    [8]  Wr1X /usr/bin/nodejs /var/www/bitweb.ee/keeleliin.bitweb.ee/wrappe
 data:    [9]  __tZ /usr/bin/nodejs /var/www/bitweb.ee/keeleliin.bitweb.ee/wrapper/morph_tagger/app.js      26601   12842    /root/.forever/__tZ.log 0:0:48:58.58
 data:    [10] OmkK /usr/bin/nodejs /var/www/bitweb.ee/keeleliin.bitweb.ee/wrapper/concat/app.js            29845   12849    /root/.forever/OmkK.log 0:0:48:58.29
 
-forever start /var/www/bitweb.ee/keeleliin.bitweb.ee/server/app.js
+
 
 
 nodejs node_modules/.bin/sequelize  migration:create --name rename_log
@@ -19,7 +19,7 @@ nodejs node_modules/.bin/sequelize  migration:create --name rename_log
 nodejs node_modules/.bin/sequelize  db:migrate
 
 
-
+forever start /var/www/bitweb.ee/keeleliin.bitweb.ee/server/app.js
 forever start /var/www/bitweb.ee/keeleliin.bitweb.ee/wrapper/archive-extractor/app.js
 forever start /var/www/bitweb.ee/keeleliin.bitweb.ee/wrapper/lausestaja/app.js
 forever start /var/www/bitweb.ee/keeleliin.bitweb.ee/wrapper/morfanalyzer/app.js

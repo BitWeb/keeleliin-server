@@ -189,6 +189,12 @@ function WorkflowHolder( workflowId ){
 
     this.finishWorkflow = function (status, cb) {
 
+        if(workflowMap.status == Workflow.statusCodes.ERROR){
+            return cb();
+        } else if(workflowMap.status == Workflow.statusCodes.CANCELLED && status != Workflow.statusCodes.ERROR){
+            return cb();
+        }
+
         workflowMap.status = status;
 
         self.workflow.finish(status, function (err) {
@@ -255,6 +261,11 @@ function WorkflowHolder( workflowId ){
 
         async.waterfall([
             function ( callback ) {
+
+                if(workflowService.status == Workflow.statusCodes.ERROR || workflowService.status == Workflow.statusCodes.CANCELLED){
+                    return callback(err);
+                }
+
                 self.finishWorkflowService(workflowService, statusCode, function (err) {
                     callback(err);
                 });
