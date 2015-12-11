@@ -189,9 +189,8 @@ function WorkflowHolder( workflowId ){
 
     this.finishWorkflow = function (status, cb) {
 
-        if(workflowMap.status == Workflow.statusCodes.ERROR){
-            return cb();
-        } else if(workflowMap.status == Workflow.statusCodes.CANCELLED && status != Workflow.statusCodes.ERROR){
+        if(workflowMap.status != Workflow.statusCodes.RUNNING){
+            logger.info('Workflow already not in RUNNING status');
             return cb();
         }
 

@@ -61,7 +61,7 @@ function NotificationService() {
 
         Notification.findById( notificationId ).then(function(notification) {
             if (!notification) {
-                return callback('Notification not found.')
+                return callback('Teadet ei leitud.')
             }
             return callback(null, notification);
         }).catch(function(error) {
@@ -144,17 +144,17 @@ function NotificationService() {
 
     this.addNotification = function(userId, code, modelId, cb) {
         logger.debug('Add notification. user: ' + userId + ' code: ' + code + ' modelId: ' + modelId);
-        notificationDaoService.getNotificationByUserAndCodeAndModel(userId, code, modelId, function(error, notification) {
+        /*notificationDaoService.getNotificationByUserAndCodeAndModel(userId, code, modelId, function(error, notification) {
             if (error) {
                 logger.error('Add notification error: ', error);
                 return cb(error);
-            }
+            }*/
 
             // Already added
-            if (notification) {
+            /*if (notification) {
                 logger.debug('Notification (id: ' + notification.id + ') already added.');
                 return cb(null, notification);
-            }
+            }*/
 
             async.waterfall([
                 function getNotificationType(callback) {
@@ -204,7 +204,7 @@ function NotificationService() {
                 }
                 return cb(error, notification);
             });
-        });
+        //});
     };
 
     this._updateNotificationTextValues = function (notificationType, notification, cb) {

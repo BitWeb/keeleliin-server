@@ -299,7 +299,11 @@ function ProjectService(){
                         }
                     } else {
                         logger.debug('Remove', existingRelation);
-
+                        notificationService.addNotification(existingRelation.userId, NotificationType.codes.PROJECT_USER_REMOVED, project.id, function (err) {
+                            if(err){
+                                logger.error(err);
+                            }
+                        });
                         existingRelation.destroy().then(function () {
                             innerCb();
                         });
@@ -334,7 +338,11 @@ function ProjectService(){
                                         projectId: project.id,
                                         role: newRelation.role
                                     }).then(function () {
-                                        notificationService.addNotification(user.id, NotificationType.codes.PROJECT_USER_ADDED, project.id, function () {});
+                                        notificationService.addNotification(user.id, NotificationType.codes.PROJECT_USER_ADDED, project.id, function (err) {
+                                            if(err){
+                                                logger.error(err);
+                                            }
+                                        });
                                         return innerCb();
                                     }).catch(function (e) {
                                         return innerCb(e.message);
@@ -362,10 +370,16 @@ function ProjectService(){
 
         async.waterfall([
                 function (callback) {
-                    var userId = req.redisSession.data.userId;
-
-                    projectDaoService.getUserProject( userId, projectId, function (err, project) {
-                        callback( err, project )
+                    self.canEditProjectById( req, projectId, function (err, success) {
+                        if(err){
+                            return callback(err);
+                        }
+                        if(!success){
+                            return callback('Kasutajal ei ole õigust antud projekti kustutada.');
+                        }
+                        self.getProject(req, projectId, function (err, project) {
+                            callback( err, project )
+                        });
                     });
                 },
                 function (project, callback) {

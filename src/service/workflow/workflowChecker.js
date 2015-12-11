@@ -42,11 +42,10 @@ var WorkflowChecker = function() {
                             console.log(now);
                             if (now > workflow.datetimeStart) {
                                 logger.debug('Workflow (id: ' + workflow.id + ') is still running, over ' + notificationType.notifyPeriodDays + ' days.');
-                                workflow.getWorkflowDefinition().then(function(workflowDefinition) {
-                                    notificationService.addNotification(workflowDefinition.userId, NotificationType.codes.WORKFLOW_STILL_RUNNING, workflow.id, function(error, notification) {
-                                    });
-                                }).catch(function(error) {
-                                    logger.error('Adding notification error: ' + error.message);
+                                notificationService.addNotification(workflow.userId, NotificationType.codes.WORKFLOW_STILL_RUNNING, workflow.id, function(error, notification) {
+                                   if(error){
+                                       logger.error( error );
+                                   }
                                 });
                             }
                             innerCallback();

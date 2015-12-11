@@ -14,6 +14,7 @@ module.exports = function(sequelize, DataTypes) {
         WORKFLOW_STILL_RUNNING : 'workflow-still-running',
         WORKFLOW_ERROR : 'workflow-error',
         PROJECT_USER_ADDED : 'project-user-added',
+        PROJECT_USER_REMOVED : 'project-user-removed',
         WORKFLOW_DEFINITION_UNPUBLISHED : 'workflow-definition-unpublished'
     };
 
