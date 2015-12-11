@@ -104,6 +104,7 @@ function ResourceHandler(project, workflow) {
                                 attributes:[]
                             }
                         }).then(function (resources) {
+                            logger.debug('Workflow '+ workflow.id +' had ' + resources.length +' input resource');
                             return callback(null, resources);
                         });
                     });
@@ -114,7 +115,8 @@ function ResourceHandler(project, workflow) {
             },
             function traverseJunks(resourceJunks, callback) {
 
-                logger.debug('Start traverse junks');
+                logger.debug('Start traverse junks with length ' + resourceJunks.length);
+
                 async.each(
                     resourceJunks,
                     function iterator(resourceJunk, itCallback) {
@@ -556,6 +558,9 @@ function ResourceHandler(project, workflow) {
         var limitLeft = serviceInputType.sizeLimit;
         var resourceCreator = new ResourceCreator(sourceResource, workflowService, globalLineIndex, project, workflow);
 
+
+        logger.debug('limit left ' + limitLeft);
+
         lineReader.eachLine(pathToSourceFile, function (line, last, lineReaderCb) {
 
             if (globalLineIndex == 0 && last) {
@@ -572,7 +577,7 @@ function ResourceHandler(project, workflow) {
             if (serviceInputType.sizeUnit == ServiceInputType.sizeUnits.PIECE) { // not supported
                 lineSize = 1;
             } else if (serviceInputType.sizeUnit == ServiceInputType.sizeUnits.BYTE) {
-                lineSize = Buffer.byteLength(line);
+                lineSize = Buffer.byteLength(line) + 2;
             }
 
             if (lineSize > serviceInputType.sizeLimit) {
@@ -581,6 +586,8 @@ function ResourceHandler(project, workflow) {
             }
 
             limitLeft = limitLeft - lineSize;
+
+            logger.debug('limit left ' + limitLeft);
 
             if (limitLeft <= 0) { //subresource filled
                 resourceCreator.finish(function (err, resource) {
