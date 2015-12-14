@@ -41,12 +41,6 @@ function WorkflowDefinitionDaoService() {
         } else if(params.type == WorkflowDefinition.accessStatuses.SHARED){
             andContitions.push(" wfd.user_id != :userId ");
             andContitions.push(" wfd.access_status = '" + WorkflowDefinition.accessStatuses.SHARED + "' ");
-        } else {
-            andContitions.push(" (" +
-            " ( wfd.access_status = '" + WorkflowDefinition.accessStatuses.PUBLIC + "' ) OR  " +
-            " ( wfd.user_id = :userId ) OR " +
-            " ( wfd.user_id != :userId AND  wfd.access_status = '" + WorkflowDefinition.accessStatuses.SHARED + "' )" +
-            " ) ");
         }
 
         if(params.type == 'bookmarked'){
@@ -59,7 +53,7 @@ function WorkflowDefinitionDaoService() {
 
         var where = "";
         if(andContitions.length > 0){
-            where = " WHERE " + andContitions.join(" AND ");
+            where = " AND " + andContitions.join(" AND ");
         }
 
         var query = " SELECT " +
@@ -79,7 +73,15 @@ function WorkflowDefinitionDaoService() {
             " LEFT JOIN workflow AS wf ON ( wf.workflow_definition_id = wfd.id ) " +
             " LEFT JOIN user_bookmark_definition as ubd ON ( ubd.user_id = :userId AND ubd.workflow_definition_id = wfd.id ) " +
             " LEFT JOIN user_bookmark_definition as ubd2 ON ( ubd2.workflow_definition_id = wfd.id ) " +
-            " JOIN \"user\" AS u ON (u.id = wfd.user_id)" +
+            " LEFT JOIN project as p ON (p.id = wfd.project_id)" +
+            " LEFT JOIN project_user as pu ON (pu.project_id = p.id AND pu.user_id = :userId)" +
+            " JOIN \"user\" AS u ON (u.id = wfd.user_id) " +
+            " WHERE (" +
+            "   ( pu.user_id > 0 ) OR " +
+            "   ( wfd.access_status = '" + WorkflowDefinition.accessStatuses.PUBLIC + "' ) OR  " +
+            "   ( wfd.user_id = :userId ) OR " +
+            "   ( wfd.user_id != :userId AND  wfd.access_status = '" + WorkflowDefinition.accessStatuses.SHARED + "' )" +
+            " ) " +
             where +
             " GROUP BY wfd.id, ubd.user_id, u.name ORDER BY "+ order +" ";
 

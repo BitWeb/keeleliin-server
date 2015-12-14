@@ -37,35 +37,33 @@ function WorkflowDefinitionService() {
                 id: definitionId
             },
             attributes: ['id', 'userId', 'accessStatus', 'projectId']
-        }).then(function (item) {
-            if(!item){
+        }).then(function (definition) {
+            if(!definition){
                 return cb(null, false);
             }
 
-            if(item.accessStatus == WorkflowDefinition.accessStatuses.PUBLIC){
+            if(definition.accessStatus == WorkflowDefinition.accessStatuses.PUBLIC){
                 return cb(null, true);
             }
 
-            if(item.accessStatus == WorkflowDefinition.accessStatuses.PRIVATE && item.userId == req.redisSession.data.userId){
+            if(definition.accessStatus == WorkflowDefinition.accessStatuses.PRIVATE && definition.userId == req.redisSession.data.userId){
                 return cb(null, true);
             }
 
-            if(item.userId == req.redisSession.data.userId){
-                return cb(null, true);
-            }
+            definition.getSharedUsers({where:{userId: req.redisSession.data.userId}}).then(function (relations) {
+                if(relations.length > 0){
+                    if(definition.accessStatus == WorkflowDefinition.accessStatuses.SHARED){
+                        return cb(null, true);
+                    }
+                } else {
+                    projectService.canEditProjectById(req, definition.projectId, function (err, success) {
+                        if(err){
+                            return cb(err);
+                        }
 
-            item.getSharedUsers({where:{userId: req.redisSession.data.userId}}).then(function (relations) {
-                if(relations.length == 0){
-
-                    logger.trace('NOLLE');
-
-                    return cb(null, false);
+                        return cb(null, success);
+                    });
                 }
-
-                if(item.accessStatus == WorkflowDefinition.accessStatuses.SHARED){
-                    return cb(null, true);
-                }
-                return cb(null, false);
             }).catch(function (err) {
                 cb(err.message);
             });
