@@ -195,12 +195,6 @@ function WorkflowDaoService() {
                 'datetimeStart',
                 'datetimeEnd'
             ],
-            include: [{
-               model: WorkflowDefinition,
-               as: 'workflowDefinition',
-               attributes: ['id', 'workflowId'],
-                required: false
-            }],
             where: {
                 projectId: projectId
             },
@@ -260,7 +254,7 @@ function WorkflowDaoService() {
             " wf.datetime_created, " +
             " wf.datetime_start, " +
             " wf.datetime_end, " +
-            " u.name as user_id, " +
+            " u.id as user_id, " +
             " u.name as user_name, " +
             " u.email as user_email" +
             " FROM workflow AS wf " +

@@ -48,4 +48,13 @@ router.put('/:definitionId/toggle-bookmark', authMiddleware('regular'), function
     });
 });
 
+/**
+ * Projekti vaade
+ */
+router.delete('/:definitionId', authMiddleware('regular'), function(req, res) {
+    workflowDefinitionService.deleteWorkflowDefinition(req, req.params.definitionId, function(err, data) {
+        return res.sendApiResponse( err, data);
+    });
+});
+
 module.exports = router;

@@ -389,7 +389,6 @@ function WorkflowService() {
                         var resultItem = workflow.dataValues;
                         workflow.getProgress(function (err, progress) {
                             resultItem.progress = progress;
-                            resultItem.canEditAccessStatus = workflow.workflowDefinition && workflow.id == workflow.workflowDefinition.workflowId;
                             innerCb(err, resultItem);
                         });
                     },

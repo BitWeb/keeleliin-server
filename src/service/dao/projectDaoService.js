@@ -45,6 +45,19 @@ function ProjectDaoService() {
         //sql += " GROUP BY project.id, project.name, project.description, project.access_status, project.created_at ";
 
         if(params.sort && params.order){
+
+            if(params.sort == 'name'){
+                params.sort = 'name';
+            } else if( params.sort == 'createdAt' ){
+                params.sort = 'created_at';
+            } else if( params.sort == 'updatedAt' ){
+                params.sort = 'updated_at';
+            } else if( params.sort == 'accessStatus' ) {
+                params.sort = 'access_status';
+            } else {
+                params.sort = 'name';
+            }
+
             sql += " ORDER BY project." + params.sort + " " + params.order + " ";
         } else {
             sql += " ORDER BY project.updated_at DESC ";

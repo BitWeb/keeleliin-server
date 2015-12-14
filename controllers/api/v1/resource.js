@@ -96,7 +96,7 @@ router.delete('/association/:associationId', authMiddleware('regular'), function
 });
 
 /**
- * Ressursi olemasolevate lisamine
+ * Olemasolevate resursside lisamine
  */
 router.post('/association', authMiddleware('regular'), function(req, res) {
     resourceService.addInputAssociations(req, req.body, function(error, resource) {

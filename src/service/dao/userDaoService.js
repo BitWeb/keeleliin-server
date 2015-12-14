@@ -80,7 +80,7 @@ function UserDaoService() {
         var sql = 'SELECT COUNT(userCount.id) as total FROM (' + q + ') as userCount';
         sequelize.query(sql, { type: sequelize.QueryTypes.SELECT}).then(function (result) {
             result = result.pop();
-            var totalCount = parseInt((result ? result['total'] : 0));
+            var totalCount = parseInt((result ? result['total'] : 0), 10);
 
             // Add limit and offset
             if (query.page > 0 && query.perPage > 0) {

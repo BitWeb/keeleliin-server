@@ -33,14 +33,18 @@ var RequestForm = function(data, parentElementName) {
 
                 if (self._isArray(value) && inputFilter.inputFilter != undefined) {
                     for (var itemIdx in value) {
-                        var item = value[itemIdx];
-                        var form = new RequestForm(item, prop);
-                        form.inputFilter = inputFilter.inputFilter;
-                        if (form.isValid()) {
-                            value[itemIdx] = form.getData();
-                        } else {
-                            for (var i in form.errors) {
-                                self.errors.push(form.errors[i]);
+                        if ( value.hasOwnProperty(itemIdx)) {
+                            var item = value[itemIdx];
+                            var form = new RequestForm(item, prop);
+                            form.inputFilter = inputFilter.inputFilter;
+                            if (form.isValid()) {
+                                value[itemIdx] = form.getData();
+                            } else {
+                                for (var i in form.errors) {
+                                    if ( form.errors.hasOwnProperty(i)) {
+                                        self.errors.push(form.errors[i]);
+                                    }
+                                }
                             }
                         }
                     }

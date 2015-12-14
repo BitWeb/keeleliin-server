@@ -22,13 +22,13 @@ function WorkflowDefinitionDaoService() {
         } else if(params.order == 'created_at_desc'){
             order = ' wfd.created_at DESC ';
         } else if(params.order == 'used_asc'){
-            order = ' usage_count DESC ';
-        } else if(params.order == 'used_desc'){
             order = ' usage_count ASC ';
+        } else if(params.order == 'used_desc'){
+            order = ' usage_count DESC ';
         } else if(params.order == 'bookmarked_asc'){
-            order = ' bookmarked_count DESC ';
-        } else if(params.order == 'bookmarked_desc'){
             order = ' bookmarked_count ASC ';
+        } else if(params.order == 'bookmarked_desc'){
+            order = ' bookmarked_count DESC ';
         } else {
             order = ' wfd.name ASC ';
         }
@@ -41,7 +41,15 @@ function WorkflowDefinitionDaoService() {
         } else if(params.type == WorkflowDefinition.accessStatuses.SHARED){
             andContitions.push(" wfd.user_id != :userId ");
             andContitions.push(" wfd.access_status = '" + WorkflowDefinition.accessStatuses.SHARED + "' ");
-        } else if(params.type == 'bookmarked'){
+        } else {
+            andContitions.push(" (" +
+            " ( wfd.access_status = '" + WorkflowDefinition.accessStatuses.PUBLIC + "' ) OR  " +
+            " ( wfd.user_id = :userId ) OR " +
+            " ( wfd.user_id != :userId AND  wfd.access_status = '" + WorkflowDefinition.accessStatuses.SHARED + "' )" +
+            " ) ");
+        }
+
+        if(params.type == 'bookmarked'){
             andContitions.push(" ubd.user_id > 0 ");
         }
 
@@ -150,13 +158,13 @@ function WorkflowDefinitionDaoService() {
         } else if(params.order == 'created_at_desc'){
             order = ' wfd.created_at DESC ';
         } else if(params.order == 'used_asc'){
-            order = ' usage_count DESC ';
-        } else if(params.order == 'used_desc'){
             order = ' usage_count ASC ';
+        } else if(params.order == 'used_desc'){
+            order = ' usage_count DESC ';
         } else if(params.order == 'bookmarked_asc'){
-            order = ' bookmarked_count DESC ';
-        } else if(params.order == 'bookmarked_desc'){
             order = ' bookmarked_count ASC ';
+        } else if(params.order == 'bookmarked_desc'){
+            order = ' bookmarked_count DESC ';
         } else {
             order = ' wfd.name ASC ';
         }

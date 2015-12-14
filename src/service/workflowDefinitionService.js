@@ -50,8 +50,15 @@ function WorkflowDefinitionService() {
                 return cb(null, true);
             }
 
+            if(item.userId == req.redisSession.data.userId){
+                return cb(null, true);
+            }
+
             item.getSharedUsers({where:{userId: req.redisSession.data.userId}}).then(function (relations) {
                 if(relations.length == 0){
+
+                    logger.trace('NOLLE');
+
                     return cb(null, false);
                 }
 
@@ -950,6 +957,30 @@ function WorkflowDefinitionService() {
             }).catch(function (err) {
                 return cb( err.message );
             });
+        });
+    };
+
+    this.deleteWorkflowDefinition = function(req, definitionId, cb) {
+
+        WorkflowDefinition.findById(definitionId).then(function (definition) {
+            if(!definition){
+                return cb('Töövoo definitsiooni ei leitud');
+            }
+
+            self.canViewDefinitionById(req, definitionId, function (err, success) {
+                if(err){
+                    return cb(err);
+                }
+                if(!success){
+                    return cb('Kasutajal ei ole õigust antud töövoogu kustutada.');
+                }
+
+                definition.destroy().then(function () {
+                   return cb();
+                });
+            });
+        }).catch(function (err) {
+            return cb( err.message );
         });
     };
 }
