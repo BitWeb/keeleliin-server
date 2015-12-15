@@ -134,7 +134,7 @@ function SubstepServiceDtoMapper(){
                                 if(sizeLeft !== null){
                                     sizeLeft = sizeLeft - resource.fileSize;
                                     if(sizeLeft < 0){
-                                        return callback('Teenusele etteantavate ressursside maht ületati.');
+                                        return callback('Teenusele etteantavate ressursside maht ületati ( limiit '+ inputype.sizeLimit +' baiti )');
                                     }
                                 }
 
