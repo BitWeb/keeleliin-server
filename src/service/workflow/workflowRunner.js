@@ -92,7 +92,11 @@ function Runner() {
                         //
                         nextWorkflowService.getService().then(function (nextService) {
                             if(!nextService || nextService.isActive == false){
-                                return callback('Teenust ei leitud! Teenus on kustutatud või mitteaktiivne.');
+                                nextWorkflowService.log = 'Teenust ei leitud! Teenus on kustutatud või mitteaktiivne.';
+                                workflowHolder.finishWorkflowService(nextWorkflowService, Workflow.statusCodes.ERROR, function (err) {
+                                    logger.error('WorkflowService finished with error: ' + err);
+                                });
+                                return callback();
                             }
 
                             if(nextService.isSynchronous){

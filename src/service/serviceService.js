@@ -727,13 +727,41 @@ function ServiceService() {
     };
 
     this.deleteService = function(req, serviceId, cb){
-        self.getService(serviceId, function (err, service) {
-            service.isActive = false;
-            service.destroy().then(function () {
-                cb(null, true);
-            });
 
-        });
+        async.waterfall([
+                function (callback) {
+                    self.getService(serviceId, function (err, servcie) {
+                        callback(err, servcie);
+                    });
+                },
+                function transferParentVersionId(service, callback) {
+                    var newParentId = service.parentVersionId;
+                    service.getChildVersions().then(function (childVersions) {
+                        async.each(childVersions, function (childVersion, innerCb) {
+                            childVersion.updateAttributes({parentVersionId: newParentId}).then(function () {
+                                innerCb();
+                            });
+                        }, function (err) {
+                            callback(err, service);
+                        });
+                    });
+                },
+                function removeParentChildRelations(service, callback) {
+                    service.setChildServices([]).then(function () {
+                        callback(null, service);
+                    });
+                },
+                function (service, callback) {
+                    service.isActive = false;
+                    service.destroy().then(function () {
+                        cb(null, true);
+                    });
+                }
+            ],
+            function (err) {
+                cb(err);
+            }
+        );
     };
 }
 

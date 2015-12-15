@@ -68,14 +68,14 @@ function ServiceDaoService() {
                     model: ServiceModel,
                     as: 'parentServices',
                     attributes: [ 'id' ],
-                    where: {isActive: true},
+                    /*where: {isActive: true},*/
                     required: false
                 },
                 {
                     model: ServiceModel,
                     as: 'childServices',
                     attributes: [ 'id' ],
-                    where: {isActive: true},
+                    /*where: {isActive: true},*/
                     required: false
                 }
             ]
@@ -113,7 +113,16 @@ function ServiceDaoService() {
     this.getServicesGridList = function( callback ) {
 
         var params = {
-            attributes: ['id', 'name', 'description', 'sid', 'createdAt', 'updatedAt', 'isActive', 'parentVersionId'],
+            attributes: [
+                'id',
+                'name',
+                'description',
+                'sid',
+                'createdAt',
+                'updatedAt',
+                'isActive',
+                'parentVersionId'
+            ],
             order: [['name', 'ASC']]
         };
 
