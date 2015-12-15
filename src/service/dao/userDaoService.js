@@ -62,14 +62,15 @@ function UserDaoService() {
             '"user".role,' +
             '"user".is_active,' +
             '"user".created_at,' +
-            '"user".updated_at FROM "user"';
+            '"user".updated_at FROM "user"' +
+            ' WHERE deleted_at IS NULL ';
 
         if (andWhere.hasOwnProperty('name') || andWhere.hasOwnProperty('role')) {
-            q += ' WHERE ';
+
             for (var key in andWhere) {
                 if (andWhere.hasOwnProperty(key)) {
                     var value = andWhere[key];
-                    q += "\"user\"." + key + " ILIKE '%" + value + "%' ";
+                    q += " AND \"user\"." + key + " ILIKE '%" + value + "%' ";
                 }
             }
         }

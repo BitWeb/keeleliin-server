@@ -242,6 +242,11 @@ function UserService() {
     this.getUserGridList = function ( req, query, cb ) {
 
         userDaoService.getUsersWithCount( query , function (err, users) {
+            if(err){
+                return cb(err);
+            }
+
+
             var updatedUsers = [];
             for(var i in users.rows){
                 if (!users.rows.hasOwnProperty(i)) {
