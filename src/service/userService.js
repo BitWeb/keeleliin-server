@@ -80,6 +80,15 @@ function UserService() {
                 });
             },
             function updateSession(user, entuUser, callback) {
+                if(user.isActive === false){
+                    return callback({
+                        message: 'Kasutaja ' + user.name + ' konto on mitteaktiivne.',
+                        code: 403
+                    });
+                }
+                callback( null, user, entuUser );
+            },
+            function updateSession(user, entuUser, callback) {
                 logger.debug('Update session');
                 request.redisSession.data.userId = user.id;
                 request.redisSession.data.role = user.role;
@@ -117,7 +126,7 @@ function UserService() {
             }
         ], function (err, user) {
             logger.debug('Auth finished ', err);
-            if(err){
+            if(err && !err.code){
                 logger.error(err);
             }
             cb(err, user);

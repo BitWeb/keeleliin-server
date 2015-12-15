@@ -42,6 +42,9 @@ module.exports = function ( role ) {
 
         userService.auth(req, function (error, user) {
             if(error || user == undefined){
+                if(error){
+                    return res.sendApiResponse(error);
+                }
                 res.status(401);
                 return res.sendApiResponse( 'Ligipääs keelatud');
             }
