@@ -136,9 +136,6 @@ function WorkflowDefinitionService() {
             function createDefinition(workflow, callback) {
                 workflowDefinitionData.workflowId = workflow.id;
                 var definition = WorkflowDefinition.build(workflowDefinitionData, {fields: ['name', 'description', 'purpose', 'projectId', 'userId', 'workflowId', 'accessStatus']});
-                /*if(definition.accessStatus == WorkflowDefinition.accessStatuses.PUBLIC){
-                    definition.publishedAt = new Date();
-                }*/
 
                 definition.validate().then(function (err) {
                     if (err) {
@@ -159,22 +156,18 @@ function WorkflowDefinitionService() {
                 });
             },
             function (definition, workflow, callback) {
-                logger.debug('Add definition owner user: def:' + definition.id + ' user: ' + workflow.userId);
 
                 WorkflowDefinitionUser.create({
                     role: WorkflowDefinitionUser.roles.OWNER,
                     userId: workflow.userId,
                     workflowDefinitionId: definition.id
                 }).then(function () {
-                    logger.debug('Definition user added');
                     return callback(null, definition, workflow);
                 }).catch(function (e) {
-                    logger.error(e.pop());
                     return callback('Err: ' + e.message);
                 });
             },
             function (definition, workflow, callback) {
-                logger.debug('Add shared to users users');
                 if(definition.accessStatus == WorkflowDefinition.accessStatuses.SHARED){
                     return self._updateDefinitionUserRelations( req, definition, workflowDefinitionData.users, function (err, definition) {
                         return callback(err, workflow);
@@ -335,6 +328,9 @@ function WorkflowDefinitionService() {
                     if(item.accessStatus == WorkflowDefinition.accessStatuses.PUBLIC){
                         item.publicUrl = self.getDefinitionPublicUrl(item);
                     }
+                    item.definitionServices.sort(function (a, b) {
+                        return a.orderNum > b.orderNum;
+                    });
                     callback(null, item);
                 }
             ],
@@ -653,9 +649,8 @@ function WorkflowDefinitionService() {
             function (err) {
                 if(err){
                     logger.error(err);
-                    return cb(err);
                 }
-                cb(null, 'todo');
+                return cb(err);
             }
         );
     };

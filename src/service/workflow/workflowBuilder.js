@@ -26,7 +26,7 @@ function WorkflowBuilder(){
                         callback( err.message );
                     });
                 },
-                function (workflow, callback) {
+                function checkStatus(workflow, callback) {
 
                     if(workflow.status != Workflow.statusCodes.INIT){
                         return callback('Töövoog ei ole INIT staatusega!');
@@ -34,12 +34,16 @@ function WorkflowBuilder(){
                     callback(null, workflow);
                 },
                 function getWorkflowDefinition(workflow, callback) {
-
                     workflow.getWorkflowDefinition().then(function (workflowDefinition) {
                         callback(null, workflow, workflowDefinition);
                     }).catch(function (err) {
                         logger.error(err);
                         callback( err.message );
+                    });
+                },
+                function (workflow, workflowDefinition, callback) {
+                    self.validateDefinitionServices(workflowDefinition, function (err) {
+                        callback( err, workflow, workflowDefinition );
                     });
                 },
                 function (workflow, workflowDefinition, callback) {
@@ -54,9 +58,7 @@ function WorkflowBuilder(){
                         });
                     });
                 },
-                function (workflow, workflowDefinition, callback) {
-
-                    logger.debug('Copy definition services. workflow: ' + workflow.id);
+                function copyDefinitionServicesToWorkflow(workflow, workflowDefinition, callback) {
 
                     workflowDefinition.getDefinitionServices().then(function (definitionServices) {
                         self.copyDefinitionServicesToServices(definitionServices, workflow, function () {
@@ -83,10 +85,40 @@ function WorkflowBuilder(){
                 }
                 cb( null, workflow );
         });
-
-
-
     };
+
+
+    this.validateDefinitionServices = function (workflowDefinition, cb) {
+
+        workflowDefinition.getDefinitionServices().then(function (definitionServices) {
+
+            async.map(definitionServices, function (definitionService, innerCb) {
+                definitionService.getService().then(function ( service ) {
+                    if(!service){
+                        return innerCb(null, 'Teenus ' + (definitionService.orderNum + 1) + ': Teenust ei leitud.');
+                    }
+                    if(service.isActive === false){
+                        return innerCb(null, 'Teenus ' + (definitionService.orderNum + 1) + ': Teenus "' + service.name + '" on mitteaktiivne.');
+                    }
+                    return innerCb();
+                });
+            }, function (err, messages) {
+
+                messages = messages.filter(function (item) {
+                    return !!item;
+                });
+
+                if(messages.length > 0){
+                    return cb(messages);
+                }
+                cb();
+            });
+        }).catch(function (err) {
+            logger.error(err);
+            cb(err.message);
+        });
+    };
+
 
     this.validateWorkflowDefinitionFirstService = function(workflow, definitionService, cb){
 
