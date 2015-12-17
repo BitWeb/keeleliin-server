@@ -219,8 +219,12 @@ function ResourceService() {
                             return callback('Faili ei leitud');
                         }
                     }).on('error', function(e) {
-                        logger.debug('problem with request: ' + e);
-                        return callback( e );
+                        logger.debug('problem with request: ', e);
+                        if(e.code == 'ENOTFOUND'){
+                            return callback('Ressursi laadimine ebaõnnestus. Aadressi ei leitud');
+                        } else {
+                            return callback( e );
+                        }
                     });
                 },
                 function ( tmpFIle, callback ) {
