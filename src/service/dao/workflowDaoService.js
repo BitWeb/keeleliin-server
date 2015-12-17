@@ -184,28 +184,33 @@ function WorkflowDaoService() {
         });
     };
 
-    this.getProjectWorkflowsList = function (projectId, callback) {
+    this.getProjectWorkflowsList = function (projectId, userId, cb) {
 
-        Workflow.findAll({
-            attributes: [
-                'id',
-                'name',
-                'status',
-                'datetimeCreated',
-                'datetimeStart',
-                'datetimeEnd'
-            ],
-            where: {
-                projectId: projectId
+        var query = "" +
+            " SELECT " +
+            " workflow.id, " +
+            " workflow.name, " +
+            " workflow.status, " +
+            " workflow.datetime_created, " +
+            " workflow.datetime_start, " +
+            " workflow.datetime_end " +
+            " FROM workflow " +
+            " JOIN workflow_definition ON ( workflow_definition.id = workflow.workflow_definition_id ) " +
+            " LEFT JOIN user_bookmark_definition as uhbwfd ON ( uhbwfd.workflow_definition_id = workflow_definition.id AND uhbwfd.user_id = :userId ) " +
+            " WHERE workflow.project_id = :projectId " +
+            " ORDER BY CASE WHEN uhbwfd.user_id > 0 THEN TRUE ELSE FALSE END DESC, datetime_created DESC ";
+
+        sequelize.query(query, {
+            replacements: {
+                projectId: projectId,
+                userId: userId
             },
-            order: 'datetime_created DESC',
-            required: false,
-            raw: false
-        }).then(function (workflows) {
-            return callback(null, workflows);
+            type: sequelize.QueryTypes.SELECT
+        }).then(function ( result ) {
+           cb(null, result);
         }).catch(function (err) {
-            logger.error('Error: ', err);
-            return callback( err.message );
+            logger.error(err);
+            return cb(err.message);
         });
     };
 

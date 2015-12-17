@@ -375,29 +375,43 @@ function WorkflowService() {
 
 
     this.getProjectWorkflowsList = function(req, projectId, cb) {
-        logger.debug('Get project workflows list');
-        projectService.getProject(req, projectId, function(err, project) {
-            if (err) {
-                return cb(err);
-            }
-            workflowDaoService.getProjectWorkflowsList(project.id, function (err, workflows) {
-                if (err) {
-                    return cb(err);
-                }
-                async.map(workflows,
-                    function(workflow, innerCb){
-                        var resultItem = workflow.dataValues;
-                        workflow.getProgress(function (err, progress) {
-                            resultItem.progress = progress;
-                            innerCb(err, resultItem);
+
+        async.waterfall([
+                function (callback) {
+                    projectService.canViewProjectById(req, projectId, function (err, success) {
+                        if(err || !success){
+                            return callback('Kasutajal ei ole õigust antud projekti töövooge näha');
+                        }
+                        callback();
+                    });
+                },
+                function (callback) {
+                    workflowDaoService.getProjectWorkflowsList(projectId, req.redisSession.data.userId, function (err, workflows) {
+                        callback(err, workflows);
+                    });
+                },
+                function (workflows, callback) {
+                    var result = [];
+                    async.eachSeries(workflows, function (item, innerCb) {
+                        item = ObjectUtil.snakeToCame( item );
+                        Workflow.build({id: item.id, status: item.status }).getProgress(function (err, progress) {
+                            item.progress = progress;
+                            result.push( item );
+                            innerCb(err);
                         });
-                    },
-                    function(err, result){
-                        cb(null, result);
-                    }
-                );
-            });
-        });
+                    }, function (err) {
+                        callback(err, result);
+                    });
+                }
+            ],
+            function (err, result) {
+                if(err){
+                   logger.error(err);
+                }
+                cb(err, result);
+            }
+        );
+
     };
 
     this.getWorkflowsManagementList = function (req, params, cb) {
