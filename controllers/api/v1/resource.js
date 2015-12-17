@@ -89,6 +89,15 @@ router.put('/:resourceId', authMiddleware('regular'), function(req, res) {
 /**
  * Ressursi kustutamise vorm
  */
+router.get('/association/:associationId', authMiddleware('regular'), function(req, res) {
+    resourceService.getResourceAssociation(req, req.params.associationId, function(error, resource) {
+        return res.sendApiResponse( error, resource);
+    });
+});
+
+/**
+ * Ressursi kustutamise vorm
+ */
 router.delete('/association/:associationId', authMiddleware('regular'), function(req, res) {
     resourceService.deleteResourceAssociation(req, req.params.associationId, function(error, resource) {
         return res.sendApiResponse( error, resource);

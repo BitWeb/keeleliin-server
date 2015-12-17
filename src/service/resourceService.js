@@ -456,7 +456,60 @@ function ResourceService() {
         return resource.name + '.txt';
     };
 
-//######################################################################################################################
+
+    this.canDeleteAssociation = function (req, association, cb) {
+
+        if(req.redisSession.data.role == User.roles.ROLE_ADMIN){
+            return cb(null, true);
+        } else if(association.userId == req.redisSession.data.userId){
+            return cb(null, true);
+        } else {
+            return cb(null, false);
+        }
+    };
+
+
+    this.getResourceAssociation = function (req, associationId, cb) {
+        async.waterfall([
+                function (callback) {
+                    ResourceAssociation.find({
+                        where: {
+                            id: associationId
+                        },
+                        attributes: ['id','context','resourceId','userId','projectId','workflowId','workflowServiceSubstepId']
+                    }).then(function (association) {
+                        callback( null, association);
+                    }).catch(function (err) {
+                        callback(err.message);
+                    });
+                },
+                function (association, callback) {
+                    self.canDeleteAssociation(req, association, function (err, canDelete) {
+                        callback(err, canDelete, association);
+                    });
+                },
+                function (canDelete, association, callback) {
+                    association = association.toJSON();
+                    association.canDelete = canDelete;
+                    callback(null, association);
+                },
+                function (data, callback) {
+                    self.getResourceInfo(req, data.resourceId, function (err, resource) {
+                        if(resource){
+                            data.resource = resource.toJSON();
+                        }
+                        callback(err, data);
+                    });
+                }
+            ],
+            function (err, data) {
+                if(err){
+                    logger.error(err);
+                }
+                cb(err, data);
+            }
+        );
+    };
 
     this.deleteResourceAssociation = function (req, associationId, cb) {
 
@@ -469,6 +522,14 @@ function ResourceService() {
                         .catch(function (err) {
                             callback(err.message);
                         });
+                },
+                function (association, callback) {
+                    self.canDeleteAssociation(req, association, function (err, canDelete) {
+                        if(canDelete === false){
+                            return callback('Kasutajal ei ole õigust antud ressurssi kustutada!');
+                        }
+                        callback(err, association);
+                    });
                 },
                 function (association, callback) {
                     self.deleteAssociation( association, callback );
