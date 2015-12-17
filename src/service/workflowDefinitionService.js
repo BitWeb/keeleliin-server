@@ -3,7 +3,6 @@
  */
 var logger = require('log4js').getLogger('workflow_definition_service');
 var workflowDefinitionDaoService = require(__base + 'src/service/dao/workflowDefinitionDaoService');
-var userDaoService = require('./dao/userDaoService');
 var workflowDaoService = require(__base + 'src/service/dao/workflowDaoService');
 var WorkflowDefinition = require(__base + 'src/service/dao/sql').WorkflowDefinition;
 var Workflow = require(__base + 'src/service/dao/sql').Workflow;
@@ -38,6 +37,7 @@ function WorkflowDefinitionService() {
             },
             attributes: ['id', 'userId', 'accessStatus', 'projectId']
         }).then(function (definition) {
+
             if(!definition){
                 return cb(null, false);
             }
@@ -68,6 +68,7 @@ function WorkflowDefinitionService() {
                 cb(err.message);
             });
         }).catch(function (err) {
+            logger.error(err);
             cb(err.message);
         });
     };
@@ -406,8 +407,11 @@ function WorkflowDefinitionService() {
         async.waterfall(
             [
                 function (callback) {
-                    self.canViewDefinitionById(req, data, function (err, canView) {
+                    self.canViewDefinitionById(req, data.id, function (err, canView) {
                        if(err || !canView){
+                           if(err){
+                               logger.error(err);
+                           }
                            return callback('Kasutajal puudub töövoo muutmiseks ligipääs');
                        }
                         callback()
@@ -461,7 +465,7 @@ function WorkflowDefinitionService() {
             ], 
             function (err, overview) {
                 if(err){
-                    return logger.error(err);
+                    logger.error(err);
                 }
                 cb(err, overview);
             }
