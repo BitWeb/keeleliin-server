@@ -396,6 +396,12 @@ function WorkflowService() {
                         item = ObjectUtil.snakeToCame( item );
                         Workflow.build({id: item.id, status: item.status }).getProgress(function (err, progress) {
                             item.progress = progress;
+                            item.workflowDefinition = {
+                                id: item.workflowDefinitionId,
+                                isBookmarked: item.isDefinitionBookmarked
+                            };
+                            delete item.workflowDefinitionId;
+                            delete item.isDefinitionBookmarked;
                             result.push( item );
                             innerCb(err);
                         });
@@ -411,7 +417,6 @@ function WorkflowService() {
                 cb(err, result);
             }
         );
-
     };
 
     this.getWorkflowsManagementList = function (req, params, cb) {

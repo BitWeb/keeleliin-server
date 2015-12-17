@@ -193,12 +193,14 @@ function WorkflowDaoService() {
             " workflow.status, " +
             " workflow.datetime_created, " +
             " workflow.datetime_start, " +
-            " workflow.datetime_end " +
+            " workflow.datetime_end, " +
+            " workflow_definition.id as workflow_definition_id, " +
+            " CASE WHEN uhbwfd.user_id > 0 THEN TRUE ELSE FALSE END AS is_definition_bookmarked " +
             " FROM workflow " +
             " JOIN workflow_definition ON ( workflow_definition.id = workflow.workflow_definition_id ) " +
             " LEFT JOIN user_bookmark_definition as uhbwfd ON ( uhbwfd.workflow_definition_id = workflow_definition.id AND uhbwfd.user_id = :userId ) " +
             " WHERE workflow.project_id = :projectId " +
-            " ORDER BY CASE WHEN uhbwfd.user_id > 0 THEN TRUE ELSE FALSE END DESC, datetime_created DESC ";
+            " ORDER BY is_definition_bookmarked DESC, datetime_created DESC ";
 
         sequelize.query(query, {
             replacements: {

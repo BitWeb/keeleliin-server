@@ -325,14 +325,21 @@ function WorkflowDefinitionService() {
                     callback(null, item);
                 },
                 function (item, callback) {
-                    item = item.toJSON();
-                    if(item.accessStatus == WorkflowDefinition.accessStatuses.PUBLIC){
-                        item.publicUrl = self.getDefinitionPublicUrl(item);
-                    }
-                    item.definitionServices.sort(function (a, b) {
-                        return a.orderNum > b.orderNum;
+
+                    item.getBookmarkedUsers({where: {id: req.redisSession.data.userId}}).then(function (users) {
+
+                        item = item.toJSON();
+                        item.isBookmarked = users.length == 1;
+
+                        if(item.accessStatus == WorkflowDefinition.accessStatuses.PUBLIC){
+                            item.publicUrl = self.getDefinitionPublicUrl(item);
+                        }
+                        item.definitionServices.sort(function (a, b) {
+                            return a.orderNum > b.orderNum;
+                        });
+                        callback(null, item);
+
                     });
-                    callback(null, item);
                 }
             ],
             function (err, data) {

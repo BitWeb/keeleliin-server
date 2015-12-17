@@ -116,7 +116,7 @@ function WorkflowDefinitionDaoService() {
             " WHERE " +
             " wfd.project_id = :projectId " +
             " GROUP BY wfd.id, ubd.user_id " +
-            " ORDER BY wfd.name;";
+            " ORDER BY is_bookmarked DESC, wfd.name ASC;";
 
         sequelize.query( query, {
             replacements: { projectId: projectId, userId: userId },
