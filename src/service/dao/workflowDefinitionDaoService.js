@@ -48,7 +48,7 @@ function WorkflowDefinitionDaoService() {
         }
 
         if(params.name){
-            andContitions.push(" wfd.name ILIKE '%"+params.name+"%' ");
+            andContitions.push(" ( wfd.name ILIKE '%"+params.name+"%' OR wfd.description ILIKE '%"+params.name+"%' OR wfd.purpose ILIKE '%"+params.name+"%' OR u.name ILIKE '%"+params.name+"%' )");
         }
 
         var where = "";
@@ -133,10 +133,15 @@ function WorkflowDefinitionDaoService() {
 
         var where = '';
 
+        var nameCondition = '';
+        if(params.name){
+            nameCondition = "( wfd.name ILIKE '%" + params.name + "%' OR wfd.description ILIKE '%" + params.name + "%' OR wfd.purpose ILIKE '%" + params.name + "%' OR u.name ILIKE '%" + params.name + "%' )";
+        }
+
         if(params.name && params.accessStatus){
-            where = " WHERE wfd.name ILIKE '%" + params.name + "%' AND  wfd.access_status = '" + params.accessStatus + "' ";
+            where = " WHERE wfd.access_status = '" + params.accessStatus + "' AND " + nameCondition;
         } else if( params.name ){
-            where = " WHERE wfd.name ILIKE '%" + params.name + "%' ";
+            where = " WHERE " + nameCondition;
         } else if( params.accessStatus ){
             where = " WHERE wfd.access_status = '" + params.accessStatus + "' ";
         }
@@ -148,7 +153,9 @@ function WorkflowDefinitionDaoService() {
 
         var countQuery = " SELECT " +
             " COUNT(wfd.id) as total_count" +
-            " FROM workflow_definition as wfd " + where + " ;";
+            " FROM workflow_definition as wfd " +
+            " LEFT JOIN \"user\" AS u ON (u.id = wfd.user_id) " +
+            "" + where + ";";
 
         var order;
         if(params.order == 'name_asc'){
@@ -182,12 +189,14 @@ function WorkflowDefinitionDaoService() {
             " wfd.created_at as created_at, " +
             " wfd.updated_at as updated_at, " +
             " COUNT( DISTINCT wf.id ) as usage_count, " +
-            " COUNT( DISTINCT ubd.workflow_definition_id ) as bookmarked_count" +
+            " COUNT( DISTINCT ubd.workflow_definition_id ) as bookmarked_count," +
+            " u.name AS owner " +
             " FROM workflow_definition as wfd " +
             " LEFT JOIN workflow AS wf ON ( wf.workflow_definition_id = wfd.id ) " +
             " LEFT JOIN user_bookmark_definition as ubd ON ( ubd.workflow_definition_id = wfd.id ) " +
+            " LEFT JOIN \"user\" AS u ON (u.id = wfd.user_id) " +
             " " + where + " " +
-            " GROUP BY wfd.id " +
+            " GROUP BY wfd.id, u.name " +
             " ORDER BY " + order + " " + limits + ";";
 
         var result = {
