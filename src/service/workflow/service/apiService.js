@@ -100,9 +100,9 @@ function ApiService(){
     };
 
     this.getConfig = function (url, cb) {
-        request.get( { url: url + 'service/config' }, function (err, resp, body) {
+        request.get( { url: url + 'service/config', timeout: 2500 }, function (err, resp, body) {
             if (err) {
-                logger.error(err.message);
+                logger.debug(err);
                 return cb(err.message);
             }
             return cb(null, JSON.parse(resp.body));
