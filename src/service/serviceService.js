@@ -25,8 +25,42 @@ function ServiceService() {
         return serviceDaoService.getServicesList(callback);
     };
 
-    this.getServicesGridList = function(req, callback) {
-        return serviceDaoService.getServicesGridList(callback);
+    this.getServicesGridList = function(req, cb) {
+
+        async.waterfall([
+                function (callback) {
+                    serviceDaoService.getServicesGridList(callback);
+                },
+                function (services, callback) {
+                    async.map(services, function (service, innerCb) {
+                        service = service.toJSON();
+                        apiService.getConfig( service.url, function (err, config) {
+                            service.status = {};
+                            if(err || (config && !config.sid)){
+                                service.status.code = 'ERROR';
+                                service.status.message = 'Viga seadete pärimisel';
+                            } else {
+                                service.status.code = 'OK';
+                                service.status.message = '';
+                            }
+
+                            delete service.url;
+                            delete service.sid;
+
+                            innerCb(null, service);
+                        });
+                    }, function (err, data) {
+                        callback(err, data);
+                    });
+                }
+            ],
+            function (err, data) {
+                if(err){
+                    logger.error(err);
+                }
+                cb(err, data);
+            }
+        );
     };
 
     this.getServicesDetailedList = function(req, callback) {

@@ -98,6 +98,18 @@ function ApiService(){
             return cb(null, JSON.parse(resp.body));
         });
     };
+
+    this.getConfig = function (url, cb) {
+        request.get( { url: url + 'service/config' }, function (err, resp, body) {
+            if (err) {
+                logger.error(err.message);
+                return cb(err.message);
+            }
+            return cb(null, JSON.parse(resp.body));
+        });
+    };
+
+
 }
 
 module.exports = new ApiService();

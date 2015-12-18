@@ -116,6 +116,8 @@ function ServiceDaoService() {
             attributes: [
                 'id',
                 'name',
+                'url',
+                'sid',
                 'description',
                 'sid',
                 'createdAt',
@@ -130,6 +132,7 @@ function ServiceDaoService() {
             .then(function(services) {
                 return callback(null, services);
             }).catch(function(error) {
+                logger.error(error);
                 return callback({
                     message: error.message,
                     code: 500
