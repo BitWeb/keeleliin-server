@@ -2,6 +2,7 @@
 var config = {};
 
 config.port = 3000;
+config.url = 'http://keeleliin.keeleressursid.ee:3000';
 
 //Kliendirakenduse url
 config.appUrl = 'http://localhost:8001';
