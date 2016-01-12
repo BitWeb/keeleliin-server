@@ -542,12 +542,24 @@ function ServiceService() {
                         return callback(serviceForm.errors);
                     }
                 });
+            },
+            function (service, callback) {
+
+                var  data = {
+                    id: service.id,
+                    name: service.name,
+                    sid: service.sid,
+                    createdAt: service.createdAt,
+                    url: service.url
+                };
+
+                callback(null, data);
             }
-        ], function (err, service) {
+        ], function (err, data) {
             if(err){
                 logger.trace(err)
             }
-            cb(err, service);
+            cb(err, data);
         });
     };
 
